@@ -3,8 +3,71 @@ body {
     padding: 0;
     list-style: circle;
     background: hsl(195, 53%, 79%);
-    text-align: center;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family: 'Segoe UI';
+}
+
+/* Content */
+.content-container {
+    max-width: 100ch; /* Maximum width of 120 characters */
+    width: 100%; /* Full width until the max-width is reached */
+    margin: 0 auto; /* Center the container horizontally */
+    padding: 20px;
+    text-align: justify;
+}
+
+/* Additional styling for the text */
+.content-container p {
+    font-size: 18px;
+    color: #333;
+}
+
+/* Floating image to the right with text wrapping around */
+.inline-image {
+    float: right;
+    margin-left: 15px; /* Space between image and text */
+    margin-bottom: 10px; /* Space below the image */
+    object-fit: cover; /* Crop and fill the container */
+    object-position: top; /* Align the image at the top */
+    height: auto;
+    width: 120px; /* Adjust image size */
+}
+
+/* Clearfix for handling floated elements properly */
+.content-container::after {
+    content: "";
+    display: block;
+    clear: both;
+}
+
+/* Fixed links */
+.fixed-links {
+    position: fixed; /* Keeps it in the same spot on the screen */
+    top: 80px; /* Distance from the top */
+    right: 10px; /* Distance from the right */
+    display: flex;
+    flex-direction: column; /* Stack the links vertically */
+    gap: 10px; /* Spacing between links */
+    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for aesthetics */
+}
+
+/* Style for individual links */
+.fixed-links a {
+    text-decoration: none; /* Remove underline */
+    color: #007BFF; /* Link color */
+    font-family: 'Courier New';
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 3px;
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+/* Hover effect for links */
+.fixed-links a:hover {
+    background-color: #0056b3; /* Darker blue */
+    color: white;
 }
 
 /* Navbar styling */
@@ -15,6 +78,8 @@ body {
     background-color: hsl(195, 53%, 50%);
     padding: 10px 20px;
     color: white;
+    z-index: 1000; /* Higher stacking order to ensure it's on top */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 /* Left-aligned buttons */
@@ -47,3 +112,28 @@ body {
     padding: 20px;
     text-align: center;
 }
+
+/* Fonts */
+/* @font-face {
+    font-family: "Computer Modern";
+    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
+  }
+  
+  @font-face {
+    font-family: "Computer Modern";
+    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunsx.otf');
+    font-weight: bold;
+  }
+  
+  @font-face {
+    font-family: "Computer Modern";
+    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunsi.otf');
+    font-style: italic, oblique;
+  }
+  
+  @font-face {
+    font-family: "Computer Modern";
+    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunbxo.otf');
+    font-weight: bold;
+    font-style: italic, oblique;
+  } */
