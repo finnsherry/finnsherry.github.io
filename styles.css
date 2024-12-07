@@ -4,6 +4,7 @@ body {
     list-style: circle;
     background: hsl(195, 53%, 79%);
     font-family: 'Segoe UI';
+    color: #333;
 }
 
 /* Content */
@@ -37,6 +38,33 @@ body {
     content: "";
     display: block;
     clear: both;
+}
+
+/* News */
+.news-section {
+    display: flex; /* Use grid layout for the section */
+    flex-direction: column; /* Stack items vertically */
+    gap: 20px; /* Space between news items */
+    font-size: 18px;
+}
+
+.news-item {
+    display: grid; /* Use grid for each news item */
+    grid-template-columns: auto 1fr; /* Two columns: narrow for date, wide for content */
+    align-items: start; /* Align items at the top */
+    gap: 20px; /* Space between date and content */
+}
+
+.news-date {
+    font-weight: bold; /* Emphasize the date */
+    text-align: right; /* Align the date to the right */
+    color: #333; /* Subtle text color for date */
+    width: 100px; /* Fixed width for the date column */
+}
+
+.news-content {
+    text-align: justify; /* Justify the news content */
+    color: #333;
 }
 
 /* Fixed links */
