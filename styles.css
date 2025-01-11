@@ -3,6 +3,7 @@ body {
     padding: 0;
     list-style: circle;
     background: hsl(195, 53%, 79%);
+    text-align: center;
     font-family: 'Segoe UI';
     color: #333;
 }
@@ -31,6 +32,14 @@ body {
     object-position: top; /* Align the image at the top */
     height: auto;
     width: 120px; /* Adjust image size */
+}
+
+img.responsive-image {
+    max-width: calc(120ch); /* Set an absolute maximum width (120 characters wide) */
+    width: 80%;            /* Set a relative maximum width (80% of the container/page) */
+    height: auto;          /* Maintain aspect ratio */
+    display: block;        /* Optional: Centers the image when margin is applied */
+    margin: 0 auto;        /* Optional: Centers the image horizontally */
 }
 
 /* Clearfix for handling floated elements properly */
@@ -120,7 +129,7 @@ body {
 }
 
 .nav-left .nav-links li a:hover {
-    background-color: #575757;
+    background-color: #0056b3;
 }
 
 /* Right-aligned name */
@@ -142,7 +151,7 @@ h3 {
 }
 
 .publication {
-    background-color: #f9f9f9; /* Light background color */
+    background-color: hsl(195, 53%, 95%); /* Light background color */
     border: 1px solid #ddd;   /* Border around the publication */
     padding: 20px;             /* Padding around content */
     margin-bottom: 20px;       /* Space between different publications */
@@ -203,7 +212,7 @@ h3 {
     display: none; /* Hidden by default */
     margin-top: 20px;
     color: #444;
-    background-color: #f1f1f1;
+    background-color: hsl(195, 53%, 99%);
     padding: 15px;
     border: 1px solid #ccc;
     border-radius: 5px;
