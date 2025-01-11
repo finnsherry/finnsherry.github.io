@@ -2,6 +2,8 @@
 
 // Define the articles to load
 const articles = [
+    // Journal
+    // Conference
     // Preprints
     { url: 'publications/preprints/Diffusion-Shock_Filtering_on_the_Space_of_Positions_and_Orientations.html', container: document.getElementById('preprints') },
     { url: 'publications/preprints/Crossing-Preserving_Geodesic_Tracking_on_Spherical_Images.html', container: document.getElementById('preprints') },
@@ -38,8 +40,14 @@ function addToggleEvent(container) {
 }
 
 // Load all articles
-articles.forEach(({ url, container }) => loadArticle(url, container));
+async function loadArticles() {
+    for (const { url, container } of articles) {
+        await loadArticle(url, container);
+    }
 
-// Make interactive
-addToggleEvent(document.getElementById('preprints'));
-addToggleEvent(document.getElementById('theses'));
+    // Make interactive
+    addToggleEvent(document.getElementById('preprints'));
+    addToggleEvent(document.getElementById('theses'));
+}
+
+loadArticles()

@@ -9,8 +9,8 @@ body {
 
 /* Content */
 .content-container {
-    max-width: 100ch; /* Maximum width of 120 characters */
-    width: 100%; /* Full width until the max-width is reached */
+    max-width: 120ch; /* Maximum width of 120 characters */
+    width: 95%; /* Full width until the max-width is reached */
     margin: 0 auto; /* Center the container horizontally */
     padding: 20px;
     text-align: justify;
