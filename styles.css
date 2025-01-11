@@ -203,29 +203,7 @@ h3 {
     font-weight: bold; /* Bold for differentiation */
 }
 
-/* Hidden summary styling */
-p {
-    margin: 0;
-    padding: 0;
-}
-
-/* Add the arrow */
-.publication::after {
-    content: '↓'; /* Arrow symbol */
-    font-size: 2em; /* Arrow size */
-    position: absolute;
-    bottom: 10px; /* Positioning it at the bottom */
-    left: 50%;
-    transform: translateX(-50%); /* Center the arrow */
-    color: #007bff; /* Arrow color */
-    transition: transform 0.3s ease-in-out; /* Smooth transition for hover effect */
-    visibility: visible; /* Arrow is visible by default */
-}
-
-/* Hide arrow when publication is expanded */
-.publication.expanded::after {
-    visibility: hidden; /* Hide arrow when expanded */
-}
+/* Summary */
 
 .publication-summary {
     display: none; /* Hidden by default */
@@ -235,6 +213,12 @@ p {
     padding: 15px;
     border: 1px solid #ccc;
     border-radius: 5px;
+}
+
+/* Hidden summary styling */
+p {
+    margin: 0;
+    padding: 0;
 }
 
 .horizontal-links ul {
@@ -266,28 +250,3 @@ p {
 .horizontal-links ul li a:hover {
     color: #0056b3; /* Change color on hover */
 }
-
-/* Fonts */
-/* @font-face {
-    font-family: "Computer Modern";
-    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
-  }
-  
-  @font-face {
-    font-family: "Computer Modern";
-    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunsx.otf');
-    font-weight: bold;
-  }
-  
-  @font-face {
-    font-family: "Computer Modern";
-    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunsi.otf');
-    font-style: italic, oblique;
-  }
-  
-  @font-face {
-    font-family: "Computer Modern";
-    src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunbxo.otf');
-    font-weight: bold;
-    font-style: italic, oblique;
-  } */
