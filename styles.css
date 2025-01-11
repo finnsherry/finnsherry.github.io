@@ -69,16 +69,10 @@ body {
 
 /* Fixed links */
 .fixed-links {
-    position: fixed; /* Keeps it in the same spot on the screen */
-    top: 80px; /* Distance from the top */
-    right: 10px; /* Distance from the right */
-    display: flex;
-    flex-direction: column; /* Stack the links vertically */
+    margin: 0 auto; /* Center the container horizontally */
     gap: 10px; /* Spacing between links */
-    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
     padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for aesthetics */
+    text-align: center;
 }
 
 /* Style for individual links */
