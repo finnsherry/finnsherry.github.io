@@ -1,31 +1,34 @@
 // main.js
 
-// Define the articles to load
-const articles = [
+import { loadArticle } from "../utils/utils.js";
+
+const articleTitlesAndTypes = [
     // Journal
     // Conference
     // Preprints
-    { url: 'publications/preprints/Diffusion-Shock_Filtering_on_the_Space_of_Positions_and_Orientations.html', container: document.getElementById('preprints') },
-    { url: 'publications/preprints/Crossing-Preserving_Geodesic_Tracking_on_Spherical_Images.html', container: document.getElementById('preprints') },
+    { 
+        title: 'Diffusion-Shock_Filtering_on_the_Space_of_Positions_and_Orientations',
+        type: 'preprints'
+    },
+    { 
+        title: 'Crossing-Preserving_Geodesic_Tracking_on_Spherical_Images',
+        type: 'preprints'
+    },
     // Theses
-    { url: 'publications/theses/Self-Healing_of_Comb_Polymer_Vitrimers.html', container: document.getElementById('theses') }
+    {
+        title: 'Self-Healing_of_Comb_Polymer_Vitrimers',
+        type: 'theses'
+    }
 ];
 
-// Function to load an article
-async function loadArticle(url, container) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-        const content = await response.text();
-        // Create a div to hold the article
-        const articleDiv = document.createElement('div');
-        articleDiv.innerHTML = content;
-        container.appendChild(articleDiv);
-    } catch (error) {
-        console.error(error);
-        container.innerHTML += `<p>Error loading article: ${url}</p>`;
+const articles = articleTitlesAndTypes.map(
+    article => {
+        return {
+            url: `publications/${article.type}/${article.title}.html`,
+            container: document.getElementById(article.type)
+        }
     }
-}
+)
 
 function addToggleEvent(container) {
     container.addEventListener('click', function (event) {
@@ -39,15 +42,9 @@ function addToggleEvent(container) {
     });
 }
 
-// Load all articles
-async function loadArticles() {
-    for (const { url, container } of articles) {
-        await loadArticle(url, container);
-    }
-
-    // Make interactive
-    addToggleEvent(document.getElementById('preprints'));
-    addToggleEvent(document.getElementById('theses'));
+for (const { url, container } of articles) {
+    await loadArticle(url, container);
 }
 
-loadArticles()
+addToggleEvent(document.getElementById('preprints'));
+addToggleEvent(document.getElementById('theses'));

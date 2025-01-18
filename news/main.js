@@ -1,34 +1,26 @@
 // main.js
 
-// Define the articles to load
-const articles = [
-    'news/2025-02-10_SSVM.html',
-    'news/2025-02-10_launch.html',
-];
+import { loadArticle } from "../utils/utils.js";
+
+const articleDescriptionsAndDates = [
+    {
+        description: "SSVM",
+        date: "2025-02-10"
+    },
+    {
+        description: "launch",
+        date: "2025-02-10"
+    }
+]
+
+const articles = articleDescriptionsAndDates.map(
+    article => {
+        return `news/${article.date}_${article.description}.html`
+    }
+)
 
 const newsContainer = document.getElementById('news')
 
-// Function to load an article
-async function loadArticle(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`Failed to fetch ${url}`);
-        const content = await response.text();
-        // Create a div to hold the article
-        const articleDiv = document.createElement('div');
-        articleDiv.innerHTML = content;
-        newsContainer.appendChild(articleDiv);
-    } catch (error) {
-        console.error(error);
-        newsContainer.innerHTML += `<p>Error loading article: ${url}</p>`;
-    }
+for (const article of articles) {
+    await loadArticle(article, newsContainer);
 }
-
-// Load all articles
-async function loadArticles() {
-    for (const article of articles) {
-        await loadArticle(article);
-    }
-}
-
-loadArticles()

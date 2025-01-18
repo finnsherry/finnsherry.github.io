@@ -28,8 +28,8 @@ function drawArrayToContext(context, array) {
 
 function canvasToImage(canvas) {
     let image = new Image();
-    const dataURL = canvas.toDataURL(); // Generate a data URL from the canvas
-    console.log("Data URL:", dataURL); // Debug: Ensure the URL is generated
+    const dataURL = canvas.toDataURL();
+    console.log("Data URL:", dataURL);
     image.src = dataURL;
     return image;
 }
