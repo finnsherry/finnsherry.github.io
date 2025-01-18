@@ -34,6 +34,11 @@ body {
     width: 120px; /* Adjust image size */
 }
 
+.scaled-image {
+    width: 500px;
+    height: 500px;
+}
+
 img.responsive-image {
     max-width: calc(120ch); /* Set an absolute maximum width (120 characters wide) */
     width: 80%;            /* Set a relative maximum width (80% of the container/page) */

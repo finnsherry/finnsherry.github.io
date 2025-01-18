@@ -2,9 +2,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+    <title>Random</title>
     <link rel="icon" href="content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles.css">
+    <script type="module" src="random/eikonal_pde.js"></script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -18,12 +19,14 @@
             .catch(error => console.error('Error loading navbar:', error));
     </script>
 
-
     <!-- Main Content -->
     <div class="content">
-        <h1>About</h1>
-        <p>This is the home page.</p>
+        <div class="content-container">
+            <h1>Random</h1>
+            <div id="distancemap"></div>
+        </div>
     </div>
+    
 
 </body>
 </html>
