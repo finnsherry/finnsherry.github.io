@@ -3,26 +3,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-    <link rel="icon" href="content/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <div id="navbar"></div>
-    <script>
-        fetch('./navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar').innerHTML = html;
-            })
-            .catch(error => console.error('Error loading navbar:', error));
-    </script>
+    <nav class="navbar">
+        <div class="nav-left">
+            <ul class="nav-links">
+                <li><a href="./"><b>Home</b></a></li>
+                <li><a href="./publications"><b>Publications</b></a></li>
+                <!-- <li><a href="./teaching"><b>Teaching</b></a></li> -->
+                <!-- <li><a href="./random"><b>Random</b></a></li> -->
+            </ul>
+        </div>
+        <div class="nav-right">
+            <span class="name">Finn Sherry</span>
+        </div>
+    </nav>
 
     <!-- About -->
     <div class="content-container">
         <h1>About</h1>
         <p>
-            <img src="./content/Pic.jpg" alt="Picture of me" class="inline-image" style="width: 200px;">
+            <img src="/content/Pic.jpg" alt="Picture of me" class="inline-image" style="width: 200px;">
             I'm a PhD candidate in Remco Duits' <a href="https://casa.win.tue.nl/home/geometric-learning-and-differential-geometry/">Geometric Learning & Differential Geometry</a> group at TU/e.
             I am a part of the <a href="https://www.tue.nl/en/research/institutes/eindhoven-artificial-intelligence-systems-institute/">EAISI</a>-funded research project <em>"New Memory Efficient Geometric Learning for Automatic Crack Detection in Bridges"</em>. Our goal is to develop and improve Geometric Deep Learning (GDL) techniques. Current GDL algorithms, such as Group-equivariant Convolutional Neural Networks (G-CNNs), have a proven track record in low data applications, but often struggle when dealing with many large images. We are investigating various ways to make scaleable GDL algorithms, e.g. by reducing their memory footprint. In the end, we hope to apply our new techniques to automate the detection of cracks in infrastructure: the vast quantity of high resolution images in this application makes current GDL methods impractical.
         </p>
@@ -43,7 +46,7 @@
         <div class="news-section" id="news"><h1>News</h1></div>
     </div>
 
-    <script type="module" src="news/main.js"></script>
+    <script type="module" src="/news/main.js"></script>
 
 </body>
 </html>
