@@ -8,30 +8,27 @@ body {
     color: #333;
 }
 
-/* Content */
 .content-container {
-    max-width: 120ch; /* Maximum width of 120 characters */
-    width: 95%; /* Full width until the max-width is reached */
-    margin: 0 auto; /* Center the container horizontally */
+    max-width: 120ch;
+    width: 95%;
+    margin: 0 auto;
     padding: 20px;
     text-align: justify;
 }
 
-/* Additional styling for the text */
 .content-container p {
     font-size: 18px;
     color: #333;
 }
 
-/* Floating image to the right with text wrapping around */
 .inline-image {
     float: right;
-    margin-left: 15px; /* Space between image and text */
-    margin-bottom: 10px; /* Space below the image */
-    object-fit: cover; /* Crop and fill the container */
-    object-position: top; /* Align the image at the top */
+    margin-left: 15px;
+    margin-bottom: 10px;
+    object-fit: cover;
+    object-position: top;
     height: auto;
-    width: 120px; /* Adjust image size */
+    width: 120px;
 }
 
 .scaled-image {
@@ -40,73 +37,19 @@ body {
 }
 
 img.responsive-image {
-    max-width: calc(120ch); /* Set an absolute maximum width (120 characters wide) */
-    width: 80%;            /* Set a relative maximum width (80% of the container/page) */
-    height: auto;          /* Maintain aspect ratio */
-    display: block;        /* Optional: Centers the image when margin is applied */
-    margin: 0 auto;        /* Optional: Centers the image horizontally */
+    max-width: calc(120ch);
+    width: 80%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
-/* Clearfix for handling floated elements properly */
 .content-container::after {
     content: "";
     display: block;
     clear: both;
 }
 
-/* News */
-.news-section {
-    display: flex; /* Use grid layout for the section */
-    flex-direction: column; /* Stack items vertically */
-    gap: 20px; /* Space between news items */
-    font-size: 18px;
-}
-
-.news-item {
-    display: grid; /* Use grid for each news item */
-    grid-template-columns: auto 1fr; /* Two columns: narrow for date, wide for content */
-    align-items: start; /* Align items at the top */
-    gap: 20px; /* Space between date and content */
-}
-
-.news-date {
-    font-weight: bold; /* Emphasize the date */
-    text-align: right; /* Align the date to the right */
-    color: #333; /* Subtle text color for date */
-    width: 100px; /* Fixed width for the date column */
-}
-
-.news-content {
-    text-align: justify; /* Justify the news content */
-    color: #333;
-}
-
-/* Fixed links */
-.fixed-links {
-    margin: 0 auto; /* Center the container horizontally */
-    gap: 10px; /* Spacing between links */
-    padding: 10px;
-    text-align: center;
-}
-
-/* Style for individual links */
-.fixed-links a {
-    text-decoration: none; /* Remove underline */
-    color: #007BFF; /* Link color */
-    font-family: 'Courier New';
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 3px;
-    transition: background-color 0.3s ease; /* Smooth hover effect */
-}
-
-/* Hover effect for links */
-.fixed-links a:hover {
-    background-color: #0056b3; /* Darker blue */
-    color: white;
-}
-
-/* Navbar styling */
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -114,11 +57,10 @@ img.responsive-image {
     background-color: hsl(195, 53%, 50%);
     padding: 10px 20px;
     color: white;
-    z-index: 1000; /* Higher stacking order to ensure it's on top */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Left-aligned buttons */
 .nav-left .nav-links {
     list-style: none;
     display: flex;
@@ -137,124 +79,12 @@ img.responsive-image {
     background-color: #0056b3;
 }
 
-/* Right-aligned name */
 .nav-right .name {
     font-size: 18px;
     font-weight: bold;
 }
 
-/* Content styling */
 .content {
     padding: 20px;
     text-align: center;
-}
-
-/* Styling for the publication component */
-h3 {
-    margin: 0;
-    padding: 0;
-}
-
-.publication {
-    background-color: hsl(195, 53%, 95%); /* Light background color */
-    border: 1px solid #ddd;   /* Border around the publication */
-    padding: 20px;             /* Padding around content */
-    margin-bottom: 20px;       /* Space between different publications */
-    border-radius: 8px;        /* Rounded corners */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
-    transition: transform 0.2s ease-in-out; /* Smooth transition for hover */
-}
-
-/* Hover effect for publication component */
-.publication:hover {
-    transform: translateY(-5px); /* Lift the component on hover */
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15); /* Increase shadow on hover */
-}
-
-/* Title of the publication */
-.publication-title {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-/* Authors styling */
-.publication-authors {
-    font-style: italic;
-    color: #555;
-    margin-bottom: 10px;
-}
-
-.publication-footer {
-    display: flex; /* Use flexbox layout */
-    justify-content: space-between; /* Push items to the edges */
-    align-items: center; /* Align items vertically */
-    margin-top: 10px; /* Add space above footer */
-    font-size: 0.9em; /* Slightly smaller text size */
-}
-
-/* Link styling */
-.publication-link {
-    text-decoration: none;       /* Remove underline */
-    font-family: 'Courier New';
-    font-weight: bold;
-    color: #007bff;              /* Blue color for the link */
-    font-weight: bold;
-}
-
-.publication-link:hover {
-    color: #0056b3;              /* Darker blue on hover */
-}
-
-.publication-year {
-    color: #666; /* Subtle gray color for the year */
-    font-weight: bold; /* Bold for differentiation */
-}
-
-/* Summary */
-
-.publication-summary {
-    display: none; /* Hidden by default */
-    margin-top: 20px;
-    color: #444;
-    background-color: hsl(195, 53%, 99%);
-    padding: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-/* Hidden summary styling */
-p {
-    margin: 0;
-    padding: 0;
-}
-
-.horizontal-links ul {
-    list-style: none; /* Remove default bullet points */
-    padding: 0;
-    margin: 0;
-    display: flex; /* Arrange items horizontally */
-    gap: 10px; /* Add spacing between items */
-    align-items: center; /* Vertically align the items */
-}
-
-.horizontal-links ul li {
-    display: inline-flex; /* Ensure proper alignment for list items */
-    align-items: center;
-}
-
-.horizontal-links ul li:not(:last-child)::after {
-    content: '•'; /* Add bullet as a separator */
-    margin-left: 10px; /* Add spacing after the text */
-    color: #333; /* Set bullet color */
-}
-
-.horizontal-links ul li a {
-    text-decoration: none; /* Remove underline */
-    color: #007bff; /* Set link color */
-    font-weight: bold; /* Make links stand out */
-}
-
-.horizontal-links ul li a:hover {
-    color: #0056b3; /* Change color on hover */
 }

@@ -5,6 +5,103 @@
     <title>Publications</title>
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        .publication {
+            background-color: hsl(195, 53%, 95%);
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .publication:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .publication-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .publication-authors {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .publication-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .publication-link {
+            text-decoration: none;
+            font-weight: bold;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .publication-link:hover {
+            color: #0056b3;
+        }
+
+        .publication-year {
+            color: #666;
+            font-weight: bold;
+        }
+
+        .publication-summary {
+            display: none;
+            margin-top: 20px;
+            color: #444;
+            background-color: hsl(195, 53%, 99%);
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .publication-summary p, h3 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .horizontal-links ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .horizontal-links ul li {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .horizontal-links ul li:not(:last-child)::after {
+            content: '•';
+            margin-left: 10px;
+            color: #333;
+        }
+
+        .horizontal-links ul li a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .horizontal-links ul li a:hover {
+            color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -33,7 +130,7 @@
                 <div class="horizontal-links">
                     <ul>
                         <li><a href="" class="publication-link" target="_blank">arXiv</a></li>
-                        <li><a href="https://github.com/finn491/M2RDSFiltering" class="publication-link" target="_blank">code</a></li>
+                        <li><a href="https://github.com/finnsherry/M2RDSFiltering" class="publication-link" target="_blank">code</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2025</span>
@@ -72,7 +169,7 @@
                 <div class="horizontal-links">
                     <ul>
                         <li><a href="" class="publication-link" target="_blank">arXiv</a></li>
-                        <li><a href="https://github.com/finn491/IterativeEikonal" class="publication-link" target="_blank">code</a></li>
+                        <li><a href="https://github.com/finnsherry/IterativeEikonal" class="publication-link" target="_blank">code</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2025</span>
