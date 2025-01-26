@@ -1,13 +1,14 @@
+
 body {
     margin: 0;
     padding: 0;
-    list-style: circle;
     background: hsl(195, 53%, 79%);
-    text-align: center;
-    font-family: 'Segoe UI';
     color: #333;
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
 }
 
+/* Content Container */
 .content-container {
     max-width: 120ch;
     width: 95%;
@@ -21,14 +22,14 @@ body {
     color: #333;
 }
 
+/* Images */
 .inline-image {
     float: right;
-    margin-left: 15px;
-    margin-bottom: 10px;
+    margin: 0 0 10px 15px;
+    width: 120px;
+    height: auto;
     object-fit: cover;
     object-position: top;
-    height: auto;
-    width: 120px;
 }
 
 .scaled-image {
@@ -37,28 +38,30 @@ body {
 }
 
 img.responsive-image {
-    max-width: calc(120ch);
+    max-width: 120ch;
     width: 80%;
     height: auto;
     display: block;
     margin: 0 auto;
 }
 
+/* Clearfix for floated elements */
 .content-container::after {
     content: "";
     display: block;
     clear: both;
 }
 
+/* Navbar */
 .navbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
     background-color: hsl(195, 53%, 50%);
-    padding: 10px 20px;
     color: white;
-    z-index: 1000;
+    padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
 .nav-left .nav-links {
@@ -84,6 +87,7 @@ img.responsive-image {
     font-weight: bold;
 }
 
+/* Content Section */
 .content {
     padding: 20px;
     text-align: center;
