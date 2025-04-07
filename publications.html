@@ -122,6 +122,70 @@
     <!-- Main Content -->
     <div class="content-container" id="preprints">
         <h1>Preprints</h1>
+        <div class="publication" id="Flow Matching on Lie Groups">
+            <h3 class="publication-title">Flow Matching on Lie Groups</h3>
+            <p class="publication-authors">
+                <b>Finn Sherry</b>, <a href="https://bmnsmets.com/">Bart Smets</a>
+            </p>
+            <div class="publication-footer">
+                <div class="horizontal-links">
+                    <ul>
+                        <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
+                        <li><a href="https://arxiv.org/abs/2504.00494" class="publication-link" target="_blank">arXiv</a></li>
+                        <li><a href="https://github.com/finnsherry/FlowMatching" class="publication-link" target="_blank">code</a></li>
+                    </ul>
+                </div>
+                <span class="publication-year">2025</span>
+            </div>
+        
+            <div class="publication-summary">
+                <p>
+                    <em>
+                        Submitted to the <a href="https://conference-gsi.org/">7th International Conference on Geometric Science of Information</a>.
+                    </em>
+                </p>
+                <p>
+                    Flow Matching (FM) is a recent generative modelling technique: we aim to learn how to sample from distribution X<sub>1</sub> by flowing samples from some distribution X<sub>0</sub> that is easy to sample from. 
+                    The key trick is that this flow field can be trained while conditioning on the end point in X<sub>1</sub>: given an end point, simply move along a straight line segment to the end point <a href="https://openreview.net/forum?id=PqvMRDCJT9t">(Lipman et al. 2023)</a>. 
+                    However, straight line segments are only well-defined on Euclidean space. 
+                    Consequently, 
+                    <a href="https://openreview.net/forum?id=g7ohDlTITL">Lipman & Chen (2024)</a> generalised the method to FM on Riemannian manifolds, replacing line segments with geodesics or their spectral approximations.
+                    We take an alternative point of view: we generalise to FM on Lie groups by instead substituting exponential curves for line segments. This leads to a simple, intrinsic, and fast implementation for many matrix Lie groups, since the required Lie group operations (products, inverses, exponentials, logarithms) are simply given by the corresponding matrix operations. 
+                    FM on Lie groups could then be used for generative modelling with data consisting of sets of features (in Euclidean space) and poses (in some Lie group), e.g. the latent codes of Equivariant Neural Fields <a href="https://openreview.net/forum?id=A4eCzSohhx">(Wessels et al. 2025)</a>.
+                </p>
+            </div>
+        </div>
+
+        <div class="publication" id="Orientation Scores should be a Piece of Cake">
+            <h3 class="publication-title">Orientation Scores should be a Piece of Cake</h3>
+            <p class="publication-authors">
+                <b>Finn Sherry</b>, <a href="">Chase van de Geijn</a>, <a href="https://ebekkers.github.io/">Erik Bekkers</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
+            </p>
+            <div class="publication-footer">
+                <div class="horizontal-links">
+                    <ul>
+                        <li><a href="https://arxiv.org/abs/2504.00702" class="publication-link" target="_blank">arXiv</a></li>
+                        <li><a href="https://gitlab.com/finn491/lietorch" class="publication-link" target="_blank">code</a></li>
+                    </ul>
+                </div>
+                <span class="publication-year">2025</span>
+            </div>
+        
+            <div class="publication-summary">
+                <p>
+                    <em>
+                        Submitted to the <a href="https://conference-gsi.org/">7th International Conference on Geometric Science of Information</a>.
+                    </em>
+                </p>
+                <p>
+                    We axiomatically derive a family of wavelets for an orientation score, lifting from position space to position and orientation space with fast reconstruction property, that minimise position-orientation uncertainty.
+                    We subsequently show that these minimum uncertainty states are well-approximated by cake wavelets: for standard parameters, the uncertainty gap of cake wavelets is less than 1.1, and in the limit, we prove the uncertainty gap tends to the minimum of 1.
+                    Next, we complete a previous theoretical argument that one does not have to train the lifting layer in (PDE-)G-CNNs, but can instead use cake wavelets.
+                    Finally, we show experimentally that in this way we can reduce the network complexity and improve the interpretability of (PDE-)G-CNNs, with only a slight impact on the model's performance.
+                </p>
+            </div>
+        </div>
+
         <div class="publication" id="Diffusion-Shock Filtering on the Space of Positions and Orientations">
             <h3 class="publication-title">Diffusion-Shock Filtering on the Space of Positions and Orientations</h3>
             <p class="publication-authors">
