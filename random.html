@@ -19,6 +19,10 @@
             gap: 20px;
             align-items: start;
         }
+
+        .random-item .p {
+            text-align: justify;
+        }
     </style>
 </head>
 <body>
@@ -28,7 +32,7 @@
                 <li><a href="/"><b>Home</b></a></li>
                 <li><a href="/publications"><b>Publications</b></a></li>
                 <!-- <li><a href="/teaching"><b>Teaching</b></a></li> -->
-                <!-- <li><a href="/random"><b>Random</b></a></li> -->
+                <li><a href="/random"><b>Random</b></a></li>
             </ul>
         </div>
         <div class="nav-right">
@@ -42,7 +46,9 @@
             <div class="random-section">
                 <h1>Random</h1>
                 <div class="random-item">
-                    <img src="/content/Pic.jpg" alt="Picture of me" class="inline-image" style="width: 200px;">
+                    <a href="/random/flow_matching_on_lie_groups"><b>Flow Matching on Lie Groups:</b></a> 
+                    <div> In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494" class="publication-link" target="_blank">arXiv</a>, <a href="https://github.com/finnsherry/FlowMatching" class="publication-link" target="_blank">code</a>), we develop a new technique for generative modelling on Lie groups, generalising <a href="https://arxiv.org/abs/2412.06264">Flow Matching by Lipman et al.</a> As the name implies, this works by flowing data from an initial to a target distribution. Here are some nice videos of this in action.
+                    </div>
                 </div>
             </div>
         </div>

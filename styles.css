@@ -45,6 +45,14 @@ img.responsive-image {
     margin: 0 auto;
 }
 
+.inline-video {
+    float: right;
+    margin: 0 0 10px 15px;
+    height: auto;
+    object-fit: cover;
+    object-position: top;
+}
+
 /* Clearfix for floated elements */
 .content-container::after {
     content: "";
