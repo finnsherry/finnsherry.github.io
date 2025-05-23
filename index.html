@@ -6,15 +6,18 @@
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <style>
+        /* Fixed Links */
+
         .fixed-links {
             margin: 0 auto;
             padding: 10px;
             text-align: center;
             display: flex;
+            flex-direction: row;
             justify-content: center;
             gap: 10px;
         }
-    
+
         .fixed-links a {
             text-decoration: none;
             color: #007BFF;
@@ -24,36 +27,67 @@
             border-radius: 3px;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-    
+
         .fixed-links a:hover {
             background-color: #0056b3;
             color: white;
         }
-    
+
+        /* News Section */
+
         .news-section {
             display: flex;
             flex-direction: column;
             gap: 20px;
             font-size: 18px;
         }
-    
+
         .news-item {
             display: grid;
             grid-template-columns: auto 1fr;
             gap: 20px;
             align-items: start;
         }
-    
+
         .news-date {
             font-weight: bold;
             text-align: right;
             color: #333;
             width: 100px;
         }
-    
+
         .news-content {
             text-align: justify;
             color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .news-item {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .news-date {
+                order: -1; /* Moves the date above content */
+                text-align: left;
+                width: auto;
+                margin-bottom: 5px;
+            }
+
+            .news-content {
+                order: 0;
+            }
+
+            .fixed-links {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .fixed-links a {
+                width: 100%;
+                box-sizing: border-box;
+            }
         }
     </style>
     
@@ -97,6 +131,12 @@
         <!-- News -->
         <div class="news-section" id="news">
             <h1>News</h1>
+            <div class="news-item">
+                <div class="news-date">2025-05-23</div>
+                <div class="news-content">
+                    My paper <a href="https://arxiv.org/abs/2502.17146">Diffusion-Shock Filtering on the Space of Positions and Orientations</a> won the Best Student Paper Award at SSVM 2025! <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO">These</a> are the slides I used for my oral presentation.
+                </div>
+            </div>
 
             <div class="news-item">
                 <div class="news-date">2025-04-02</div>
