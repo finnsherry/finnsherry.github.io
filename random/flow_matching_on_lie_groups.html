@@ -26,7 +26,7 @@
         <div class="content-container">
             <h1>Flow Matching on Lie Groups</h1>
             <p>
-                <video autoplay loop class="inline-video" width="300px">
+                <video autoplay loop controls class="inline-video" width="300px">
                     <source src="/random/flow_matching_SE2.mp4" type="video/mp4"/>
                 </video>
                 In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494" class="publication-link" target="_blank">arXiv</a>, <a href="https://github.com/finnsherry/FlowMatching" class="publication-link" target="_blank">code</a>), we develop a new technique for generative modelling on Lie groups, generalising <a href="https://arxiv.org/abs/2412.06264">Flow Matching by Lipman et al.</a> As the name implies, this works by flowing data from an initial to a target distribution. Here are some nice videos of this in action.
@@ -38,7 +38,7 @@
                 We add a bit of noise to both distributions such that their supports are homotopic. This is necessary since flows are always homotopies: it is therefore impossible to learn a flow between distributions whose supports aren't homotopic.
             </p>
             <p>
-                <video autoplay loop class="inline-video" width="300px">
+                <video autoplay loop controls class="inline-video" width="300px">
                     <source src="/random/flow_matching_SO3_vertical_line_to_circle.mp4" type="video/mp4"/>
                 </video>
                 For the next example, we perform flow matching on the special orthogonal group of rotations, SO(3). Like SE(2), SO(3) is diffeomorphic to a space of positions and orientations; now it is the space of spherical positions and orientations. Hence, we can represent rotations with an arrow on the sphere.
