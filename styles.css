@@ -107,7 +107,6 @@ img.responsive-image {
     display: flex;
     justify-content: center; /* Center the content */
     width: 100%;
-    padding: 0px 0px 15px 0px;
 }
 
 .nav-right .name li a {
@@ -135,7 +134,8 @@ img.responsive-image {
         order: -1;
         width: 100%;
         text-align: center;
-        margin-top: 15px;
+        margin-top: 10px;
+        padding-bottom: 10px;
     }
 
     .nav-left .nav-links {
