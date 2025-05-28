@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,7 @@
     <link rel="stylesheet" href="/styles.css">
     <style>
         .publication {
-            background-color: hsl(195, 53%, 95%);
+            background: color-mix(in oklab, var(--bg-colour) 20%, white 80%);
             border: 1px solid #ddd;
             padding: 20px;
             margin-bottom: 20px;
@@ -62,13 +63,14 @@
             display: none;
             margin-top: 20px;
             color: #444;
-            background-color: hsl(195, 53%, 99%);
+            background: color-mix(in oklab, var(--bg-colour) 5%, white 95%);
             padding: 15px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
 
-        .publication-summary p, h3 {
+        .publication-summary p,
+        h3 {
             margin: 0;
             padding: 0;
         }
@@ -108,15 +110,15 @@
                 padding: 15px;
                 text-align: left;
             }
-            
+
             .publication-title {
                 font-size: 1.2em;
             }
-            
+
             .publication-authors {
                 font-size: 0.95em;
             }
-            
+
             .publication-year {
                 font-size: 0.9em;
             }
@@ -129,6 +131,7 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-left">
@@ -140,7 +143,9 @@
             </ul>
         </div>
         <div class="nav-right">
-            <span class="name"><li><a href="/">Finn Sherry</a></li></span>
+            <span class="name">
+                <li><a href="/">Finn Sherry</a></li>
+            </span>
         </div>
     </nav>
 
@@ -156,27 +161,41 @@
                 <div class="horizontal-links">
                     <ul>
                         <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://arxiv.org/abs/2504.00494" class="publication-link" target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/FlowMatching" class="publication-link" target="_blank">🧑‍💻code</a></li>
+                        <li><a href="https://arxiv.org/abs/2504.00494" class="publication-link"
+                                target="_blank">🔓arXiv</a></li>
+                        <li><a href="https://github.com/finnsherry/FlowMatching" class="publication-link"
+                                target="_blank">🧑‍💻code</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
-        
+
             <div class="publication-summary">
                 <p>
                     <em>
-                        Submitted to the <a href="https://conference-gsi.org/">7th International Conference on Geometric Science of Information</a>.
+                        Submitted to the <a href="https://conference-gsi.org/">7th International Conference on Geometric
+                            Science of Information</a>.
                     </em>
                 </p>
                 <p>
-                    Flow Matching (FM) is a recent generative modelling technique: we aim to learn how to sample from distribution X<sub>1</sub> by flowing samples from some distribution X<sub>0</sub> that is easy to sample from. 
-                    The key trick is that this flow field can be trained while conditioning on the end point in X<sub>1</sub>: given an end point, simply move along a straight line segment to the end point <a href="https://openreview.net/forum?id=PqvMRDCJT9t">(Lipman et al. 2023)</a>. 
-                    However, straight line segments are only well-defined on Euclidean space. 
-                    Consequently, 
-                    <a href="https://openreview.net/forum?id=g7ohDlTITL">Lipman & Chen (2024)</a> generalised the method to FM on Riemannian manifolds, replacing line segments with geodesics or their spectral approximations.
-                    We take an alternative point of view: we generalise to FM on Lie groups by instead substituting exponential curves for line segments. This leads to a simple, intrinsic, and fast implementation for many matrix Lie groups, since the required Lie group operations (products, inverses, exponentials, logarithms) are simply given by the corresponding matrix operations. 
-                    FM on Lie groups could then be used for generative modelling with data consisting of sets of features (in Euclidean space) and poses (in some Lie group), e.g. the latent codes of Equivariant Neural Fields <a href="https://openreview.net/forum?id=A4eCzSohhx">(Wessels et al. 2025)</a>.
+                    Flow Matching (FM) is a recent generative modelling technique: we aim to learn how to sample from
+                    distribution X<sub>1</sub> by flowing samples from some distribution X<sub>0</sub> that is easy to
+                    sample from.
+                    The key trick is that this flow field can be trained while conditioning on the end point in
+                    X<sub>1</sub>: given an end point, simply move along a straight line segment to the end point <a
+                        href="https://openreview.net/forum?id=PqvMRDCJT9t">(Lipman et al. 2023)</a>.
+                    However, straight line segments are only well-defined on Euclidean space.
+                    Consequently,
+                    <a href="https://openreview.net/forum?id=g7ohDlTITL">Lipman & Chen (2024)</a> generalised the method
+                    to FM on Riemannian manifolds, replacing line segments with geodesics or their spectral
+                    approximations.
+                    We take an alternative point of view: we generalise to FM on Lie groups by instead substituting
+                    exponential curves for line segments. This leads to a simple, intrinsic, and fast implementation for
+                    many matrix Lie groups, since the required Lie group operations (products, inverses, exponentials,
+                    logarithms) are simply given by the corresponding matrix operations.
+                    FM on Lie groups could then be used for generative modelling with data consisting of sets of
+                    features (in Euclidean space) and poses (in some Lie group), e.g. the latent codes of Equivariant
+                    Neural Fields <a href="https://openreview.net/forum?id=A4eCzSohhx">(Wessels et al. 2025)</a>.
                 </p>
             </div>
         </div>
@@ -184,29 +203,40 @@
         <div class="publication" id="Orientation Scores should be a Piece of Cake">
             <h3 class="publication-title">Orientation Scores should be a Piece of Cake</h3>
             <p class="publication-authors">
-                <b>Finn Sherry</b>, <a href="https://chasevdg.github.io/">Chase van de Geijn</a>, <a href="https://ebekkers.github.io/">Erik Bekkers</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
+                <b>Finn Sherry</b>, <a href="https://chasevdg.github.io/">Chase van de Geijn</a>, <a
+                    href="https://ebekkers.github.io/">Erik Bekkers</a>, <a href="https://rduits.win.tue.nl/">Remco
+                    Duits</a>
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <ul>
-                        <li><a href="https://arxiv.org/abs/2504.00702" class="publication-link" target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://gitlab.com/finn491/lietorch" class="publication-link" target="_blank">🧑‍💻code</a></li>
+                        <li><a href="https://arxiv.org/abs/2504.00702" class="publication-link"
+                                target="_blank">🔓arXiv</a></li>
+                        <li><a href="https://gitlab.com/finn491/lietorch" class="publication-link"
+                                target="_blank">🧑‍💻code</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
-        
+
             <div class="publication-summary">
                 <p>
                     <em>
-                        Submitted to the <a href="https://conference-gsi.org/">7th International Conference on Geometric Science of Information</a>.
+                        Submitted to the <a href="https://conference-gsi.org/">7th International Conference on Geometric
+                            Science of Information</a>.
                     </em>
                 </p>
                 <p>
-                    We axiomatically derive a family of wavelets for an orientation score, lifting from position space to position and orientation space with fast reconstruction property, that minimise position-orientation uncertainty.
-                    We subsequently show that these minimum uncertainty states are well-approximated by cake wavelets: for standard parameters, the uncertainty gap of cake wavelets is less than 1.1, and in the limit, we prove the uncertainty gap tends to the minimum of 1.
-                    Next, we complete a previous theoretical argument that one does not have to train the lifting layer in (PDE-)G-CNNs, but can instead use cake wavelets.
-                    Finally, we show experimentally that in this way we can reduce the network complexity and improve the interpretability of (PDE-)G-CNNs, with only a slight impact on the model's performance.
+                    We axiomatically derive a family of wavelets for an orientation score, lifting from position space
+                    to position and orientation space with fast reconstruction property, that minimise
+                    position-orientation uncertainty.
+                    We subsequently show that these minimum uncertainty states are well-approximated by cake wavelets:
+                    for standard parameters, the uncertainty gap of cake wavelets is less than 1.1, and in the limit, we
+                    prove the uncertainty gap tends to the minimum of 1.
+                    Next, we complete a previous theoretical argument that one does not have to train the lifting layer
+                    in (PDE-)G-CNNs, but can instead use cake wavelets.
+                    Finally, we show experimentally that in this way we can reduce the network complexity and improve
+                    the interpretability of (PDE-)G-CNNs, with only a slight impact on the model's performance.
                 </p>
             </div>
         </div>
@@ -214,25 +244,32 @@
         <div class="publication" id="Diffusion-Shock Filtering on the Space of Positions and Orientations">
             <h3 class="publication-title">Diffusion-Shock Filtering on the Space of Positions and Orientations</h3>
             <p class="publication-authors">
-                <b>Finn Sherry</b>, <a href="https://www.mia.uni-saarland.de/schaefer/index.shtml">Kristina Schaefer</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
+                <b>Finn Sherry</b>, <a href="https://www.mia.uni-saarland.de/schaefer/index.shtml">Kristina
+                    Schaefer</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <ul>
                         <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_16" class="publication-link" target="_blank">🔒Springer</a></li>
-                        <li><a href="https://arxiv.org/abs/2502.17146" class="publication-link" target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/M2RDSFiltering" class="publication-link" target="_blank">🧑‍💻code</a></li>
-                        <li><a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO" class="publication-link" target="_blank">🗨️slides</a></li>
+                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_16" class="publication-link"
+                                target="_blank">🔒Springer</a></li>
+                        <li><a href="https://arxiv.org/abs/2502.17146" class="publication-link"
+                                target="_blank">🔓arXiv</a></li>
+                        <li><a href="https://github.com/finnsherry/M2RDSFiltering" class="publication-link"
+                                target="_blank">🧑‍💻code</a></li>
+                        <li><a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
+                                class="publication-link" target="_blank">🗨️slides</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
-        
+
             <div class="publication-summary">
                 <p>
                     <em>
-                        Winner of Best Student Paper Award at the <a href="https://sites.google.com/view/ssvm-2025/home-page">10th International Conference on Scale Space and Variational Methods in Computer Vision</a>.
+                        Winner of Best Student Paper Award at the <a
+                            href="https://sites.google.com/view/ssvm-2025/home-page">10th International Conference on
+                            Scale Space and Variational Methods in Computer Vision</a>.
                     </em>
                 </p>
                 <p>
@@ -241,49 +278,65 @@
                     from two dimensional Euclidean
                     space to the space of positions and orientations.
                     This has numerous advantages, e.g. making it possible to enhance and inpaint crossing structures,
-                    since they become disentangled when lifted. 
+                    since they become disentangled when lifted.
                     We create a version of the algorithm using gauge frames to mitigate issues caused by lifting to a
                     finite number of orientations. This leads us to study generalisations of diffusion, since the gauge
                     frame diffusion is not generated by the Laplace-Beltrami operator.
-                    RDS filtering compares favourably to existing techniques such as 
-                    <a href="https://doi.org/10.1007/s00211-019-01026-w">Total Roto-Translational Variation flow</a>, 
+                    RDS filtering compares favourably to existing techniques such as
+                    <a href="https://doi.org/10.1007/s00211-019-01026-w">Total Roto-Translational Variation flow</a>,
                     <a href="https://doi.org/10.5201/ipol.2011.bcm_nlm">Non-Local Means</a>, and
-                    <a href="https://doi.org/10.1109/TIP.2007.901238">BM3D</a> when denoising images with crossing structures, particularly if they are segmented.
+                    <a href="https://doi.org/10.1109/TIP.2007.901238">BM3D</a> when denoising images with crossing
+                    structures, particularly if they are segmented.
                     Additionally, we see that RDS inpainting on the space of positions and orientations is indeed able
                     to restore crossing structures, unlike its Euclidean counterpart.
                 </p>
             </div>
         </div>
-    
+
         <div class="publication" id="Crossing-Preserving Geodesic Tracking on Spherical Images">
             <h3 class="publication-title">Crossing-Preserving Geodesic Tracking on Spherical Images</h3>
-            <p class="publication-authors"><b><a href="https://nickyjvandenberg.com/">Nicky van den Berg</a></b>, <b>Finn Sherry</b>, <a href="https://cris.maastrichtuniversity.nl/en/persons/tos-berendschot">Tos Berendschot</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a></p>
+            <p class="publication-authors"><b><a href="https://nickyjvandenberg.com/">Nicky van den Berg</a></b>,
+                <b>Finn Sherry</b>, <a href="https://cris.maastrichtuniversity.nl/en/persons/tos-berendschot">Tos
+                    Berendschot</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
+            </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <ul>
                         <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_15" class="publication-link" target="_blank">🔒Springer</a></li>
-                        <li><a href="https://arxiv.org/abs/2504.03388" class="publication-link" target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/IterativeEikonal" class="publication-link" target="_blank">🧑‍💻code</a></li>
+                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_15" class="publication-link"
+                                target="_blank">🔒Springer</a></li>
+                        <li><a href="https://arxiv.org/abs/2504.03388" class="publication-link"
+                                target="_blank">🔓arXiv</a></li>
+                        <li><a href="https://github.com/finnsherry/IterativeEikonal" class="publication-link"
+                                target="_blank">🧑‍💻code</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
-        
+
             <div class="publication-summary">
                 <p>
                     <em>
-                        In the proceedings of the <a href="https://sites.google.com/view/ssvm-2025/home-page">10th International Conference on Scale Space and Variational Methods in Computer Vision</a>.
+                        In the proceedings of the <a href="https://sites.google.com/view/ssvm-2025/home-page">10th
+                            International Conference on Scale Space and Variational Methods in Computer Vision</a>.
                     </em>
                 </p>
                 <p>
-                    In image analysis one often encounters spherical images, for instance in retinal imaging. 
+                    In image analysis one often encounters spherical images, for instance in retinal imaging.
                     The behavior of the vessels in the retina is an indicator of several diseases.
-                    To automate disease diagnosis using retinal images,  it is necessary to develop an algorithm that automatically identifies and tracks vessels. 
-                    To deal with crossings due to projected blood vessels in the image it is common to lift retinal images to the space of <em>planar</em> positions and orientations. This implicitly assumes that the flat image accurately represents the geometry of the retina.
-                    As the eyeball is a sphere (and not a plane), we propose to compute the <em>cusp-free, crossing-preserving</em> geodesics in the space of <em>spherical</em> positions and orientations on wide-field images. We clarify how to relate both manifolds and compare the calculated geodesics. The results show clear advantages of crossing-preserving tracking over non-crossing-preserving tracking in the space of spherical positions and orientations, and are comparable to tracking results in the space of planar positions and orientations.
+                    To automate disease diagnosis using retinal images, it is necessary to develop an algorithm that
+                    automatically identifies and tracks vessels.
+                    To deal with crossings due to projected blood vessels in the image it is common to lift retinal
+                    images to the space of <em>planar</em> positions and orientations. This implicitly assumes that the
+                    flat image accurately represents the geometry of the retina.
+                    As the eyeball is a sphere (and not a plane), we propose to compute the <em>cusp-free,
+                        crossing-preserving</em> geodesics in the space of <em>spherical</em> positions and orientations
+                    on wide-field images. We clarify how to relate both manifolds and compare the calculated geodesics.
+                    The results show clear advantages of crossing-preserving tracking over non-crossing-preserving
+                    tracking in the space of spherical positions and orientations, and are comparable to tracking
+                    results in the space of planar positions and orientations.
                 </p>
-            </div>            
+            </div>
         </div>
     </div>
 
@@ -292,31 +345,54 @@
         <div class="publication" id="Self-Healing of Comb Polymer Vitrimers">
             <h3 class="publication-title">Self-Healing of Comb Polymer Vitrimers</h3>
             <p class="publication-authors">
-                Supervised by <a href="http://tps.phys.tue.nl/ellenbroek/">Wouter Ellenbroek</a> & <a href="https://www.baumeiergroup.com/team/b-baumeier">Björn Baumeier</a>
+                Supervised by <a href="http://tps.phys.tue.nl/ellenbroek/">Wouter Ellenbroek</a> & <a
+                    href="https://www.baumeiergroup.com/team/b-baumeier">Björn Baumeier</a>
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <ul>
-                        <li><a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf" class="publication-link" target="_blank">pure.tue.nl</a></li>
+                        <li><a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf"
+                                class="publication-link" target="_blank">pure.tue.nl</a></li>
                     </ul>
                 </div>
                 <span class="publication-year">2023</span>
             </div>
-        
+
             <div class="publication-summary">
                 <p>
                     <em>
-                        This thesis belongs to the graduation project of my combined Masters Industrial & Applied Mathematics and Applied Physics.
+                        This thesis belongs to the graduation project of my combined Masters Industrial & Applied
+                        Mathematics and Applied Physics.
                     </em>
                 </p>
                 <p>
-                    We investigate so-called <em>vitrimers</em>, polymer materials with reversible, associative bonds. Vitrimers can interpolate between traditional thermoplastics and thermosets. Due to the reversible nature of their bonds, they become malleable at high temperatures like thermoplastics, allowing them to heal damage. Since the bonds are additionally associative, however, at all times the total number of bonds is fixed: this makes vitrimers resistant to solvents and creep like thermosets.
+                    We investigate so-called <em>vitrimers</em>, polymer materials with reversible, associative bonds.
+                    Vitrimers can interpolate between traditional thermoplastics and thermosets. Due to the reversible
+                    nature of their bonds, they become malleable at high temperatures like thermoplastics, allowing them
+                    to heal damage. Since the bonds are additionally associative, however, at all times the total number
+                    of bonds is fixed: this makes vitrimers resistant to solvents and creep like thermosets.
                 </p>
                 <p>
-                    Previous (simulation) work by <a href="https://doi.org/10.3390/COATINGS9020114">Ciarella & Ellenbroek</a> has shown that vitrimers made of star-shaped polymers are particularly suitable for making strong, self-healing materials: they remain rigid on timescales around three orders of magnitude greater than their healing time. We seek to improve upon this result by using comb instead of star polymers, hypothesising that the networks will heal on similar timescales, which being stable for much longer due to the entanglement of the backbones.
+                    Previous (simulation) work by <a href="https://doi.org/10.3390/COATINGS9020114">Ciarella &
+                        Ellenbroek</a> has shown that vitrimers made of star-shaped polymers are particularly suitable
+                    for making strong, self-healing materials: they remain rigid on timescales around three orders of
+                    magnitude greater than their healing time. We seek to improve upon this result by using comb instead
+                    of star polymers, hypothesising that the networks will heal on similar timescales, which being
+                    stable for much longer due to the entanglement of the backbones.
                 </p>
                 <p>
-                    We first develop a simple theoretical model to predict the typical bond swap times in the network, and test this using Molecular Dynamics simulations; our model appears to extrapolate well outside of the data it was fitted on. The simulations additionally show that the swap times cannot be described by an exponential or Weibull distribution. Using these typical swap times, we derive an expression for the evolution of the number of bonds around damage and the equilibrium shear modulus. These models are again tested using Molecular Dynamics simulations. We see that the vitrimer networks based on combs indeed heal at similar speeds to the one based on stars, confirming the first part of our hypothesis. Finally, we measure the stress relaxation of a comb vitrimer network using Molecular Dynamics simulations to find the timescale on which the network is rigid. Unfortunately, we believe we have encountered an issue in the implementation of the dynamic bonds in simulations, causing us to observe a nonphysical stress relaxation; we therefore have been unable to test the second part of our hypothesis.
+                    We first develop a simple theoretical model to predict the typical bond swap times in the network,
+                    and test this using Molecular Dynamics simulations; our model appears to extrapolate well outside of
+                    the data it was fitted on. The simulations additionally show that the swap times cannot be described
+                    by an exponential or Weibull distribution. Using these typical swap times, we derive an expression
+                    for the evolution of the number of bonds around damage and the equilibrium shear modulus. These
+                    models are again tested using Molecular Dynamics simulations. We see that the vitrimer networks
+                    based on combs indeed heal at similar speeds to the one based on stars, confirming the first part of
+                    our hypothesis. Finally, we measure the stress relaxation of a comb vitrimer network using Molecular
+                    Dynamics simulations to find the timescale on which the network is rigid. Unfortunately, we believe
+                    we have encountered an issue in the implementation of the dynamic bonds in simulations, causing us
+                    to observe a nonphysical stress relaxation; we therefore have been unable to test the second part of
+                    our hypothesis.
                 </p>
             </div>
         </div>
@@ -340,4 +416,5 @@
     </script>
 
 </body>
+
 </html>

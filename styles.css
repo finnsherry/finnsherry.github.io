@@ -1,9 +1,13 @@
+:root {
+    --bg-colour: oklch(80% 0.1 200);
+}
+
 /* Base Styles */
 
 body {
     margin: 0;
     padding: 0;
-    background: hsl(195, 53%, 90%);
+    background: color-mix(in oklab, var(--bg-colour) 40%, white 60%);
     color: #333;
     font-family: 'Segoe UI', sans-serif;
     text-align: center;
@@ -72,7 +76,7 @@ img.responsive-image {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: hsl(195, 53%, 70%);
+    background: color-mix(in oklab, var(--bg-colour) 100%, white 0%);
     color: white;
     padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -83,6 +87,9 @@ img.responsive-image {
 .nav-left .nav-links {
     list-style: none;
     display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: wrap;
     gap: 15px;
     padding: 0;
     margin: 0;
@@ -105,7 +112,8 @@ img.responsive-image {
     font-weight: bold;
     list-style: none;
     display: flex;
-    justify-content: center; /* Center the content */
+    justify-content: center;
+    /* Center the content */
     width: 100%;
 }
 
@@ -129,40 +137,25 @@ img.responsive-image {
         align-items: center;
         text-align: center;
     }
-    
+
     .nav-right {
         order: -1;
-        width: 100%;
         text-align: center;
         margin-top: 10px;
         padding-bottom: 10px;
-    }
-
-    .nav-left .nav-links {
-        flex-direction: column;
-        width: 100%;
-        gap: 10px;
-        padding: 0;
-    }
-
-    .nav-left .nav-links li {
-        width: 100%;
-        text-align: center;
     }
 
     .inline-image {
         float: none;
         display: block;
         margin: 0 auto 15px auto;
-        width: 100%;
         max-width: 200px;
     }
 
-    .inline-video {  
+    .inline-video {
         float: none;
         display: block;
         margin: 0 auto 15px auto;
-        width: 100%;
         max-width: 500px;
     }
 

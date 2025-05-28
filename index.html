@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,8 +14,9 @@
             padding: 10px;
             text-align: center;
             display: flex;
+            flex-wrap: wrap;
             flex-direction: row;
-            justify-content: center;
+            justify-content: space-around;
             gap: 10px;
         }
 
@@ -69,7 +71,8 @@
             }
 
             .news-date {
-                order: -1; /* Moves the date above content */
+                order: -1;
+                /* Moves the date above content */
                 text-align: left;
                 width: auto;
                 margin-bottom: 5px;
@@ -78,20 +81,11 @@
             .news-content {
                 order: 0;
             }
-
-            .fixed-links {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .fixed-links a {
-                width: 100%;
-                box-sizing: border-box;
-            }
         }
     </style>
-    
+
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-left">
@@ -103,7 +97,9 @@
             </ul>
         </div>
         <div class="nav-right">
-            <span class="name"><li><a href="/">Finn Sherry</a></li></span>
+            <span class="name">
+                <li><a href="/">Finn Sherry</a></li>
+            </span>
         </div>
     </nav>
 
@@ -112,12 +108,24 @@
         <h1>About</h1>
         <p>
             <img src="/content/Pic.jpg" alt="Picture of me" class="inline-image" style="width: 200px;">
-            I'm a PhD candidate in Remco Duits' <a href="https://casa.win.tue.nl/home/geometric-learning-and-differential-geometry/">Geometric Learning & Differential Geometry</a> group at TU/e.
-            I am a part of the <a href="https://www.tue.nl/en/research/institutes/eindhoven-artificial-intelligence-systems-institute/">EAISI</a>-funded research project <em>"New Memory Efficient Geometric Learning for Automatic Crack Detection in Bridges"</em>. Our goal is to develop and improve Geometric Deep Learning (GDL) techniques. Current GDL algorithms, such as Group-equivariant Convolutional Neural Networks (G-CNNs), have a proven track record in low data applications, but often struggle when dealing with many large images. We are investigating various ways to make scaleable GDL algorithms, e.g. by reducing their memory footprint. In the end, we hope to apply our new techniques to automate the detection of cracks in infrastructure: the vast quantity of high resolution images in this application makes current GDL methods impractical.
+            I'm a PhD candidate in Remco Duits' <a
+                href="https://casa.win.tue.nl/home/geometric-learning-and-differential-geometry/">Geometric Learning &
+                Differential Geometry</a> group at TU/e.
+            I am a part of the <a
+                href="https://www.tue.nl/en/research/institutes/eindhoven-artificial-intelligence-systems-institute/">EAISI</a>-funded
+            research project <em>"New Memory Efficient Geometric Learning for Automatic Crack Detection in
+                Bridges"</em>. Our goal is to develop and improve Geometric Deep Learning (GDL) techniques. Current GDL
+            algorithms, such as Group-equivariant Convolutional Neural Networks (G-CNNs), have a proven track record in
+            low data applications, but often struggle when dealing with many large images. We are investigating various
+            ways to make scaleable GDL algorithms, e.g. by reducing their memory footprint. In the end, we hope to apply
+            our new techniques to automate the detection of cracks in infrastructure: the vast quantity of high
+            resolution images in this application makes current GDL methods impractical.
         </p>
         <p>
-            In addition to machine learning and (differential) geometry, I like analysis, PDE theory, and mathematical physics.
-            I am also interested in history, particularly classical antiquity, and I'm a member of the Dutch classics association <a href="https://nederlandsklassiekverbond.nl/">NKV</a>.
+            In addition to machine learning and (differential) geometry, I like analysis, PDE theory, and mathematical
+            physics.
+            I am also interested in history, particularly classical antiquity, and I'm a member of the Dutch classics
+            association <a href="https://nederlandsklassiekverbond.nl/">NKV</a>.
         </p>
 
         <!-- Fixed Links -->
@@ -134,7 +142,10 @@
             <div class="news-item">
                 <div class="news-date">2025-05-23</div>
                 <div class="news-content">
-                    My paper <a href="https://arxiv.org/abs/2502.17146">Diffusion-Shock Filtering on the Space of Positions and Orientations</a> won the Best Student Paper Award at SSVM 2025! <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO">These</a> are the slides I used for my oral presentation.
+                    My paper <a href="https://arxiv.org/abs/2502.17146">Diffusion-Shock Filtering on the Space of
+                        Positions and Orientations</a> won the Best Student Paper Award at SSVM 2025! <a
+                        href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO">These</a>
+                    are the slides I used for my oral presentation.
                 </div>
             </div>
 
@@ -144,8 +155,9 @@
                     Submitted two papers to GSI 2025! Check them out now:
                     <ul>
                         <li><a href="https://arxiv.org/abs/2504.00494">Flow Matching on Lie Groups</a>,</li>
-                        <li><a href="https://arxiv.org/abs/2504.00702">Orientation Scores should be a Piece of Cake</a>.</li>
-                    </ul> 
+                        <li><a href="https://arxiv.org/abs/2504.00702">Orientation Scores should be a Piece of Cake</a>.
+                        </li>
+                    </ul>
                 </div>
             </div>
 
@@ -154,9 +166,11 @@
                 <div class="news-content">
                     My first two papers have been accepted in SSVM 2025! Check them out now:
                     <ul>
-                        <li><a href="https://arxiv.org/abs/2502.17146">Diffusion-Shock Filtering on the Space of Positions and Orientations</a>,</li>
-                        <li><a href="https://arxiv.org/abs/2504.03388">Crossing-Preserving Geodesic Tracking on Spherical Images</a>.</li>
-                    </ul> 
+                        <li><a href="https://arxiv.org/abs/2502.17146">Diffusion-Shock Filtering on the Space of
+                                Positions and Orientations</a>,</li>
+                        <li><a href="https://arxiv.org/abs/2504.03388">Crossing-Preserving Geodesic Tracking on
+                                Spherical Images</a>.</li>
+                    </ul>
                 </div>
             </div>
 
@@ -170,4 +184,5 @@
     </div>
 
 </body>
+
 </html>
