@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="/styles.css">
     <style>
         .publication {
-            background: color-mix(in oklab, var(--bg-colour) 20%, white 80%);
+            background: color-mix(in oklab, var(--bg-colour) 10%, white 90%);
             border: 1px solid #ddd;
-            padding: 20px;
+            padding: 15px;
             margin-bottom: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -23,48 +23,49 @@
         }
 
         .publication-title {
-            font-size: 1.5em;
+            font-size: 1.25em;
             font-weight: bold;
+            text-align: left;
             margin-bottom: 10px;
         }
 
         .publication-authors {
             font-style: italic;
+            text-align: left;
             color: #555;
             margin-bottom: 10px;
         }
 
         .publication-footer {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
-            align-items: center;
             margin-top: 10px;
-            font-size: 0.9em;
         }
 
         .publication-link {
             text-decoration: none;
             font-family: 'Courier New';
             font-weight: bold;
-            color: #007bff;
-            font-weight: bold;
+            color: var(--link-colour)
+
         }
 
         .publication-link:hover {
-            color: #0056b3;
+            color: var(--link-hover-colour);
         }
 
         .publication-year {
             color: #666;
             font-weight: bold;
+            margin-left: 10px;
         }
 
         .publication-summary {
             display: none;
-            margin-top: 20px;
-            color: #444;
-            background: color-mix(in oklab, var(--bg-colour) 5%, white 95%);
-            padding: 15px;
+            margin-top: 10px;
+            background: color-mix(in oklab, var(--bg-colour) 1%, white 99%);
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
@@ -79,55 +80,29 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            display: flex;
-            gap: 10px;
-            align-items: center;
+            display: block;
+            text-align: center;
         }
 
         .horizontal-links ul li {
             display: inline-flex;
+            flex-wrap: wrap;
             align-items: center;
         }
 
         .horizontal-links ul li:not(:last-child)::after {
             content: '•';
             margin-left: 10px;
-            color: #333;
         }
 
         .horizontal-links ul li a {
             text-decoration: none;
-            color: #007bff;
+            color: var(--link-colour);
             font-weight: bold;
         }
 
         .horizontal-links ul li a:hover {
-            color: #0056b3;
-        }
-
-        @media (max-width: 768px) {
-            .publication {
-                padding: 15px;
-                text-align: left;
-            }
-
-            .publication-title {
-                font-size: 1.2em;
-            }
-
-            .publication-authors {
-                font-size: 0.95em;
-            }
-
-            .publication-year {
-                font-size: 0.9em;
-            }
-
-            .publication-footer {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
+            color: var(--link-hover-colour)
         }
     </style>
 </head>
@@ -150,6 +125,106 @@
     </nav>
 
     <!-- Main Content -->
+    <div class="content-container" id="conference">
+        <h1>Conference Submissions</h1>
+        <div class="publication" id="Diffusion-Shock Filtering on the Space of Positions and Orientations">
+            <h3 class="publication-title">Diffusion-Shock Filtering on the Space of Positions and Orientations</h3>
+            <p class="publication-authors">
+                <b>Finn Sherry</b>, <a href="https://www.mia.uni-saarland.de/schaefer/index.shtml">Kristina
+                    Schaefer</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
+            </p>
+            <div class="publication-footer">
+                <div class="horizontal-links">
+                    <ul>
+                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_16" class="publication-link"
+                                target="_blank">🔒Springer</a></li>
+                        <li><a href="https://arxiv.org/abs/2502.17146" class="publication-link"
+                                target="_blank">🔓arXiv</a></li>
+                        <li><a href="https://github.com/finnsherry/M2RDSFiltering" class="publication-link"
+                                target="_blank">🧑‍💻code</a></li>
+                        <li><a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
+                                class="publication-link" target="_blank">🗨️slides</a></li>
+                    </ul>
+                </div>
+                <span class="publication-year">2025</span>
+            </div>
+
+            <div class="publication-summary">
+                <p>
+                    <em>
+                        Winner of Best Student Paper Award at the <a
+                            href="https://sites.google.com/view/ssvm-2025/home-page">10th International Conference on
+                            Scale Space and Variational Methods in Computer Vision</a>.
+                    </em>
+                </p>
+                <p>
+                    We extend
+                    <a href="https://doi.org/10.1007/s10851-024-01175-0">Regularised Diffusion-Shock (RDS) filtering</a>
+                    from two dimensional Euclidean
+                    space to the space of positions and orientations.
+                    This has numerous advantages, e.g. making it possible to enhance and inpaint crossing structures,
+                    since they become disentangled when lifted.
+                    We create a version of the algorithm using gauge frames to mitigate issues caused by lifting to a
+                    finite number of orientations. This leads us to study generalisations of diffusion, since the gauge
+                    frame diffusion is not generated by the Laplace-Beltrami operator.
+                    RDS filtering compares favourably to existing techniques such as
+                    <a href="https://doi.org/10.1007/s00211-019-01026-w">Total Roto-Translational Variation flow</a>,
+                    <a href="https://doi.org/10.5201/ipol.2011.bcm_nlm">Non-Local Means</a>, and
+                    <a href="https://doi.org/10.1109/TIP.2007.901238">BM3D</a> when denoising images with crossing
+                    structures, particularly if they are segmented.
+                    Additionally, we see that RDS inpainting on the space of positions and orientations is indeed able
+                    to restore crossing structures, unlike its Euclidean counterpart.
+                </p>
+            </div>
+        </div>
+
+        <div class="publication" id="Crossing-Preserving Geodesic Tracking on Spherical Images">
+            <h3 class="publication-title">Crossing-Preserving Geodesic Tracking on Spherical Images</h3>
+            <p class="publication-authors"><b><a href="https://nickyjvandenberg.com/">Nicky van den Berg</a></b>,
+                <b>Finn Sherry</b>, <a href="https://cris.maastrichtuniversity.nl/en/persons/tos-berendschot">Tos
+                    Berendschot</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
+            </p>
+            <div class="publication-footer">
+                <div class="horizontal-links">
+                    <ul>
+                        <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
+                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_15" class="publication-link"
+                                target="_blank">🔒Springer</a></li>
+                        <li><a href="https://arxiv.org/abs/2504.03388" class="publication-link"
+                                target="_blank">🔓arXiv</a></li>
+                        <li><a href="https://github.com/finnsherry/IterativeEikonal" class="publication-link"
+                                target="_blank">🧑‍💻code</a></li>
+                    </ul>
+                </div>
+                <span class="publication-year">2025</span>
+            </div>
+
+            <div class="publication-summary">
+                <p>
+                    <em>
+                        In the proceedings of the <a href="https://sites.google.com/view/ssvm-2025/home-page">10th
+                            International Conference on Scale Space and Variational Methods in Computer Vision</a>.
+                    </em>
+                </p>
+                <p>
+                    In image analysis one often encounters spherical images, for instance in retinal imaging.
+                    The behavior of the vessels in the retina is an indicator of several diseases.
+                    To automate disease diagnosis using retinal images, it is necessary to develop an algorithm that
+                    automatically identifies and tracks vessels.
+                    To deal with crossings due to projected blood vessels in the image it is common to lift retinal
+                    images to the space of <em>planar</em> positions and orientations. This implicitly assumes that the
+                    flat image accurately represents the geometry of the retina.
+                    As the eyeball is a sphere (and not a plane), we propose to compute the <em>cusp-free,
+                        crossing-preserving</em> geodesics in the space of <em>spherical</em> positions and orientations
+                    on wide-field images. We clarify how to relate both manifolds and compare the calculated geodesics.
+                    The results show clear advantages of crossing-preserving tracking over non-crossing-preserving
+                    tracking in the space of spherical positions and orientations, and are comparable to tracking
+                    results in the space of planar positions and orientations.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <div class="content-container" id="preprints">
         <h1>Preprints</h1>
         <div class="publication" id="Flow Matching on Lie Groups">
@@ -240,104 +315,6 @@
                 </p>
             </div>
         </div>
-
-        <div class="publication" id="Diffusion-Shock Filtering on the Space of Positions and Orientations">
-            <h3 class="publication-title">Diffusion-Shock Filtering on the Space of Positions and Orientations</h3>
-            <p class="publication-authors">
-                <b>Finn Sherry</b>, <a href="https://www.mia.uni-saarland.de/schaefer/index.shtml">Kristina
-                    Schaefer</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
-            </p>
-            <div class="publication-footer">
-                <div class="horizontal-links">
-                    <ul>
-                        <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_16" class="publication-link"
-                                target="_blank">🔒Springer</a></li>
-                        <li><a href="https://arxiv.org/abs/2502.17146" class="publication-link"
-                                target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/M2RDSFiltering" class="publication-link"
-                                target="_blank">🧑‍💻code</a></li>
-                        <li><a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
-                                class="publication-link" target="_blank">🗨️slides</a></li>
-                    </ul>
-                </div>
-                <span class="publication-year">2025</span>
-            </div>
-
-            <div class="publication-summary">
-                <p>
-                    <em>
-                        Winner of Best Student Paper Award at the <a
-                            href="https://sites.google.com/view/ssvm-2025/home-page">10th International Conference on
-                            Scale Space and Variational Methods in Computer Vision</a>.
-                    </em>
-                </p>
-                <p>
-                    We extend
-                    <a href="https://doi.org/10.1007/s10851-024-01175-0">Regularised Diffusion-Shock (RDS) filtering</a>
-                    from two dimensional Euclidean
-                    space to the space of positions and orientations.
-                    This has numerous advantages, e.g. making it possible to enhance and inpaint crossing structures,
-                    since they become disentangled when lifted.
-                    We create a version of the algorithm using gauge frames to mitigate issues caused by lifting to a
-                    finite number of orientations. This leads us to study generalisations of diffusion, since the gauge
-                    frame diffusion is not generated by the Laplace-Beltrami operator.
-                    RDS filtering compares favourably to existing techniques such as
-                    <a href="https://doi.org/10.1007/s00211-019-01026-w">Total Roto-Translational Variation flow</a>,
-                    <a href="https://doi.org/10.5201/ipol.2011.bcm_nlm">Non-Local Means</a>, and
-                    <a href="https://doi.org/10.1109/TIP.2007.901238">BM3D</a> when denoising images with crossing
-                    structures, particularly if they are segmented.
-                    Additionally, we see that RDS inpainting on the space of positions and orientations is indeed able
-                    to restore crossing structures, unlike its Euclidean counterpart.
-                </p>
-            </div>
-        </div>
-
-        <div class="publication" id="Crossing-Preserving Geodesic Tracking on Spherical Images">
-            <h3 class="publication-title">Crossing-Preserving Geodesic Tracking on Spherical Images</h3>
-            <p class="publication-authors"><b><a href="https://nickyjvandenberg.com/">Nicky van den Berg</a></b>,
-                <b>Finn Sherry</b>, <a href="https://cris.maastrichtuniversity.nl/en/persons/tos-berendschot">Tos
-                    Berendschot</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
-            </p>
-            <div class="publication-footer">
-                <div class="horizontal-links">
-                    <ul>
-                        <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_15" class="publication-link"
-                                target="_blank">🔒Springer</a></li>
-                        <li><a href="https://arxiv.org/abs/2504.03388" class="publication-link"
-                                target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/IterativeEikonal" class="publication-link"
-                                target="_blank">🧑‍💻code</a></li>
-                    </ul>
-                </div>
-                <span class="publication-year">2025</span>
-            </div>
-
-            <div class="publication-summary">
-                <p>
-                    <em>
-                        In the proceedings of the <a href="https://sites.google.com/view/ssvm-2025/home-page">10th
-                            International Conference on Scale Space and Variational Methods in Computer Vision</a>.
-                    </em>
-                </p>
-                <p>
-                    In image analysis one often encounters spherical images, for instance in retinal imaging.
-                    The behavior of the vessels in the retina is an indicator of several diseases.
-                    To automate disease diagnosis using retinal images, it is necessary to develop an algorithm that
-                    automatically identifies and tracks vessels.
-                    To deal with crossings due to projected blood vessels in the image it is common to lift retinal
-                    images to the space of <em>planar</em> positions and orientations. This implicitly assumes that the
-                    flat image accurately represents the geometry of the retina.
-                    As the eyeball is a sphere (and not a plane), we propose to compute the <em>cusp-free,
-                        crossing-preserving</em> geodesics in the space of <em>spherical</em> positions and orientations
-                    on wide-field images. We clarify how to relate both manifolds and compare the calculated geodesics.
-                    The results show clear advantages of crossing-preserving tracking over non-crossing-preserving
-                    tracking in the space of spherical positions and orientations, and are comparable to tracking
-                    results in the space of planar positions and orientations.
-                </p>
-            </div>
-        </div>
     </div>
 
     <div class="content-container" id="theses">
@@ -411,6 +388,7 @@
                 }
             });
         }
+        addToggleEvent(document.getElementById('conference'));
         addToggleEvent(document.getElementById('preprints'));
         addToggleEvent(document.getElementById('theses'));
     </script>

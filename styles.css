@@ -1,5 +1,7 @@
 :root {
-    --bg-colour: oklch(80% 0.1 200);
+    --bg-colour: oklch(80% 0.1 195);
+    --link-colour: #007bff;
+    --link-hover-colour: #0056b3;
 }
 
 /* Base Styles */
@@ -7,10 +9,15 @@
 body {
     margin: 0;
     padding: 0;
-    background: color-mix(in oklab, var(--bg-colour) 40%, white 60%);
+    background: color-mix(in oklab, var(--bg-colour) 10%, white 90%);
     color: #333;
     font-family: 'Segoe UI', sans-serif;
     text-align: center;
+    font-size: 15px;
+}
+
+h1 {
+    font-size: 1.8em;
 }
 
 /* Content Container */
@@ -19,12 +26,10 @@ body {
     max-width: 120ch;
     width: 95%;
     margin: 0 auto;
-    padding: 20px;
     text-align: justify;
 }
 
 .content-container p {
-    font-size: 18px;
     color: #333;
 }
 
@@ -33,6 +38,7 @@ body {
 .inline-image {
     float: right;
     margin: 0 0 10px 15px;
+    max-width: 100%;
     width: 200px;
     height: auto;
     object-fit: cover;
@@ -45,19 +51,11 @@ body {
 }
 
 img.responsive-image {
-    max-width: 120ch;
-    width: 80%;
+    max-width: 100%;
+    width: 300px;
     height: auto;
     display: block;
     margin: 0 auto;
-}
-
-.inline-video {
-    float: right;
-    margin: 0 0 10px 15px;
-    height: auto;
-    object-fit: cover;
-    object-position: top;
 }
 
 /* Clearfix */
@@ -74,6 +72,7 @@ img.responsive-image {
     position: sticky;
     top: 0;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     background: color-mix(in oklab, var(--bg-colour) 100%, white 0%);
@@ -81,7 +80,7 @@ img.responsive-image {
     padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     z-index: 1000;
-    flex-wrap: wrap;
+    font-size: 1.25em;
 }
 
 .nav-left .nav-links {
@@ -104,11 +103,10 @@ img.responsive-image {
 }
 
 .nav-left .nav-links li a:hover {
-    background-color: #0056b3;
+    background-color: var(--link-hover-colour);
 }
 
 .nav-right .name {
-    font-size: 18px;
     font-weight: bold;
     list-style: none;
     display: flex;
@@ -126,16 +124,14 @@ img.responsive-image {
 }
 
 .nav-right .name li a:hover {
-    background-color: #0056b3;
+    background-color: var(--link-hover-colour);
 }
 
 /* Responsive Adjustments */
 
-@media (max-width: 768px) {
+@media (max-width: 520px) {
     .navbar {
         flex-direction: column;
-        align-items: center;
-        text-align: center;
     }
 
     .nav-right {
@@ -148,19 +144,7 @@ img.responsive-image {
     .inline-image {
         float: none;
         display: block;
-        margin: 0 auto 15px auto;
-        max-width: 200px;
-    }
-
-    .inline-video {
-        float: none;
-        display: block;
-        margin: 0 auto 15px auto;
-        max-width: 500px;
-    }
-
-    .content-container p {
-        font-size: 16px;
+        margin: auto;
     }
 
     .content-container {
