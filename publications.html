@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/styles.css">
     <style>
         .publication {
-            background: color-mix(in oklab, var(--bg-colour) 10%, white 90%);
+            background: var(--pub-colour);
             border: 1px solid #ddd;
             padding: 15px;
             margin-bottom: 20px;
@@ -43,18 +43,6 @@
             margin-top: 10px;
         }
 
-        .publication-link {
-            text-decoration: none;
-            font-family: 'Courier New';
-            font-weight: bold;
-            color: var(--link-colour)
-
-        }
-
-        .publication-link:hover {
-            color: var(--link-hover-colour);
-        }
-
         .publication-year {
             color: #666;
             font-weight: bold;
@@ -64,7 +52,7 @@
         .publication-summary {
             display: none;
             margin-top: 10px;
-            background: color-mix(in oklab, var(--bg-colour) 1%, white 99%);
+            background: var(--pubsum-colour);
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
@@ -74,35 +62,6 @@
         h3 {
             margin: 0;
             padding: 0;
-        }
-
-        .horizontal-links ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: block;
-            text-align: center;
-        }
-
-        .horizontal-links ul li {
-            display: inline-flex;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .horizontal-links ul li:not(:last-child)::after {
-            content: '•';
-            margin-left: 10px;
-        }
-
-        .horizontal-links ul li a {
-            text-decoration: none;
-            color: var(--link-colour);
-            font-weight: bold;
-        }
-
-        .horizontal-links ul li a:hover {
-            color: var(--link-hover-colour)
         }
     </style>
 </head>
@@ -135,16 +94,15 @@
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
-                    <ul>
-                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_16" class="publication-link"
-                                target="_blank">🔒Springer</a></li>
-                        <li><a href="https://arxiv.org/abs/2502.17146" class="publication-link"
-                                target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/M2RDSFiltering" class="publication-link"
-                                target="_blank">🧑‍💻code</a></li>
-                        <li><a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
-                                class="publication-link" target="_blank">🗨️slides</a></li>
-                    </ul>
+                    <p style="text-align: center;">
+                        <a href="https://doi.org/10.1007/978-3-031-92369-2_16"
+                                target="_blank">🔒Springer</a> •
+                        <a href="https://arxiv.org/abs/2502.17146"
+                                target="_blank">🔓arXiv</a> •
+                        <a href="https://github.com/finnsherry/M2RDSFiltering"
+                                target="_blank">🧑‍💻code</a> •
+                        <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO" target="_blank">🗨️slides</a>
+                    </p>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
@@ -186,15 +144,14 @@
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
-                    <ul>
-                        <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://doi.org/10.1007/978-3-031-92369-2_15" class="publication-link"
-                                target="_blank">🔒Springer</a></li>
-                        <li><a href="https://arxiv.org/abs/2504.03388" class="publication-link"
-                                target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/IterativeEikonal" class="publication-link"
-                                target="_blank">🧑‍💻code</a></li>
-                    </ul>
+                    <p style="text-align: center;">
+                        <a href="https://doi.org/10.1007/978-3-031-92369-2_15"
+                                target="_blank">🔒Springer</a> • 
+                        <a href="https://arxiv.org/abs/2504.03388"
+                                target="_blank">🔓arXiv</a> • 
+                        <a href="https://github.com/finnsherry/IterativeEikonal"
+                                target="_blank">🧑‍💻code</a>
+                    </p>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
@@ -234,13 +191,12 @@
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
-                    <ul>
-                        <!-- <li><a href="" class="publication-link" target="_blank">arXiv</a></li> -->
-                        <li><a href="https://arxiv.org/abs/2504.00494" class="publication-link"
-                                target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://github.com/finnsherry/FlowMatching" class="publication-link"
-                                target="_blank">🧑‍💻code</a></li>
-                    </ul>
+                    <p style="text-align: center;">
+                        <a href="https://arxiv.org/abs/2504.00494"
+                                target="_blank">🔓arXiv</a> •
+                        <a href="https://github.com/finnsherry/FlowMatching"
+                                target="_blank">🧑‍💻code</a>
+                    </p>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
@@ -284,12 +240,12 @@
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
-                    <ul>
-                        <li><a href="https://arxiv.org/abs/2504.00702" class="publication-link"
-                                target="_blank">🔓arXiv</a></li>
-                        <li><a href="https://gitlab.com/finn491/lietorch" class="publication-link"
-                                target="_blank">🧑‍💻code</a></li>
-                    </ul>
+                    <p style="text-align: center;">
+                        <a href="https://arxiv.org/abs/2504.00702"
+                                target="_blank">🔓arXiv</a> •
+                        <a href="https://gitlab.com/finn491/lietorch"
+                                target="_blank">🧑‍💻code</a>
+                    </p>
                 </div>
                 <span class="publication-year">2025</span>
             </div>
@@ -327,10 +283,9 @@
             </p>
             <div class="publication-footer">
                 <div class="horizontal-links">
-                    <ul>
-                        <li><a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf"
-                                class="publication-link" target="_blank">pure.tue.nl</a></li>
-                    </ul>
+                    <p style="text-align: center;">
+                        <a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf" target="_blank">pure.tue.nl</a>
+                    </p>
                 </div>
                 <span class="publication-year">2023</span>
             </div>

@@ -9,37 +9,17 @@
         .random-section {
             display: flex;
             flex-direction: column;
+            flex-wrap: wrap;
             gap: 20px;
         }
 
         .random-item {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 20px;
-            align-items: start;
+            display: flex;
+            flex-wrap: wrap;
         }
 
         .random-item .p {
             text-align: justify;
-        }
-
-        @media (max-width: 768px) {
-            .random-section {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-            }
-
-            .random-item {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                align-items: start;
-            }
-
-            .random-item .p {
-                text-align: justify;
-            }
         }
     </style>
 </head>

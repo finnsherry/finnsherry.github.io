@@ -1,7 +1,11 @@
 :root {
-    --bg-colour: oklch(80% 0.1 195);
-    --link-colour: #007bff;
-    --link-hover-colour: #0056b3;
+    --base-colour: oklch(80% 0.1 195);
+    --bg-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
+    --navbar-colour: color-mix(in oklab, var(--base-colour) 100%, white 0%);
+    --pub-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
+    --pubsum-colour: color-mix(in oklab, var(--base-colour) 1%, white 99%);
+    --link-colour: oklch(60% 0.35 210);
+    --link-hover-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
 }
 
 /* Base Styles */
@@ -9,21 +13,26 @@
 body {
     margin: 0;
     padding: 0;
-    background: color-mix(in oklab, var(--bg-colour) 10%, white 90%);
+    background: var(--bg-colour);
     color: #333;
     font-family: 'Segoe UI', sans-serif;
     text-align: center;
-    font-size: 15px;
+    font-size: 18px;
 }
 
 h1 {
     font-size: 1.8em;
 }
 
+a {
+    text-decoration: none;
+    color: var(--link-colour);
+}
+
 /* Content Container */
 
 .content-container {
-    max-width: 120ch;
+    max-width: 1024px;
     width: 95%;
     margin: 0 auto;
     text-align: justify;
@@ -75,7 +84,7 @@ img.responsive-image {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    background: color-mix(in oklab, var(--bg-colour) 100%, white 0%);
+    background: var(--navbar-colour);
     color: white;
     padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -96,7 +105,6 @@ img.responsive-image {
 
 .nav-left .nav-links li a {
     color: white;
-    text-decoration: none;
     padding: 5px 10px;
     border-radius: 5px;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -117,7 +125,6 @@ img.responsive-image {
 
 .nav-right .name li a {
     color: white;
-    text-decoration: none;
     padding: 5px 10px;
     border-radius: 5px;
     transition: background-color 0.3s ease, color 0.3s ease;
@@ -125,6 +132,26 @@ img.responsive-image {
 
 .nav-right .name li a:hover {
     background-color: var(--link-hover-colour);
+}
+
+/* Links */
+
+.publication-link {
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+}
+
+.horizontal-links a {
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    padding: 5px 10px;
+    border-radius: 3px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.horizontal-links a:hover {
+    background-color: var(--link-hover-colour);
+    color: white;
 }
 
 /* Responsive Adjustments */
