@@ -1,4 +1,5 @@
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,6 +7,7 @@
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-left">
@@ -17,7 +19,9 @@
             </ul>
         </div>
         <div class="nav-right">
-            <span class="name"><li><a href="/">Finn Sherry</a></li></span>
+            <span class="name">
+                <li><a href="/">Finn Sherry</a></li>
+            </span>
         </div>
     </nav>
 
@@ -26,29 +30,49 @@
         <div class="content-container">
             <h1>Flow Matching on Lie Groups</h1>
             <p>
-                In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494" class="publication-link" target="_blank">arXiv</a>, <a href="https://github.com/finnsherry/FlowMatching" class="publication-link" target="_blank">code</a>), we develop a new technique for generative modelling on Lie groups, generalising <a href="https://arxiv.org/abs/2412.06264">Flow Matching by Lipman et al.</a> As the name implies, this works by flowing data from an initial to a target distribution. Here are some nice videos of this in action.
+                In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494" class="publication-link"
+                    target="_blank">arXiv</a>, <a href="https://github.com/finnsherry/FlowMatching"
+                    class="publication-link" target="_blank">code</a>), we develop a new technique for generative
+                modelling on Lie groups, generalising <a href="https://arxiv.org/abs/2412.06264">Flow Matching by Lipman
+                    et al.</a> As the name implies, this works by flowing data from an initial to a target distribution.
+                Here are some nice videos of this in action.
             </p>
             <p>
-                In this first example, we perform flow matching on the special Euclidean group of roto-translations, SE(2). Since SE(2) is diffeomorphic to the space of planar positions and orientations, we can represent any roto-translation as a position and orientation, i.e. an arrow on the plane.
+                In this first example, we perform flow matching on the special Euclidean group of roto-translations,
+                SE(2). Since SE(2) is diffeomorphic to the space of planar positions and orientations, we can represent
+                any roto-translation as a position and orientation, i.e. an arrow on the plane.
             </p>
-                <video autoplay loop controls style=" max-width: 100%; width: 500px; display: block; margin: auto;">
-                    <source src="/random/flow_matching_SE2.mp4" type="video/mp4"/>
+            <div class="video-wrapper" style="aspect-ratio: 1 / 1;">
+                <video autoplay loop style="width: 100%; display: block; margin: auto; object-fit: cover;">
+                    <source src="/random/flow_matching_SE2.mp4" type="video/mp4" />
                 </video>
-            <p>    
-                We add a bit of noise to both distributions such that their supports are homotopic. This is necessary since flows are always homotopies: it is therefore impossible to learn a flow between distributions whose supports aren't homotopic.
+            </div>
+            <p>
+                We add a bit of noise to both distributions such that their supports are homotopic. This is necessary
+                since flows are always homotopies: it is therefore impossible to learn a flow between distributions
+                whose supports aren't homotopic.
             </p>
             <p>
-                For the next example, we perform flow matching on the special orthogonal group of rotations, SO(3). Like SE(2), SO(3) is diffeomorphic to a space of positions and orientations; now it is the space of spherical positions and orientations. Hence, we can represent rotations with an arrow on the sphere.
+                For the next example, we perform flow matching on the special orthogonal group of rotations, SO(3). Like
+                SE(2), SO(3) is diffeomorphic to a space of positions and orientations; now it is the space of spherical
+                positions and orientations. Hence, we can represent rotations with an arrow on the sphere.
             </p>
-                <video autoplay loop controls style=" max-width: 100%; width: 500px; display: block; margin: auto;">
-                    <source src="/random/flow_matching_SO3_vertical_line_to_circle.mp4" type="video/mp4"/>
+            <div class="video-wrapper" style="aspect-ratio: 1 / 1;">
+                <video autoplay loop
+                    style="width: 120%; height: 120%; display: block; top: -10%; left: -10%; transform: translate(-10%, -10%); object-fit: cover;">
+                    <source src="/random/flow_matching_SO3_vertical_line_to_circle.mp4" type="video/mp4" />
                 </video>
+            </div>
             <p>
-                Flow Matching can be performed on Lie groups with a surjective exponential map. On matrix groups, the implementation is particularly straightforward, since then the required group operations are simply given by their matrix equivalents. It is also easy to work with (direct) products of Lie groups: the exponential curves can simply be computed on the subgroups and combined.
+                Flow Matching can be performed on Lie groups with a surjective exponential map. On matrix groups, the
+                implementation is particularly straightforward, since then the required group operations are simply
+                given by their matrix equivalents. It is also easy to work with (direct) products of Lie groups: the
+                exponential curves can simply be computed on the subgroups and combined.
             </p>
         </div>
     </div>
-    
+
 
 </body>
+
 </html>
