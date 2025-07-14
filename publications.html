@@ -84,6 +84,11 @@
     </nav>
 
     <!-- Main Content -->
+    <!-- <div class="content-container" id="journal">
+        <h1>Journal Articles</h1>
+
+    </div> -->
+
     <div class="content-container" id="conference">
         <h1>Conference Submissions</h1>
 
@@ -334,22 +339,26 @@
         </div>
     </div>
 
-    <!-- Make articles interactable -->
     <script>
-        function addToggleEvent(container) {
-            container.addEventListener('click', function (event) {
-                const publication = event.target.closest('.publication');
-                if (publication) {
-                    const summary = publication.querySelector('.publication-summary');
-                    if (summary) {
-                        summary.style.display = summary.style.display === 'none' || !summary.style.display ? 'block' : 'none';
+        function addToggleEvent(containerId) {
+            container = document.getElementById(containerId);
+            if (container) {
+                container.addEventListener('click', function (event) {
+                    const publication = event.target.closest('.publication');
+                    if (publication) {
+                        const summary = publication.querySelector('.publication-summary');
+                        if (summary) {
+                            summary.style.display = summary.style.display === 'none' || !summary.style.display ? 'block' : 'none';
+                        }
                     }
-                }
-            });
+                });
+            }
+            
         }
-        addToggleEvent(document.getElementById('conference'));
-        addToggleEvent(document.getElementById('preprints'));
-        addToggleEvent(document.getElementById('theses'));
+        addToggleEvent('journal');
+        addToggleEvent('conference');
+        addToggleEvent('preprints');
+        addToggleEvent('theses');
     </script>
 
 </body>
