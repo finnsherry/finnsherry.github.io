@@ -8,13 +8,6 @@
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <style>
-        .random-section {
-            display: flex;
-            flex-direction: column;
-            flex-wrap: wrap;
-            gap: 1em;
-        }
-
         .random-item {
             display: flex;
             flex-wrap: wrap;
@@ -31,44 +24,34 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <div class="nav-left">
-            <ul class="nav-links">
-                <li><a href="/">Home</a></li>
-                <li><a href="/publications">Publications</a></li>
-                <!-- <li><a href="/teaching">Teaching</a></li> -->
-                <li><a href="/random">Random</a></li>
-            </ul>
+    <header>
+        <div id="nav">
+            <a class="navlink" href="/">Home</a>
+            <a class="navlink" href="/publications">Publications</a>
+            <!-- <a class="navlink" href="/teaching">Teaching</a> -->
+            <a class="navlink" href="/random">Random</a>
         </div>
-        <div class="nav-right">
-            <span class="name">
-                <li><a href="/">Finn Sherry</a></li>
-            </span>
-        </div>
-    </nav>
+        <a id="home" href="/">Finn Sherry</a>
+    </header>
 
-    <!-- Main Content -->
-    <div class="content">
+    <main>
         <div class="content-container">
-            <div class="random-section">
-                <h1>Random</h1>
-                <div class="random-item">
-                    <a class="random-item-title" href="/random/flow_matching_on_lie_groups">Flow Matching on Lie
-                        Groups:</a>
-                    <div> In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494"
-                            class="publication-link" target="_blank">arXiv</a>, <a
-                            href="https://github.com/finnsherry/FlowMatching" class="publication-link"
-                            target="_blank">code</a>), we develop a new technique for generative modelling on Lie
-                        groups, generalising <a href="https://arxiv.org/abs/2412.06264">Flow Matching by Lipman et
-                            al.</a> As the name implies, this works by flowing data from an initial to a target
-                        distribution. <a href="/random/flow_matching_on_lie_groups">Here</a> are some nice videos of
-                        this in action.
-                    </div>
+            <h1>Random</h1>
+            <div class="random-item">
+                <a class="random-item-title" href="/random/flow_matching_on_lie_groups">Flow Matching on Lie
+                    Groups:</a>
+                <div> In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494"
+                        class="publication-link" target="_blank">arXiv</a>, <a
+                        href="https://github.com/finnsherry/FlowMatching" class="publication-link"
+                        target="_blank">code</a>), we develop a new technique for generative modelling on Lie
+                    groups, generalising <a href="https://arxiv.org/abs/2412.06264">Flow Matching by Lipman et
+                        al.</a> As the name implies, this works by flowing data from an initial to a target
+                    distribution. <a href="/random/flow_matching_on_lie_groups">Here</a> are some nice videos of
+                    this in action.
                 </div>
             </div>
         </div>
-    </div>
-
+    </main>
 
 </body>
 
