@@ -6,6 +6,9 @@
     --pubsum-colour: color-mix(in oklab, var(--base-colour) 1%, white 99%);
     --link-colour: oklch(60% 0.35 210);
     --link-hover-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
+    --border-radius: 0.2em;
+    --item-pad: 0.25em 0.35em;
+    --nav-pad: 0.5em;
 }
 
 /* Base Styles */
@@ -34,7 +37,7 @@ a {
 .content-container {
     max-width: calc(0.95*1080px);
     width: 95%;
-    margin: 0 auto;
+    margin: auto;
     text-align: justify;
 }
 
@@ -70,7 +73,7 @@ a {
     align-items: center;
     background: var(--navbar-colour);
     color: white;
-    padding: 0.5em 1em;
+    padding: var(--nav-pad);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     font-size: 1.25em;
@@ -89,8 +92,8 @@ a {
 
 .nav-left .nav-links li a {
     color: white;
-    padding: 0.25em 0.35em;
-    border-radius: 0.2em;
+    padding: var(--item-pad);
+    border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -103,14 +106,13 @@ a {
     list-style: none;
     display: flex;
     justify-content: center;
-    /* Center the content */
     width: 100%;
 }
 
 .nav-right .name li a {
     color: white;
-    padding: 0.25em 0.35em;
-    border-radius: 0.2em;
+    padding: var(--item-pad);
+    border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -128,8 +130,8 @@ a {
 .horizontal-links a {
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    padding: 5px 10px;
-    border-radius: 3px;
+    padding: var(--item-pad);
+    border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -161,13 +163,10 @@ a {
         padding-bottom: 10px;
     }
 
+
     .inline-image {
         float: none;
         display: block;
         margin: auto;
-    }
-
-    .content-container {
-        padding: 10px;
     }
 }

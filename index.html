@@ -11,21 +11,19 @@
 
         .fixed-links {
             margin: 0 auto;
-            padding: 10px;
             text-align: center;
             display: flex;
             flex-wrap: wrap;
             flex-direction: row;
             justify-content: space-around;
-            gap: 10px;
         }
 
         .fixed-links a {
             color: var(--link-colour);
             font-family: 'Courier New', monospace;
             font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: var(--item-pad);
+            border-radius: var(--border-radius);
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
@@ -41,7 +39,7 @@
             flex-direction: column;
             flex-wrap: wrap;
         }
-        
+
         .news-item {
             display: grid;
             margin-bottom: 1em;
@@ -119,7 +117,9 @@
             <div class="news-item">
                 <div class="news-date">2025-06-27</div>
                 <div class="news-content">
-                    My papers <a href="https://arxiv.org/abs/2504.00494">Flow Matching on Lie Groups</a> and <a href="https://arxiv.org/abs/2504.00702">Orientation Scores should be a Piece of Cake</a> have been accepted in GSI 2025!
+                    My papers <a href="https://arxiv.org/abs/2504.00494">Flow Matching on Lie Groups</a> and <a
+                        href="https://arxiv.org/abs/2504.00702">Orientation Scores should be a Piece of Cake</a> have
+                    been accepted in GSI 2025!
                 </div>
             </div>
 

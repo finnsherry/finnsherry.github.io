@@ -10,9 +10,9 @@
         .publication {
             background: var(--pub-colour);
             border: 1px solid #ddd;
-            padding: 15px;
+            padding: 1em;
             margin-bottom: 20px;
-            border-radius: 8px;
+            border-radius: calc(3 * var(--border-radius));
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.2s ease-in-out;
         }
@@ -26,37 +26,38 @@
             font-size: 1.25em;
             font-weight: bold;
             text-align: left;
-            margin-bottom: 10px;
         }
 
         .publication-authors {
             font-style: italic;
             text-align: left;
             color: #555;
-            margin-bottom: 10px;
         }
 
         .publication-footer {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            margin-top: 10px;
+            margin-top: 0;
         }
 
         .publication-year {
             color: #666;
             font-weight: bold;
-            margin-left: 10px;
+            margin-left: 1em;
         }
 
         .publication-summary {
             display: none;
-            margin-top: 10px;
+            margin-top: 0;
             background: var(--pubsum-colour);
-            padding: 10px;
+            padding: 0.5em;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: calc(2 * var(--border-radius));
+            /* margin: 0;
+            padding: 0; */
         }
+
 
         .publication-summary p,
         h3 {
@@ -92,7 +93,7 @@
     <div class="content-container" id="conference">
         <h1>Conference Submissions</h1>
 
-                <div class="publication" id="Flow Matching on Lie Groups">
+        <div class="publication" id="Flow Matching on Lie Groups">
             <h3 class="publication-title">Flow Matching on Lie Groups</h3>
             <p class="publication-authors">
                 <b>Finn Sherry</b>, <a href="https://bmnsmets.com/">Bart Smets</a>
@@ -100,11 +101,10 @@
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <p style="text-align: center;">
-                        <a href="https://arxiv.org/abs/2504.00494"
-                                target="_blank">🔓arXiv</a> •
-                        <a href="https://github.com/finnsherry/FlowMatching"
-                                target="_blank">🧑‍💻code</a> •
-                        <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EWrUATgr5bxGlOw9umM_wxABiBZOadCHAjHXtmDT2J5j7Q?e=gX3jud" target="_blank">🗨️slides</a>
+                        <a href="https://arxiv.org/abs/2504.00494" target="_blank">🔓arXiv</a> •
+                        <a href="https://github.com/finnsherry/FlowMatching" target="_blank">🧑‍💻code</a> •
+                        <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EWrUATgr5bxGlOw9umM_wxABiBZOadCHAjHXtmDT2J5j7Q?e=gX3jud"
+                            target="_blank">🗨️slides</a>
                     </p>
                 </div>
                 <span class="publication-year">2025</span>
@@ -150,10 +150,8 @@
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <p style="text-align: center;">
-                        <a href="https://arxiv.org/abs/2504.00702"
-                                target="_blank">🔓arXiv</a> •
-                        <a href="https://gitlab.com/finn491/lietorch"
-                                target="_blank">🧑‍💻code</a>
+                        <a href="https://arxiv.org/abs/2504.00702" target="_blank">🔓arXiv</a> •
+                        <a href="https://gitlab.com/finn491/lietorch" target="_blank">🧑‍💻code</a>
                     </p>
                 </div>
                 <span class="publication-year">2025</span>
@@ -190,13 +188,11 @@
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <p style="text-align: center;">
-                        <a href="https://doi.org/10.1007/978-3-031-92369-2_16"
-                                target="_blank">🔒Springer</a> •
-                        <a href="https://arxiv.org/abs/2502.17146"
-                                target="_blank">🔓arXiv</a> •
-                        <a href="https://github.com/finnsherry/M2RDSFiltering"
-                                target="_blank">🧑‍💻code</a> •
-                        <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO" target="_blank">🗨️slides</a>
+                        <a href="https://doi.org/10.1007/978-3-031-92369-2_16" target="_blank">🔒Springer</a> •
+                        <a href="https://arxiv.org/abs/2502.17146" target="_blank">🔓arXiv</a> •
+                        <a href="https://github.com/finnsherry/M2RDSFiltering" target="_blank">🧑‍💻code</a> •
+                        <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
+                            target="_blank">🗨️slides</a>
                     </p>
                 </div>
                 <span class="publication-year">2025</span>
@@ -240,12 +236,9 @@
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <p style="text-align: center;">
-                        <a href="https://doi.org/10.1007/978-3-031-92369-2_15"
-                                target="_blank">🔒Springer</a> • 
-                        <a href="https://arxiv.org/abs/2504.03388"
-                                target="_blank">🔓arXiv</a> • 
-                        <a href="https://github.com/finnsherry/IterativeEikonal"
-                                target="_blank">🧑‍💻code</a>
+                        <a href="https://doi.org/10.1007/978-3-031-92369-2_15" target="_blank">🔒Springer</a> •
+                        <a href="https://arxiv.org/abs/2504.03388" target="_blank">🔓arXiv</a> •
+                        <a href="https://github.com/finnsherry/IterativeEikonal" target="_blank">🧑‍💻code</a>
                     </p>
                 </div>
                 <span class="publication-year">2025</span>
@@ -293,7 +286,8 @@
             <div class="publication-footer">
                 <div class="horizontal-links">
                     <p style="text-align: center;">
-                        <a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf" target="_blank">pure.tue.nl</a>
+                        <a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf"
+                            target="_blank">pure.tue.nl</a>
                     </p>
                 </div>
                 <span class="publication-year">2023</span>
@@ -340,20 +334,22 @@
     </div>
 
     <script>
+        function toggleSummary(event) {
+            const publication = event.target.closest('.publication');
+            if (publication) {
+                const summary = publication.querySelector('.publication-summary');
+                if (summary) {
+                    summary.style.display = summary.style.display === 'none' || !summary.style.display ? 'block' : 'none';
+                }
+            }
+        }
+
         function addToggleEvent(containerId) {
             container = document.getElementById(containerId);
             if (container) {
-                container.addEventListener('click', function (event) {
-                    const publication = event.target.closest('.publication');
-                    if (publication) {
-                        const summary = publication.querySelector('.publication-summary');
-                        if (summary) {
-                            summary.style.display = summary.style.display === 'none' || !summary.style.display ? 'block' : 'none';
-                        }
-                    }
-                });
+                container.addEventListener('click', toggleSummary);
             }
-            
+
         }
         addToggleEvent('journal');
         addToggleEvent('conference');
