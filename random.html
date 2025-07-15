@@ -20,6 +20,10 @@
             flex-wrap: wrap;
         }
 
+        .random-item-title {
+            font-weight: bold;
+        }
+
         .random-item .p {
             text-align: justify;
         }
@@ -30,10 +34,10 @@
     <nav class="navbar">
         <div class="nav-left">
             <ul class="nav-links">
-                <li><a href="/"><b>Home</b></a></li>
-                <li><a href="/publications"><b>Publications</b></a></li>
-                <!-- <li><a href="/teaching"><b>Teaching</b></a></li> -->
-                <li><a href="/random"><b>Random</b></a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/publications">Publications</a></li>
+                <!-- <li><a href="/teaching">Teaching</a></li> -->
+                <li><a href="/random">Random</a></li>
             </ul>
         </div>
         <div class="nav-right">
@@ -49,7 +53,8 @@
             <div class="random-section">
                 <h1>Random</h1>
                 <div class="random-item">
-                    <a href="/random/flow_matching_on_lie_groups"><b>Flow Matching on Lie Groups:</b></a>
+                    <a class="random-item-title" href="/random/flow_matching_on_lie_groups">Flow Matching on Lie
+                        Groups:</a>
                     <div> In "Flow Matching on Lie Groups" (<a href="https://arxiv.org/abs/2504.00494"
                             class="publication-link" target="_blank">arXiv</a>, <a
                             href="https://github.com/finnsherry/FlowMatching" class="publication-link"

@@ -5,7 +5,9 @@
     --pub-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
     --pubsum-colour: color-mix(in oklab, var(--base-colour) 1%, white 99%);
     --link-colour: oklch(60% 0.35 210);
-    --link-hover-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
+    --link-hover-colour: oklch(45% 0.35 210);
+    --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
+    --font-color: color-mix(in oklab, var(--base-colour) 50%, black 50%);
     --border-radius: 0.2em;
     --item-pad: 0.25em 0.35em;
     --nav-pad: 0.5em;
@@ -17,10 +19,14 @@ body {
     margin: 0;
     padding: 0;
     background: var(--bg-colour);
-    color: #333;
-    font-family: 'Segoe UI', sans-serif;
+    color: var(--font-color);
+    font-family: 'Segoe UI', 'Arial', sans-serif;
     text-align: center;
     font-size: 1.2em;
+}
+
+b {
+    color: var(--font-color)
 }
 
 h1 {
@@ -32,26 +38,21 @@ a {
     color: var(--link-colour);
 }
 
-/* Content Container */
+a:hover {
+    color: var(--link-hover-colour);
+}
+
+hr {
+    width: 90%;
+    margin: 1em auto 1em auto;
+}
 
 .content-container {
     max-width: calc(0.95*1080px);
     width: 95%;
-    margin: auto;
+    margin: 1em auto 2em auto;
     text-align: justify;
 }
-
-.content-container p {
-    color: #333;
-}
-
-.content-container::after {
-    content: "";
-    display: block;
-    clear: both;
-}
-
-/* Images */
 
 .inline-image {
     float: right;
@@ -92,13 +93,14 @@ a {
 
 .nav-left .nav-links li a {
     color: white;
+    font-weight: bold;
     padding: var(--item-pad);
     border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .nav-left .nav-links li a:hover {
-    background-color: var(--link-hover-colour);
+    background-color: var(--link-background-colour);
 }
 
 .nav-right .name {
@@ -117,7 +119,7 @@ a {
 }
 
 .nav-right .name li a:hover {
-    background-color: var(--link-hover-colour);
+    background-color: var(--link-background-colour);
 }
 
 /* Links */
