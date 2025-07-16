@@ -7,7 +7,10 @@
     --link-colour: oklch(60% 0.35 210);
     --link-hover-colour: oklch(45% 0.35 210);
     --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
-    --font-color: color-mix(in oklab, var(--base-colour) 50%, black 50%);
+    --font-size: 19px;
+    --font-colour: color-mix(in oklab, var(--base-colour) 50%, black 50%);
+    --navbar-font-size: 1.25em;
+    --navbar-font-colour: white;
     --border-radius: 0.2em;
     --item-pad: 0.25em 0.35em;
     --nav-pad: 0.5em;
@@ -19,14 +22,13 @@ body {
     margin: 0;
     padding: 0;
     background: var(--bg-colour);
-    color: var(--font-color);
     font-family: 'Segoe UI', 'Arial', sans-serif;
-    text-align: center;
-    font-size: 1.2em;
+    font-size: var(--font-size);
 }
 
-b {
-    color: var(--font-color)
+main {
+    color: var(--font-colour);
+    text-align: center;
 }
 
 h1 {
@@ -85,11 +87,12 @@ header {
     align-items: center;
     flex-wrap: wrap;
     position: sticky;
-    font-size: 1.25em;
+    font-size: var(--navbar-font-size);
+    font-weight: bold;
     top: 0;
     z-index: 10;
     background: var(--navbar-colour);
-    color: white;
+    color: var(--navbar-font-colour);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     padding: var(--nav-pad);
     width: 100%;
@@ -98,24 +101,22 @@ header {
 
 #nav {
     display: inline;
-    font-weight: bold;
 }
 
 .navlink {
-    color: white;
+    color: var(--navbar-font-colour);
     padding: var(--item-pad);
     border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .navlink:hover {
-    color: white;
+    color: var(--navbar-font-colour);
     background-color: var(--link-background-colour);
 }
 
 #home {
-    color: white;
-    font-weight: bold;
+    color: var(--navbar-font-colour);
     padding: var(--item-pad);
     margin-left: auto;
     border-radius: var(--border-radius);
@@ -123,19 +124,47 @@ header {
 }
 
 #home:hover {
-    color: white;
+    color: var(--navbar-font-colour);
     background-color: var(--link-background-colour);
+}
+
+#navbutton {
+    border: none;
+    background-color: transparent;
+    display: none;
+    font-size: var(--navbar-font-size);
+    color: var(--navbar-font-colour);
 }
 
 @media (width <=900px) {
     header {
-        flex-direction: column;
+        justify-content: space-around;
     }
 
     #home {
-        order: -1;
+        display: flex;
+        order: -2;
         text-align: center;
-        margin: 0
+    }
+
+    #navbutton {
+        display: flex;
+        margin-left: auto;
+        order: -1;
+        text-align: right;
+    }
+
+    #nav {
+        display: none;
+    }
+
+    #nav.expand {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        text-align: center;
+        justify-content: space-evenly;
+        font-size: 0.8em;
     }
 }
 
