@@ -16,24 +16,26 @@
             background: var(--pub-colour);
             border: 1px solid #ddd;
             padding: 1em;
-            margin-bottom: 20px;
+            margin-bottom: 1em;
             border-radius: calc(3 * var(--border-radius));
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             transition: transform 0.2s ease-in-out;
         }
 
         .publication:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            box-shadow: var(--shadow-hover);
+            cursor: pointer;
         }
 
-        .publication-title {
+        .publication h3 {
             font-size: 1.25em;
             font-weight: bold;
             text-align: left;
+            margin: 0;
         }
 
-        .publication-authors {
+        .publication p {
             font-style: italic;
             text-align: left;
             color: #555;
@@ -57,13 +59,13 @@
             margin-top: 0;
             background: var(--pubsum-colour);
             padding: 1em;
+            margin-top: 1em;
             border: 1px solid #ccc;
             border-radius: calc(2 * var(--border-radius));
             overflow: hidden;
         }
 
-        .publication-summary p,
-        h3 {
+        .publication-summary p {
             margin: 0;
             padding: 0;
         }
@@ -109,18 +111,16 @@
             <div class="publication">
                 <input id="Flow Matching on Lie Groups" class="toggle" type="checkbox">
                 <label for="Flow Matching on Lie Groups" class="publication-label">
-                    <h3 class="publication-title">Flow Matching on Lie Groups</h3>
-                    <p class="publication-authors">
+                    <h3>Flow Matching on Lie Groups</h3>
+                    <p>
                         <b>Finn Sherry</b>, <a href="https://bmnsmets.com/">Bart Smets</a>
                     </p>
                     <div class="publication-footer">
                         <div class="horizontal-links">
-                            <p style="text-align: center;">
-                                <a href="https://arxiv.org/abs/2504.00494" target="_blank">🔓arXiv</a> •
-                                <a href="https://github.com/finnsherry/FlowMatching" target="_blank">🧑‍💻code</a> •
-                                <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EWrUATgr5bxGlOw9umM_wxABiBZOadCHAjHXtmDT2J5j7Q?e=gX3jud"
-                                    target="_blank">🗨️slides</a>
-                            </p>
+                            <a href="https://arxiv.org/abs/2504.00494" target="_blank">🔓arXiv</a> •
+                            <a href="https://github.com/finnsherry/FlowMatching" target="_blank">🧑‍💻code</a> •
+                            <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EWrUATgr5bxGlOw9umM_wxABiBZOadCHAjHXtmDT2J5j7Q?e=gX3jud"
+                                target="_blank">🗨️slides</a>
                         </div>
                         <span class="publication-year">2025</span>
                     </div>
@@ -167,7 +167,7 @@
                 <input id="Orientation Scores should be a Piece of Cake" class="toggle" type="checkbox">
                 <label for="Orientation Scores should be a Piece of Cake" class="publication-label">
                     <h3 class="publication-title">Orientation Scores should be a Piece of Cake</h3>
-                    <p class="publication-authors">
+                    <p>
                         <b>Finn Sherry</b>, <a href="https://chasevdg.github.io/">Chase van de Geijn</a>, <a
                             href="https://ebekkers.github.io/">Erik Bekkers</a>, <a
                             href="https://rduits.win.tue.nl/">Remco
@@ -175,10 +175,8 @@
                     </p>
                     <div class="publication-footer">
                         <div class="horizontal-links">
-                            <p style="text-align: center;">
-                                <a href="https://arxiv.org/abs/2504.00702" target="_blank">🔓arXiv</a> •
-                                <a href="https://gitlab.com/finn491/lietorch" target="_blank">🧑‍💻code</a>
-                            </p>
+                            <a href="https://arxiv.org/abs/2504.00702" target="_blank">🔓arXiv</a> •
+                            <a href="https://gitlab.com/finn491/lietorch" target="_blank">🧑‍💻code</a>
                         </div>
                         <span class="publication-year">2025</span>
                     </div>
@@ -219,19 +217,17 @@
                     class="publication-label">
                     <h3 class="publication-title">Diffusion-Shock Filtering on the Space of Positions and Orientations
                     </h3>
-                    <p class="publication-authors">
+                    <p>
                         <b>Finn Sherry</b>, <a href="https://www.mia.uni-saarland.de/schaefer/index.shtml">Kristina
                             Schaefer</a>, <a href="https://rduits.win.tue.nl/">Remco Duits</a>
                     </p>
                     <div class="publication-footer">
                         <div class="horizontal-links">
-                            <p style="text-align: center;">
-                                <a href="https://doi.org/10.1007/978-3-031-92369-2_16" target="_blank">🔒Springer</a> •
-                                <a href="https://arxiv.org/abs/2502.17146" target="_blank">🔓arXiv</a> •
-                                <a href="https://github.com/finnsherry/M2RDSFiltering" target="_blank">🧑‍💻code</a> •
-                                <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
-                                    target="_blank">🗨️slides</a>
-                            </p>
+                            <a href="https://doi.org/10.1007/978-3-031-92369-2_16" target="_blank">🔒Springer</a> •
+                            <a href="https://arxiv.org/abs/2502.17146" target="_blank">🔓arXiv</a> •
+                            <a href="https://github.com/finnsherry/M2RDSFiltering" target="_blank">🧑‍💻code</a> •
+                            <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO"
+                                target="_blank">🗨️slides</a>
                         </div>
                         <span class="publication-year">2025</span>
                     </div>
@@ -277,7 +273,7 @@
                 <input id="Crossing-Preserving Geodesic Tracking on Spherical Images" class="toggle" type="checkbox">
                 <label for="Crossing-Preserving Geodesic Tracking on Spherical Images" class="publication-label">
                     <h3 class="publication-title">Crossing-Preserving Geodesic Tracking on Spherical Images</h3>
-                    <p class="publication-authors"><b><a href="https://nickyjvandenberg.com/">Nicky van den
+                    <p><b><a href="https://nickyjvandenberg.com/">Nicky van den
                                 Berg</a></b>,
                         <b>Finn Sherry</b>, <a
                             href="https://cris.maastrichtuniversity.nl/en/persons/tos-berendschot">Tos
@@ -285,11 +281,9 @@
                     </p>
                     <div class="publication-footer">
                         <div class="horizontal-links">
-                            <p style="text-align: center;">
-                                <a href="https://doi.org/10.1007/978-3-031-92369-2_15" target="_blank">🔒Springer</a> •
-                                <a href="https://arxiv.org/abs/2504.03388" target="_blank">🔓arXiv</a> •
-                                <a href="https://github.com/finnsherry/IterativeEikonal" target="_blank">🧑‍💻code</a>
-                            </p>
+                            <a href="https://doi.org/10.1007/978-3-031-92369-2_15" target="_blank">🔒Springer</a> •
+                            <a href="https://arxiv.org/abs/2504.03388" target="_blank">🔓arXiv</a> •
+                            <a href="https://github.com/finnsherry/IterativeEikonal" target="_blank">🧑‍💻code</a>
                         </div>
                         <span class="publication-year">2025</span>
                     </div>
@@ -335,16 +329,14 @@
                 <input id="Self-Healing of Comb Polymer Vitrimers" class="toggle" type="checkbox">
                 <label for="Self-Healing of Comb Polymer Vitrimers" class="publication-label">
                     <h3 class="publication-title">Self-Healing of Comb Polymer Vitrimers</h3>
-                    <p class="publication-authors">
+                    <p>
                         Supervised by <a href="http://tps.phys.tue.nl/ellenbroek/">Wouter Ellenbroek</a> & <a
                             href="https://www.baumeiergroup.com/team/b-baumeier">Björn Baumeier</a>
                     </p>
                     <div class="publication-footer">
                         <div class="horizontal-links">
-                            <p style="text-align: center;">
-                                <a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf"
-                                    target="_blank">pure.tue.nl</a>
-                            </p>
+                            <a href="https://pure.tue.nl/ws/portalfiles/portal/308515756/1310380_-_Sherry_F.M._-_MSc_thesis_Thesis_-_MAP.pdf"
+                                target="_blank">pure.tue.nl</a>
                         </div>
                         <span class="publication-year">2023</span>
                     </div>
