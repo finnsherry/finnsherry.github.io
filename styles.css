@@ -1,19 +1,39 @@
 :root {
-    --base-colour: oklch(80% 0.1 195);
-    --bg-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
+    --jordy-blue: rgb(123, 160, 201);
+    --emerald: rgb(69, 203, 133);
+    --caribbean-current: rgb(25, 114, 120);
+    --persian-red: rgb(196, 69, 54);
+    --orange-peel: rgb(255, 166, 43);
+
+    --base-colour: var(--jordy-blue);
+    --bg-colour: rgb(245, 245, 245);
     --navbar-colour: color-mix(in oklab, var(--base-colour) 100%, white 0%);
+
     --pub-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
     --pubsum-colour: color-mix(in oklab, var(--base-colour) 1%, white 99%);
-    --link-colour: oklch(60% 0.35 210);
-    --link-hover-colour: oklch(45% 0.35 210);
+    --link-colour: color-mix(in oklab, var(--persian-red) 80%, white 20%);
+    --link-hover-colour: color-mix(in oklab, var(--link-colour) 80%, black 20%);
     --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
-    --font-size: 19px;
+
+    --font-size: 12pt;
     --font-colour: color-mix(in oklab, var(--base-colour) 50%, black 50%);
     --navbar-font-size: 1.25em;
     --navbar-font-colour: white;
     --border-radius: 0.2em;
     --item-pad: 0.25em 0.35em;
     --nav-pad: 0.5em;
+}
+
+@media (max-width: 600px) {
+    :root {
+        --font-size: 11pt
+    }
+}
+
+@media (max-width: 400px) {
+    :root {
+        --font-size: 10pt
+    }
 }
 
 /* Base Styles */
