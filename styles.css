@@ -11,14 +11,20 @@
 
     --pub-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
     --pubsum-colour: color-mix(in oklab, var(--base-colour) 1%, white 99%);
+
     --link-colour: color-mix(in oklab, var(--persian-red) 80%, white 20%);
     --link-hover-colour: color-mix(in oklab, var(--link-colour) 80%, black 20%);
     --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
+    /* --link-colour: color-mix(in oklab, var(--orange-peel) 80%, black 20%);
+    --link-hover-colour: color-mix(in oklab, var(--link-colour) 80%, black 20%);
+    --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%); */
 
-    --font-size: 12pt;
+    --font-size: 13pt;
     --font-colour: color-mix(in oklab, var(--base-colour) 50%, black 50%);
     --navbar-font-size: 1.25em;
     --navbar-font-colour: white;
+
+    --line-height: 1.5;
     --border-radius: 0.2em;
     --item-pad: 0.25em 0.35em;
     --nav-pad: 0.5em;
@@ -26,13 +32,13 @@
 
 @media (max-width: 600px) {
     :root {
-        --font-size: 11pt
+        --font-size: 12pt
     }
 }
 
 @media (max-width: 400px) {
     :root {
-        --font-size: 10pt
+        --font-size: 11pt
     }
 }
 
@@ -44,6 +50,7 @@ body {
     background: var(--bg-colour);
     font-family: 'Segoe UI', 'Arial', sans-serif;
     font-size: var(--font-size);
+    line-height: var(--line-height);
 }
 
 main {
