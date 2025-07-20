@@ -1,4 +1,17 @@
 :root {
+    /* sizing */
+    --font-size: 13pt;
+    --navbar-font-size: 1.25em;
+    --line-height: 1.5;
+    --border-radius: 0.2em;
+    --item-pad: 0.25em 0.35em;
+    --nav-pad: 0.5em;
+}
+
+:root{
+    /* colours */
+    color-scheme: light;
+
     --jordy-blue: rgb(123, 160, 201);
     --emerald: rgb(69, 203, 133);
     --caribbean-current: rgb(25, 114, 120);
@@ -7,30 +20,52 @@
 
     --base-colour: var(--jordy-blue);
     --bg-colour: rgb(245, 245, 245);
-    --navbar-colour: color-mix(in oklab, var(--base-colour) 100%, white 0%);
+    --navbar-colour: var(--base-colour);
+    --pub-colour: color-mix(in oklab, var(--base-colour), white 95%);
+    --pubsum-colour: color-mix(in oklab, var(--base-colour), white 99%);
 
-    --pub-colour: color-mix(in oklab, var(--base-colour) 5%, white 95%);
-    --pubsum-colour: color-mix(in oklab, var(--base-colour) 1%, white 99%);
+    --link-colour: color-mix(in oklab, var(--persian-red), white 20%);
+    --link-hover-colour: color-mix(in oklab, var(--link-colour), black 20%);
+    --link-background-colour: color-mix(in oklab, var(--link-colour), black 20%);
 
-    --link-colour: color-mix(in oklab, var(--persian-red) 80%, white 20%);
-    --link-hover-colour: color-mix(in oklab, var(--link-colour) 80%, black 20%);
-    --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%);
-    /* --link-colour: color-mix(in oklab, var(--orange-peel) 80%, black 20%);
-    --link-hover-colour: color-mix(in oklab, var(--link-colour) 80%, black 20%);
-    --link-background-colour: color-mix(in oklab, var(--link-colour) 90%, black 10%); */
-
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.15);
-
-    --font-size: 13pt;
-    --font-colour: color-mix(in oklab, var(--base-colour) 50%, black 50%);
-    --navbar-font-size: 1.25em;
+    --font-colour: color-mix(in oklab, var(--base-colour), black 50%);
     --navbar-font-colour: white;
 
-    --line-height: 1.5;
-    --border-radius: 0.2em;
-    --item-pad: 0.25em 0.35em;
-    --nav-pad: 0.5em;
+    --border-colour: #ccc;
+    --shadow-colour: rgba(0, 0, 0, 0.2);
+    --shadow-hover-colour: rgba(0, 0, 0, 0.3);
+
+    --image-brightness: 100%;
+}
+:root[data-scheme="dark"] {
+    color-scheme: dark;
+
+    --jordy-blue-dark: color-mix(in oklab, var(--jordy-blue) 40%, black);
+    --persian-red-dark: color-mix(in oklab, var(--persian-red) 90%, white);
+    
+    --base-colour: var(--jordy-blue-dark);
+    --bg-colour: color-mix(in oklab, var(--base-colour), white 10%);
+    --navbar-colour: var(--base-colour);
+    --pub-colour: color-mix(in oklab, var(--base-colour), white 5%);
+    --pubsum-colour: color-mix(in oklab, var(--base-colour), white 1%);
+
+    --link-colour: color-mix(in oklab, var(--persian-red-dark), white 20%);
+    --link-hover-colour: color-mix(in oklab, var(--link-colour), black 20%);
+    --link-background-colour: color-mix(in oklab, var(--link-colour), black 20%);
+
+    --font-colour: color-mix(in oklab, var(--base-colour), white 80%);
+    --navbar-font-colour: var(--font-colour);
+
+    --border-colour: #222;
+    --shadow-colour: rgba(0, 0, 0, 0.4);
+    --shadow-hover-colour: rgba(0, 0, 0, 0.5);
+
+    --image-brightness: 80%;
+}
+
+:root{
+    --shadow: 0 2px 8px var(--shadow-colour);
+    --shadow-hover: 0 4px 16px var(--shadow-hover-colour);
 }
 
 @media (max-width: 600px) {
@@ -79,6 +114,12 @@ hr {
     margin: 1em auto 1em auto;
 }
 
+img {
+    border-radius: 1em;
+    border: 5px solid var(--border-colour);
+    filter: brightness(var(--image-brightness));
+}
+
 .content-container {
     max-width: calc(0.95*1080px);
     width: 95%;
@@ -98,18 +139,18 @@ hr {
 @media (max-width: 580px) {
     .inline-image {
         float: none;
-        display: block;
+        display: flex;
         margin: auto;
     }
 }
 
-.video-wrapper {
+video {
+    display: block;
     width: 100%;
     margin: auto;
-    overflow: hidden;
-    position: relative;
-    box-sizing: border-box;
-    border: 3px solid #000;
+    border-radius: 1em;
+    border: 5px solid var(--border-colour);
+    filter: brightness(var(--image-brightness));
 }
 
 header {
@@ -148,14 +189,22 @@ header {
 #home {
     color: var(--navbar-font-colour);
     padding: var(--item-pad);
-    margin-left: auto;
     border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
+    order: 1;
 }
 
 #home:hover {
     color: var(--navbar-font-colour);
     background-color: var(--link-background-colour);
+}
+
+#colourbutton {
+    border: none;
+    background-color: transparent;
+    margin-left: auto;
+    font-size: var(--navbar-font-size);
+    color: var(--navbar-font-colour);
 }
 
 #navbutton {
@@ -174,12 +223,17 @@ header {
     #home {
         display: flex;
         order: -2;
+        margin: auto;
         text-align: center;
+    }
+
+    #colourbutton {
+        order: -3;
+        margin-left: 0;
     }
 
     #navbutton {
         display: flex;
-        margin-left: auto;
         order: -1;
         text-align: right;
     }

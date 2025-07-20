@@ -18,12 +18,36 @@
             <a class="navlink" href="/random">Random</a>
         </div>
         <a id="home" href="/">Finn Sherry</a>
+        <button id="colourbutton">
+            🌙
+        </button>
         <button id="navbutton" onclick="toggleNav()">
             •••
         </button>
         <script>
             function toggleNav() {
                 document.getElementById("nav").classList.toggle('expand')
+            }
+
+            const root = document.documentElement;
+            const storedScheme = localStorage.getItem('scheme');
+            console.log(storedScheme)
+            const colourButton = document.getElementById("colourbutton");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
+
+            applyScheme(scheme);
+
+            colourButton.addEventListener("click", () => {
+                const current = root.dataset.scheme === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyScheme(next);
+                localStorage.setItem('scheme', next);
+            });
+
+            function applyScheme(scheme) {
+                root.dataset.scheme = scheme
+                colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
             }
         </script>
     </header>
@@ -47,12 +71,10 @@
                 represent
                 any roto-translation as a position and orientation, i.e. an arrow on the plane.
             </p>
-            <div class="video-wrapper" style="aspect-ratio: 1 / 1; max-width: 35em;">
-                <video autoplay muted playsinline loop
-                    style="width: 100%; display: block; margin: auto; object-fit: cover; pointer-events: none;">
-                    <source src="/random/flow_matching_SE2.mp4" type="video/mp4" />
-                </video>
-            </div>
+            <video autoplay muted playsinline loop
+                style="aspect-ratio: 1 / 1; max-width: 35em; pointer-events: none;">
+                <source src="/random/flow_matching_SE2.mp4" type="video/mp4" />
+            </video>
             <p>
                 We add a bit of noise to both distributions such that their supports are homotopic. This is
                 necessary
@@ -66,12 +88,10 @@
                 spherical
                 positions and orientations. Hence, we can represent rotations with an arrow on the sphere.
             </p>
-            <div class="video-wrapper" style="aspect-ratio: 1 / 1; max-width: 35em;">
-                <video autoplay muted playsinline loop
-                    style="width: 120%; height: 120%; display: block; top: -10%; left: -10%; transform: translate(-10%, -10%); object-fit: cover; pointer-events: none;">
-                    <source src="/random/flow_matching_SO3_vertical_line_to_circle.mp4" type="video/mp4" />
-                </video>
-            </div>
+            <video autoplay muted playsinline loop
+                style="aspect-ratio: 1 / 1; max-width: 35em; pointer-events: none;">
+                <source src="/random/flow_matching_SO3_vertical_line_to_circle.mp4" type="video/mp4" />
+            </video>
             <p>
                 Flow Matching can be performed on Lie groups with a surjective exponential map. On matrix groups,
                 the

@@ -12,7 +12,6 @@
             display: flex;
             flex-direction: row;
             background: var(--pub-colour);
-            border: 1px solid #ddd;
             padding: 1em;
             margin-bottom: 1em;
             border-radius: calc(3 * var(--border-radius));
@@ -57,6 +56,7 @@
             margin-left: 1em;
             box-shadow: var(--shadow);
             border-radius: 0.5em;
+            border: none;
         }
 
         @media (max-width: 600px) {
@@ -83,12 +83,36 @@
             <a class="navlink" href="/random">Random</a>
         </div>
         <a id="home" href="/">Finn Sherry</a>
+        <button id="colourbutton">
+            🌙
+        </button>
         <button id="navbutton" onclick="toggleNav()">
             •••
         </button>
         <script>
             function toggleNav() {
                 document.getElementById("nav").classList.toggle('expand')
+            }
+
+            const root = document.documentElement;
+            const storedScheme = localStorage.getItem('scheme');
+            console.log(storedScheme)
+            const colourButton = document.getElementById("colourbutton");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
+
+            applyScheme(scheme);
+
+            colourButton.addEventListener("click", () => {
+                const current = root.dataset.scheme === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyScheme(next);
+                localStorage.setItem('scheme', next);
+            });
+
+            function applyScheme(scheme) {
+                root.dataset.scheme = scheme
+                colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
             }
         </script>
     </header>
