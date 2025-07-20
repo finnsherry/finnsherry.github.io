@@ -6,11 +6,11 @@
     --border-radius: 0.2em;
     --item-pad: 0.25em 0.35em;
     --nav-pad: 0.5em;
+}
 
-
-
+:root{
     /* colours */
-    color-scheme: light dark;
+    color-scheme: light;
 
     --jordy-blue: rgb(123, 160, 201);
     --emerald: rgb(69, 203, 133);
@@ -36,32 +36,34 @@
     --shadow-hover-colour: rgba(0, 0, 0, 0.3);
 
     --image-brightness: 100%;
+}
+:root[data-scheme="dark"] {
+    color-scheme: dark;
 
-    /* dark mode */
-    @media (prefers-color-scheme: dark) {
-        --jordy-blue-dark: color-mix(in oklab, var(--jordy-blue) 40%, black);
-        --persian-red-dark: color-mix(in oklab, var(--persian-red) 90%, white);
-        
-        --base-colour: var(--jordy-blue-dark);
-        --bg-colour: color-mix(in oklab, var(--base-colour), white 10%);
-        --navbar-colour: var(--base-colour);
-        --pub-colour: color-mix(in oklab, var(--base-colour), white 5%);
-        --pubsum-colour: color-mix(in oklab, var(--base-colour), white 1%);
+    --jordy-blue-dark: color-mix(in oklab, var(--jordy-blue) 40%, black);
+    --persian-red-dark: color-mix(in oklab, var(--persian-red) 90%, white);
+    
+    --base-colour: var(--jordy-blue-dark);
+    --bg-colour: color-mix(in oklab, var(--base-colour), white 10%);
+    --navbar-colour: var(--base-colour);
+    --pub-colour: color-mix(in oklab, var(--base-colour), white 5%);
+    --pubsum-colour: color-mix(in oklab, var(--base-colour), white 1%);
 
-        --link-colour: color-mix(in oklab, var(--persian-red-dark), white 20%);
-        --link-hover-colour: color-mix(in oklab, var(--link-colour), black 20%);
-        --link-background-colour: color-mix(in oklab, var(--link-colour), black 20%);
+    --link-colour: color-mix(in oklab, var(--persian-red-dark), white 20%);
+    --link-hover-colour: color-mix(in oklab, var(--link-colour), black 20%);
+    --link-background-colour: color-mix(in oklab, var(--link-colour), black 20%);
 
-        --font-colour: color-mix(in oklab, var(--base-colour), white 80%);
-        --navbar-font-colour: var(--font-colour);
+    --font-colour: color-mix(in oklab, var(--base-colour), white 80%);
+    --navbar-font-colour: var(--font-colour);
 
-        --border-colour: #222;
-        --shadow-colour: rgba(0, 0, 0, 0.4);
-        --shadow-hover-colour: rgba(0, 0, 0, 0.5);
+    --border-colour: #222;
+    --shadow-colour: rgba(0, 0, 0, 0.4);
+    --shadow-hover-colour: rgba(0, 0, 0, 0.5);
 
-        --image-brightness: 80%;
-    }
+    --image-brightness: 80%;
+}
 
+:root{
     --shadow: 0 2px 8px var(--shadow-colour);
     --shadow-hover: 0 4px 16px var(--shadow-hover-colour);
 }
@@ -142,6 +144,8 @@ img {
 }
 
 video {
+    /* border-radius: 1em; */
+    /* border: 10px solid var(--border-colour); */
     filter: brightness(var(--image-brightness));
 }
 
@@ -190,14 +194,22 @@ header {
 #home {
     color: var(--navbar-font-colour);
     padding: var(--item-pad);
-    margin-left: auto;
     border-radius: var(--border-radius);
     transition: background-color 0.3s ease, color 0.3s ease;
+    order: 1;
 }
 
 #home:hover {
     color: var(--navbar-font-colour);
     background-color: var(--link-background-colour);
+}
+
+#colourbutton {
+    border: none;
+    background-color: transparent;
+    margin-left: auto;
+    font-size: var(--navbar-font-size);
+    color: var(--navbar-font-colour);
 }
 
 #navbutton {
@@ -216,12 +228,17 @@ header {
     #home {
         display: flex;
         order: -2;
+        margin: auto;
         text-align: center;
+    }
+
+    #colourbutton {
+        order: -3;
+        margin-left: 0;
     }
 
     #navbutton {
         display: flex;
-        margin-left: auto;
         order: -1;
         text-align: right;
     }
