@@ -139,12 +139,13 @@ img {
 @media (max-width: 580px) {
     .inline-image {
         float: none;
-        display: block;
+        display: flex;
         margin: auto;
     }
 }
 
 video {
+    display: block;
     width: 100%;
     margin: auto;
     border-radius: 1em;
