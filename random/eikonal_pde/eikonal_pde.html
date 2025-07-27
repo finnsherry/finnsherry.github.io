@@ -7,7 +7,8 @@
     <title>Random</title>
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
-    <script type="module" src='eikonal_pde/main.js' defer></script>
+    <!-- <script type="module" src='main.js' defer></script> -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
 <body>
@@ -51,13 +52,14 @@
                 colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
             }
         </script>
-        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     </header>
 
     <main>
         <div class="content-container">
             <h1>Eikonal PDE</h1>
             <p>
+                <img src="riemannian_ball.png" alt="Isosurfaces of a Riemannian distance on position-orientation space."
+                    class="inline-image" style="width: 18em;">
                 In "Crossing-Preserving Geodesic Tracking on Spherical Images" (<a
                     href="https://arxiv.org/abs/2504.03388" target="_blank">🔓arXiv</a>, <a
                     href="https://github.com/finnsherry/IterativeEikonal" target="_blank">🧑‍💻code</a>), we model blood
@@ -68,8 +70,6 @@
                     (Shadertoy)</a> so we can see it in practice. WebGPU implementation coming soon<sup>TM</sup>.
             </p>
             <p>
-                <img src="riemannian_ball.png" alt="Isosurfaces of a Riemannian distance on position-orientation space."
-                    class="inline-image" style="width: 18em;">
                 By definition, a Riemannian manifold \((\mathcal{M}, \mathcal{G})\) has a Riemannian metric tensor field
                 \(\mathcal{G}\)
                 (or Riemannian metric for short), which in essence is an inner product defined on the tangent space at
@@ -83,8 +83,7 @@
                 where \(\Gamma_p^q := \{\gamma: \mathbb{R} \to \mathcal{M} \,|\, \gamma(0) = p, \gamma(1) = q, \gamma
                 \textrm{ sufficiently regular}\}\), and \(L\) is the length functional. The geodesics are then the
                 curves that minimise \(L\). The figure shows the isosurfaces of a distance map on position-orientation
-                space. We designed the Riemannian metric such that points that lie along the orientation or closer than
-                those that
+                space. We designed the Riemannian metric such that the distance between points is small when they are both spatially close and aligned.
             </p>
             <p>
                 Riemannian metrics also allow us to properly define the notion of gradient on manifolds: the gradient is
