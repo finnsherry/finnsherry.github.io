@@ -8,7 +8,7 @@
     --nav-pad: 0.5em;
 }
 
-:root{
+:root {
     /* colours */
     color-scheme: light;
 
@@ -37,12 +37,13 @@
 
     --image-brightness: 100%;
 }
+
 :root[data-scheme="dark"] {
     color-scheme: dark;
 
     --jordy-blue-dark: color-mix(in oklab, var(--jordy-blue) 40%, black);
     --persian-red-dark: color-mix(in oklab, var(--persian-red) 90%, white);
-    
+
     --base-colour: var(--jordy-blue-dark);
     --bg-colour: color-mix(in oklab, var(--base-colour), white 10%);
     --navbar-colour: var(--base-colour);
@@ -63,7 +64,7 @@
     --image-brightness: 80%;
 }
 
-:root{
+:root {
     --shadow: 0 2px 8px var(--shadow-colour);
     --shadow-hover: 0 4px 16px var(--shadow-hover-colour);
 }
@@ -79,8 +80,6 @@
         --font-size: 11pt
     }
 }
-
-/* Base Styles */
 
 body {
     margin: 0;
@@ -252,8 +251,6 @@ header {
     }
 }
 
-/* Links */
-
 .publication-link {
     font-weight: bold;
     font-family: 'Courier New', monospace;
@@ -272,4 +269,14 @@ header {
 .horizontal-links a:hover {
     background-color: var(--link-hover-colour);
     color: white;
+}
+
+.form {
+    display: grid;
+    direction: column;
+}
+
+.form tr,
+.form td {
+    padding: 0 0.2em 0.2em 0;
 }
