@@ -217,7 +217,7 @@ function runSimulation() {
 
   const cellStateArray = new Uint32Array(gridHeight * gridWidth);
   for (let i = 0; i < cellStateArray.length; i += 3) {
-    cellStateArray[i] = Math.random() > aliveFraction ? 1 : 0;
+    cellStateArray[i] = Math.random() < aliveFraction ? 1 : 0;
   }
   const cellStateStorage = [
     device.createBuffer({
