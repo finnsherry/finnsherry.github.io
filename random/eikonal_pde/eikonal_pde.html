@@ -7,7 +7,7 @@
     <title>Random</title>
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
-    <!-- <script type="module" src='main.js' defer></script> -->
+    <script type="module" src='main.js' defer></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
@@ -126,7 +126,7 @@
                 scaled pointwise by a cost function, similar to how we defined the metrics in our paper.
             </p>
 
-            <!-- <table class="form">
+            <table class="form">
                 <tr>
                     <td><label for="contours">Number of contours: </label></td>
                     <td><input type="text" id="contours" name="contours" placeholder="20" required></td>
@@ -144,7 +144,8 @@
                 </tr>
             </table>
 
-            <canvas id="canvas"></canvas> -->
+            <!-- <canvas id="canvas" style="width: 100%; aspect-ratio: 1;"></canvas> -->
+            <canvas id="canvas" width="512" height="512"></canvas>
         </div>
     </main>
 </body>
