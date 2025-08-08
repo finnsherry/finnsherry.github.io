@@ -125,27 +125,28 @@
                 distance map on \(\mathbb{R}^2\) in this way. The Riemannian metric is simply the Euclidean metric,
                 scaled pointwise by a cost function, similar to how we defined the metrics in our paper.
             </p>
-
-            <table class="form">
+            <p>
+                Here is an initial WebGPU implementation of the distance map computation:
+            </p>
+            <table class="form" id="parameters">
                 <tr>
-                    <td><label for="contours">Number of contours: </label></td>
-                    <td><input type="text" id="contours" name="contours" placeholder="20" required></td>
+                    <td><label for="gridheight">Grid height: </label></td>
+                    <td><input type="text" id="gridheight" name="gridheight" placeholder="96" required></td>
                 </tr>
                 <tr>
-                    <td><label for="cost">Cost multiplier: </label></td>
-                    <td><input type="text" id="cost" name="cost" placeholder="12." required></td>
+                    <td><label for="gridwidth">Grid width: </label></td>
+                    <td><input type="text" id="gridwidth" name="gridwidth" placeholder="128" required></td>
                 </tr>
                 <tr>
-                    <td><label for="image">Image</label></td>
-                    <td><input type="file" id="image" name="image"></td>
+                    <td><label for="frametime">Time between frames (ms): </label></td>
+                    <td><input type="text" id="frametime" name="frametime" placeholder="50" required></td>
                 </tr>
                 <tr>
-                    <td><input type="submit" value="Start"></td>
+                    <td><button id="submit">Start</button></td>
                 </tr>
             </table>
-
-            <!-- <canvas id="canvas" style="width: 100%; aspect-ratio: 1;"></canvas> -->
-            <canvas id="canvas" width="512" height="512"></canvas>
+            
+            <canvas id="canvas" style="width: 100%;"></canvas>
         </div>
     </main>
 </body>

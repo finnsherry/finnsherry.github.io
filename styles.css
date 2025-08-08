@@ -214,7 +214,7 @@ header {
     color: var(--navbar-font-colour);
 }
 
-@media (width <=900px) {
+@media (width <= 900px) {
     header {
         justify-content: space-around;
     }

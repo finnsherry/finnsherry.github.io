@@ -88,11 +88,11 @@ const simulationShaderModule = device.createShaderModule({
         }
 
         default: {
-            cellStateOut[i] = 0;
-            }
-            }
-            }
-            `,
+          cellStateOut[i] = 0;
+        }
+      }
+    }
+  `,
 });
 
 // Square in grid
@@ -301,6 +301,7 @@ function runSimulation() {
     renderPass.end();
     device.queue.submit([encoder.finish()]);
   }
+  updateGrid();
   return setInterval(updateGrid, updateInterval);
 }
 

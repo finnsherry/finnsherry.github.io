@@ -10,39 +10,101 @@ context.configure({ device, format });
 
 const WORKGROUP_SIZE = 8;
 
-const UPDATE_INTERVAL = 200;
-let step = 0;
+const shaderModule = device.createShaderModule({
+  label: "Eikonal PDE shader",
+  code: `
+    struct Uniforms {
+      grid: vec2f,
+      maxValue: f32,
+      dt: f32,
+      origin: f32,
+    };
+      
+    struct VertexInput {
+      @location(0) pos: vec2f,
+      @builtin(instance_index) instance: u32,
+    };
 
-const GRID_SIZE = 16;
-const uniformArray = new Float32Array([GRID_SIZE, GRID_SIZE]);
-const uniformBuffer = device.createBuffer({
-  label: "Grid uniforms",
-  size: uniformArray.byteLength,
-  usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    struct VertexOutput {
+      @builtin(position) pos: vec4f,
+      @location(0) state: f32,
+    };
+
+    @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+    @group(0) @binding(1) var<storage> cellStateIn: array<f32>;
+    @group(0) @binding(2) var<storage, read_write> cellStateOut: array<f32>;
+
+    // Compute shaders
+    fn cellIndex(cell: vec2u) -> u32 {
+      let grid = uniforms.grid;
+      let x = clamp(cell.x, 0, u32(grid.x - 1));
+      let y = clamp(cell.y, 0, u32(grid.y - 1));
+      return y * u32(grid.x) + x;
+    }
+
+    fn selectUpwind(forward: f32, backward: f32) -> f32 {
+      return max(max(-forward, backward), 0.) * (2. * step(-forward, backward) - 1.);
+    }
+
+    fn computeHamiltonian(cell: vec2u) -> f32 {
+      let centre = cellStateIn[cellIndex(cell)];
+      let xForward = cellStateIn[cellIndex(vec2u(cell.x+1, cell.y))];
+      let xBackward = cellStateIn[cellIndex(vec2u(cell.x-1, cell.y))];
+      let yForward = cellStateIn[cellIndex(vec2u(cell.x, cell.y+1))];
+      let yBackward = cellStateIn[cellIndex(vec2u(cell.x, cell.y-1))];
+
+      let dxForward = xForward - centre;
+      let dxBackward = centre - xBackward;
+      let dyForward = yForward - centre;
+      let dyBackward = centre - yBackward;
+
+      let dx = selectUpwind(dxForward, dxBackward);
+      let dy = selectUpwind(dyForward, dyBackward);
+
+      let i = cellIndex(cell.xy);
+
+      return 1. - sqrt(dx * dx + dy * dy);
+    }
+
+    @compute
+    @workgroup_size(${WORKGROUP_SIZE}, ${WORKGROUP_SIZE})
+    fn computeMain(@builtin(global_invocation_id) cell: vec3u) {
+      let dWdt = computeHamiltonian(cell.xy);
+      let i = cellIndex(cell.xy);
+      if (f32(i) == uniforms.origin) {
+        cellStateOut[i] = 0.;
+      } else {
+        cellStateOut[i] = cellStateIn[i] + uniforms.dt * dWdt;
+      }
+    }
+
+    // Vertex shaders
+    @vertex
+    fn vertexMain(input: VertexInput) -> VertexOutput {
+      let i = f32(input.instance);
+      let grid = uniforms.grid;
+      let cell = vec2f(i % grid.x, floor(i / grid.x));
+      var state = cellStateIn[input.instance];
+
+      let gridPos = (input.pos + 1) / grid - 1 + cell / grid * 2;
+
+      var output: VertexOutput;
+      output.pos = vec4f(gridPos, 0, 1);
+      output.state = state;
+      return output;
+    }
+
+    // Fragment shaders
+    @fragment
+    fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+      let c = clamp(2. * input.state / uniforms.maxValue, 0., 1.);
+      return vec4f(c, 0.1, 1. - c, 1);
+    }
+  `,
 });
-device.queue.writeBuffer(uniformBuffer, 0, uniformArray);
-const WORKGROUP_COUNT = Math.ceil(GRID_SIZE / WORKGROUP_SIZE);
 
-const cellStateArray = new Uint32Array(GRID_SIZE * GRID_SIZE);
-for (let i = 0; i < cellStateArray.length; i += 3) {
-  cellStateArray[i] = Math.random() > 0.6 ? 1 : 0;
-}
-const cellStateStorage = [
-  device.createBuffer({
-    label: "Cell states A",
-    size: cellStateArray.byteLength,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-  }),
-  device.createBuffer({
-    label: "Cell states B",
-    size: cellStateArray.byteLength,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-  }),
-];
-device.queue.writeBuffer(cellStateStorage[0], 0, cellStateArray);
-device.queue.writeBuffer(cellStateStorage[1], 0, cellStateArray);
-
-const vertexSize = 0.9;
+// Square in grid
+const vertexSize = 0.92;
 const vertices = new Float32Array([
   -1, -1, 1, -1, 1, 1,
 
@@ -64,91 +126,6 @@ const vertexBufferLayout = {
     },
   ],
 };
-
-const cellShaderModule = device.createShaderModule({
-  label: "Cell shader",
-  code: `
-    struct VertexInput {
-      @location(0) pos: vec2f,
-      @builtin(instance_index) instance: u32,
-    };
-
-    struct VertexOutput {
-      @builtin(position) pos: vec4f,
-      @location(0) cell: vec2f,
-    };
-
-    @group(0) @binding(0) var<uniform> grid: vec2f;
-    @group(0) @binding(1) var<storage> cellState: array<u32>;
-
-    @vertex
-    fn vertexMain(input: VertexInput) -> VertexOutput {
-      let i = f32(input.instance);
-      let cell = vec2f(i % grid.x, floor(i / grid.x));
-      let state = f32(cellState[input.instance]);
-
-      let gridPos = (input.pos * state + 1) / grid - 1 + cell / grid * 2;
-
-      var output: VertexOutput;
-      output.pos = vec4f(gridPos, 0, 1);
-      output.cell = cell;
-      return output;
-    }
-
-    @fragment
-    fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-    let c = input.cell / grid;
-      return vec4f(c, 1 - c.x, 1);
-    }
-  `,
-});
-
-const simulationShaderModule = device.createShaderModule({
-  label: "Game of life simulation shader",
-  code: `
-    @group(0) @binding(0) var<uniform> grid: vec2f;
-
-    @group(0) @binding(1) var<storage> cellStateIn: array<u32>;
-    @group(0) @binding(2) var<storage, read_write> cellStateOut: array<u32>;
-
-    fn cellIndex(cell: vec2u) -> u32 {
-      return (cell.y % u32(grid.y)) * u32(grid.x) + cell.x % u32(grid.x);
-    }
-
-    fn cellActive(x: u32, y: u32) -> u32 {
-      return cellStateIn[cellIndex(vec2(x, y))];
-    }
-
-    @compute
-    @workgroup_size(${WORKGROUP_SIZE}, ${WORKGROUP_SIZE})
-    fn computeMain(@builtin(global_invocation_id) cell: vec3u) {
-      let activeNeighbours = cellActive(cell.x+1, cell.y+1) +
-                            cellActive(cell.x+1, cell.y) +
-                            cellActive(cell.x+1, cell.y-1) +
-                            cellActive(cell.x, cell.y-1) +
-                            cellActive(cell.x-1, cell.y-1) +
-                            cellActive(cell.x-1, cell.y) +
-                            cellActive(cell.x-1, cell.y+1) +
-                            cellActive(cell.x, cell.y+1);
-
-      let i = cellIndex(cell.xy);
-      
-      switch activeNeighbours {
-        case 2: {
-          cellStateOut[i] = cellStateIn[i];
-        }
-
-        case 3: {
-          cellStateOut[i] = 1;
-        }
-
-        default: {
-          cellStateOut[i] = 0;
-        }
-      }
-    }
-  `,
-});
 
 const bindGroupLayout = device.createBindGroupLayout({
   label: "Cell bind group layout",
@@ -174,45 +151,6 @@ const bindGroupLayout = device.createBindGroupLayout({
   ],
 });
 
-const bindGroups = [
-  device.createBindGroup({
-    label: "Cell renderer bind group A",
-    layout: bindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: { buffer: uniformBuffer },
-      },
-      {
-        binding: 1,
-        resource: { buffer: cellStateStorage[0] },
-      },
-      {
-        binding: 2,
-        resource: { buffer: cellStateStorage[1] },
-      },
-    ],
-  }),
-  device.createBindGroup({
-    label: "Cell renderer bind group B",
-    layout: bindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: { buffer: uniformBuffer },
-      },
-      {
-        binding: 1,
-        resource: { buffer: cellStateStorage[1] },
-      },
-      {
-        binding: 2,
-        resource: { buffer: cellStateStorage[0] },
-      },
-    ],
-  }),
-];
-
 const pipelineLayout = device.createPipelineLayout({
   label: "Cell pipeline layout",
   bindGroupLayouts: [bindGroupLayout],
@@ -222,12 +160,12 @@ const cellPipeline = device.createRenderPipeline({
   label: "Cell pipeline",
   layout: pipelineLayout,
   vertex: {
-    module: cellShaderModule,
+    module: shaderModule,
     entryPoint: "vertexMain",
     buffers: [vertexBufferLayout],
   },
   fragment: {
-    module: cellShaderModule,
+    module: shaderModule,
     entryPoint: "fragmentMain",
     targets: [
       {
@@ -241,178 +179,160 @@ const simulationPipeline = device.createComputePipeline({
   label: "Simulation pipeline",
   layout: pipelineLayout,
   compute: {
-    module: simulationShaderModule,
+    module: shaderModule,
     entryPoint: "computeMain",
   },
 });
 
-function updateGrid() {
-  const encoder = device.createCommandEncoder();
-
-  const computePass = encoder.beginComputePass();
-  computePass.setPipeline(simulationPipeline);
-  computePass.setBindGroup(0, bindGroups[step % 2]);
-  computePass.dispatchWorkgroups(WORKGROUP_COUNT, WORKGROUP_COUNT);
-  computePass.end();
-
-  step++;
-
-  const renderPass = encoder.beginRenderPass({
-    colorAttachments: [
-      {
-        view: context.getCurrentTexture().createView(),
-        loadOp: "clear",
-        clearValue: [0, 0, 0.4, 0],
-        storeOp: "store",
-      },
-    ],
-  });
-  renderPass.setPipeline(cellPipeline);
-  renderPass.setVertexBuffer(0, vertexBuffer);
-  renderPass.setBindGroup(0, bindGroups[step % 2]);
-  renderPass.draw(vertices.length / 2, GRID_SIZE * GRID_SIZE);
-  renderPass.end();
-  device.queue.submit([encoder.finish()]);
+function roundUpToMultiple(number, multiplier) {
+  const div = Math.floor(number / multiplier);
+  const rem = number % multiplier;
+  const roundUp = rem > 0 ? 1 : 0;
+  return (div + roundUp) * multiplier;
 }
-setInterval(updateGrid, UPDATE_INTERVAL);
 
-// resizeCanvas(canvas);
-// const context = canvas.getContext("webgpu");
-// const format = navigator.gpu.getPreferredCanvasFormat();
-// context.configure({ device, format });
+function resizeCanvas(canvas, aspect) {
+  const pixelRatio = window.devicePixelRatio;
+  canvas.width = Math.ceil(canvas.clientWidth * pixelRatio);
+  canvas.height = Math.ceil(canvas.width * aspect);
+}
 
-// const NUM_BALLS = 100;
-// const BUFFER_SIZE = NUM_BALLS * 6;
-// let inputBalls = new Float32Array(new ArrayBuffer(BUFFER_SIZE));
-// for (let i = 0; i < BUFFER_SIZE; i += 6) {
-//   inputBalls[i + 0] = randomBetween(2, 10);
-//   inputBalls[i + 1] = 0;
-//   inputBalls[i + 2] = randomBetween(0, context.canvas.width);
-//   inputBalls[i + 3] = randomBetween(0, context.canvas.height);
-//   inputBalls[i + 4] = randomBetween(-100, 100);
-//   inputBalls[i + 5] = randomBetween(-100, 100);
-// }
+function runSimulation() {
+  let gridHeight = parseFloat(document.getElementById("gridheight").value);
+  if (!gridHeight) {
+    gridHeight = 96;
+  }
+  let gridWidth = parseFloat(document.getElementById("gridwidth").value);
+  if (!gridWidth) {
+    gridWidth = 128;
+  }
+  let updateInterval = parseInt(document.getElementById("frametime").value);
+  if (!updateInterval) {
+    updateInterval = 50;
+  }
 
-// async function initWebGPU() {
-//   const module = device.createShaderModule({
-//     code: `
-//             struct Ball {
-//                 radius: f32,
-//                 position: vec2<f32>,
-//                 velocity: vec2<f32>,
-//             }
+  const maxValue = Math.sqrt(gridHeight * gridHeight + gridWidth * gridWidth);
+  const dt = 1 / Math.sqrt(2);
+  const origin = Math.ceil((gridHeight / 2) * gridWidth + gridWidth / 2);
 
-//             @group(0) @binding(0)
-//             var<storage, read_write> input: array<Ball>;
+  const aspect = gridHeight / gridWidth;
+  resizeCanvas(canvas, aspect);
 
-//             @group(0) @binding(1)
-//             var<storage, read_write> output: array<Ball>;
+  let step = 0;
 
-//             const TIME_STEP: f32 = 0.016;
+  const uniformArray = new Float32Array([
+    gridWidth,
+    gridHeight,
+    maxValue,
+    dt,
+    origin,
+  ]);
+  const uniformBuffer = device.createBuffer({
+    label: "Grid uniforms",
+    size: roundUpToMultiple(uniformArray.byteLength, 16),
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(uniformBuffer, 0, uniformArray);
+  const workgroupHeight = Math.ceil(gridHeight / WORKGROUP_SIZE);
+  const workgroupWidth = Math.ceil(gridWidth / WORKGROUP_SIZE);
 
-//             @compute @workgroup_size(64)
-//             fn main(
-//                 @builtin(global_invocation_id) global_id: vec3<u32>,
-//             ) {
-//                 let num_balls = arrayLength(&output);
-//                 if(global_id.x >= num_balls) {
-//                     return;
-//                 }
-//                 output[global_id.x].position = output[global_id.x].position + output[global_id.x].velocity * TIME_STEP;
-//             }
-//         `,
-//   });
+  const cellStateArray = new Float32Array(gridHeight * gridWidth);
+  for (let i = 0; i < cellStateArray.length; i += 1) {
+    cellStateArray[i] = i == origin ? 0 : maxValue;
+  }
+  const cellStateStorage = [
+    device.createBuffer({
+      label: "Cell states A",
+      size: cellStateArray.byteLength,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    }),
+    device.createBuffer({
+      label: "Cell states B",
+      size: cellStateArray.byteLength,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+    }),
+  ];
+  device.queue.writeBuffer(cellStateStorage[0], 0, cellStateArray);
+  device.queue.writeBuffer(cellStateStorage[1], 0, cellStateArray);
 
-//   const bindGroupLayout = device.createBindGroupLayout({
-//     entries: [
-//       {
-//         binding: 0,
-//         visibility: GPUShaderStage.COMPUTE,
-//         buffer: { type: "read-only-storage" },
-//       },
-//       {
-//         binding: 1,
-//         visibility: GPUShaderStage.COMPUTE,
-//         buffer: { type: "storage" },
-//       },
-//     ],
-//   });
+  const bindGroups = [
+    device.createBindGroup({
+      label: "Cell renderer bind group A",
+      layout: bindGroupLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: { buffer: uniformBuffer },
+        },
+        {
+          binding: 1,
+          resource: { buffer: cellStateStorage[0] },
+        },
+        {
+          binding: 2,
+          resource: { buffer: cellStateStorage[1] },
+        },
+      ],
+    }),
+    device.createBindGroup({
+      label: "Cell renderer bind group B",
+      layout: bindGroupLayout,
+      entries: [
+        {
+          binding: 0,
+          resource: { buffer: uniformBuffer },
+        },
+        {
+          binding: 1,
+          resource: { buffer: cellStateStorage[1] },
+        },
+        {
+          binding: 2,
+          resource: { buffer: cellStateStorage[0] },
+        },
+      ],
+    }),
+  ];
 
-//   const pipeline = device.createComputePipeline({
-//     layout: device.createPipelineLayout({
-//       bindGroupLayouts: [bindGroupLayout],
-//     }),
-//     compute: {
-//       module,
-//       entryPoint: "main",
-//     },
-//   });
+  function updateGrid() {
+    const encoder = device.createCommandEncoder();
 
-//   const input = device.createBuffer({
-//     size: BUFFER_SIZE,
-//     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
-//   });
+    step++;
 
-//   const output = device.createBuffer({
-//     size: BUFFER_SIZE,
-//     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-//   });
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: context.getCurrentTexture().createView(),
+          loadOp: "clear",
+          clearValue: [0.1, 0.1, 0.1, 0],
+          storeOp: "store",
+        },
+      ],
+    });
+    renderPass.setPipeline(cellPipeline);
+    renderPass.setVertexBuffer(0, vertexBuffer);
+    renderPass.setBindGroup(0, bindGroups[step % 2]);
+    renderPass.draw(vertices.length / 2, gridWidth * gridHeight);
+    renderPass.end();
 
-//   const stagingBuffer = device.createBuffer({
-//     size: BUFFER_SIZE,
-//     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-//   });
+    const computePass = encoder.beginComputePass();
+    computePass.setPipeline(simulationPipeline);
+    computePass.setBindGroup(0, bindGroups[step % 2]);
+    computePass.dispatchWorkgroups(workgroupWidth, workgroupHeight);
+    computePass.end();
+    device.queue.submit([encoder.finish()]);
+  }
+  updateGrid();
+  return setInterval(updateGrid, updateInterval);
+}
 
-//   const bindGroup = device.createBindGroup({
-//     layout: bindGroupLayout,
-//     entries: [
-//       {
-//         binding: 0,
-//         resource: { buffer: input },
-//       },
-//       {
-//         binding: 1,
-//         resource: { buffer: output },
-//       },
-//     ],
-//   });
+function startSimulation() {
+  if (previousSimulation) {
+    clearInterval(previousSimulation);
+  }
+  previousSimulation = runSimulation();
+}
 
-//   device.queue.writeBuffer(input, 0, inputBalls);
-
-//   const commandEncoder = device.createCommandEncoder();
-//   const passEncoder = commandEncoder.beginComputePass();
-//   passEncoder.setPipeline(pipeline);
-//   passEncoder.setBindGroup(0, bindGroup);
-//   passEncoder.dispatchWorkgroups(Math.ceil(BUFFER_SIZE / 64));
-//   passEncoder.end();
-
-//   commandEncoder.copyBufferToBuffer(output, 0, stagingBuffer, 0, BUFFER_SIZE);
-
-//   const commands = commandEncoder.finish();
-//   device.queue.submit([commands]);
-
-//   await stagingBuffer.mapAsync(GPUMapMode.READ, 0, BUFFER_SIZE);
-
-//   const copyArrayBuffer = stagingBuffer.getMappedRange(0, BUFFER_SIZE);
-//   const data = copyArrayBuffer.slice();
-//   stagingBuffer.unmap();
-//   console.log(new Float32Array(data));
-// }
-
-// function randomBetween(lower, upper) {
-//   return Math.floor(lower + Math.random() * (upper - lower + 1));
-// }
-
-// function resizeCanvas(canvas) {
-//   const pixelRatio = window.devicePixelRatio;
-//   canvas.width = Math.ceil(canvas.clientWidth * pixelRatio);
-//   canvas.height = Math.ceil(canvas.clientHeight * pixelRatio);
-// }
-
-// async function main() {
-//   await initWebGPU();
-
-//   console.log();
-// }
-
-// main();
+let previousSimulation = runSimulation();
+const submit = document.getElementById("submit");
+submit.addEventListener("click", startSimulation);
