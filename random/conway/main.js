@@ -185,11 +185,11 @@ function resizeCanvas(canvas, aspect) {
 function runSimulation() {
   let gridHeight = parseFloat(document.getElementById("gridheight").value);
   if (!gridHeight) {
-    gridHeight = 8;
+    gridHeight = 128;
   }
   let gridWidth = parseFloat(document.getElementById("gridwidth").value);
   if (!gridWidth) {
-    gridWidth = 16;
+    gridWidth = 128;
   }
   let aliveFraction = parseFloat(document.getElementById("fraction").value);
   if (!aliveFraction) {

@@ -104,7 +104,7 @@ const shaderModule = device.createShaderModule({
 });
 
 // Square in grid
-const vertexSize = 0.92;
+const vertexSize = 0.99;
 const vertices = new Float32Array([
   -1, -1, 1, -1, 1, 1,
 
