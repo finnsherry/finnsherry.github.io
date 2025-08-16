@@ -29,9 +29,9 @@ async function svgFileToArray(filePath, width) {
       const maze = new Float32Array(width * height);
       for (let i = 0; i < width * height; i++) {
         if (data[i * 4 + 3] > 0) {
-          maze[i] = 1;
-        } else {
           maze[i] = 0;
+        } else {
+          maze[i] = 1;
         }
       }
       resolve({ maze, height });
@@ -85,8 +85,10 @@ const shaderModule = device.createShaderModule({
       return max(max(-forward, backward), 0.) * (2. * step(-forward, backward) - 1.);
     }
 
-    fn computeHamiltonian(cell: vec2u) -> f32 {
-      let centre = cellStateIn[cellIndex(cell)];
+    @compute
+    @workgroup_size(${WORKGROUP_SIZE}, ${WORKGROUP_SIZE})
+    fn computeMain(@builtin(global_invocation_id) cell: vec3u) {
+      let centre = cellStateIn[cellIndex(cell.xy)];
       let xForward = cellStateIn[cellIndex(vec2u(cell.x+1, cell.y))];
       let xBackward = cellStateIn[cellIndex(vec2u(cell.x-1, cell.y))];
       let yForward = cellStateIn[cellIndex(vec2u(cell.x, cell.y+1))];
@@ -99,20 +101,12 @@ const shaderModule = device.createShaderModule({
 
       let dx = selectUpwind(dxForward, dxBackward);
       let dy = selectUpwind(dyForward, dyBackward);
-
+      
       let i = cellIndex(cell.xy);
-      let cost = 1. / (1. + uniforms.mazeMax * (1 - maze[i]));
-      // let cost = 1. / (1. + 500. * maze[i]);
+      let cost = 1. / (1. + uniforms.mazeMax * maze[i]);
 
-      return cost - sqrt(dx * dx + dy * dy);
-    }
-
-    @compute
-    @workgroup_size(${WORKGROUP_SIZE}, ${WORKGROUP_SIZE})
-    fn computeMain(@builtin(global_invocation_id) cell: vec3u) {
-      let dWdt = computeHamiltonian(cell.xy);
-      let i = cellIndex(cell.xy);
-      if (f32(i) == uniforms.origin) {
+      let dWdt = cost - sqrt(dx * dx + dy * dy);
+      if abs(f32(i) - uniforms.origin) < 0.5 {
         cellStateOut[i] = 0.;
       } else {
         cellStateOut[i] = cellStateIn[i] + uniforms.dt * dWdt;
@@ -132,7 +126,7 @@ const shaderModule = device.createShaderModule({
       var output: VertexOutput;
       output.pos = vec4f(gridPos, 0, 1);
       output.state = state;
-      output.inMaze = 1 - maze[input.instance];
+      output.inMaze = maze[input.instance];
       return output;
     }
 
@@ -254,11 +248,11 @@ function resizeCanvas(canvas, aspect) {
 async function runSimulation() {
   let gridWidth = parseFloat(document.getElementById("gridwidth").value);
   if (!gridWidth) {
-    gridWidth = 1024;
+    gridWidth = 256;
   }
   let updateInterval = parseInt(document.getElementById("frametime").value);
   if (!updateInterval) {
-    updateInterval = 10;
+    updateInterval = 20;
   }
   // let contourCount = parseFloat(document.getElementById("contourcount").value);
   // if (!contourCount) {
@@ -273,7 +267,8 @@ async function runSimulation() {
   const maxValue =
     (Math.sqrt(gridHeight * gridHeight + gridWidth * gridWidth) * 2) / mazeMax;
   const dt = 1 / Math.sqrt(2);
-  const origin = Math.ceil((gridHeight / 2) * gridWidth + gridWidth / 2);
+  const origin =
+    Math.floor(gridHeight / 2) * gridWidth + Math.floor(gridWidth / 2);
   const contourWidth = 16 / Math.min(gridWidth, gridHeight);
 
   const aspect = gridHeight / gridWidth;
@@ -319,7 +314,6 @@ async function runSimulation() {
   device.queue.writeBuffer(cellStateStorage[0], 0, cellStateArray);
   device.queue.writeBuffer(cellStateStorage[1], 0, cellStateArray);
 
-  console.log(maze);
   const mazeStorage = device.createBuffer({
     label: "Maze",
     size: maze.byteLength,
