@@ -10,6 +10,40 @@ context.configure({ device, format });
 
 const WORKGROUP_SIZE = 8;
 
+async function svgFileToArray(filePath, width) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      const aspect = img.naturalHeight / img.naturalWidth;
+      const height = Math.round(width * aspect);
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(img, 0, 0, width, height);
+      const { data } = ctx.getImageData(0, 0, width, height);
+
+      const maze = new Float32Array(width * height);
+      for (let i = 0; i < width * height; i++) {
+        if (data[i * 4 + 3] > 0) {
+          maze[i] = 1;
+        } else {
+          maze[i] = 0;
+        }
+      }
+      resolve({ maze, height });
+    };
+
+    img.onerror = reject;
+    img.src = filePath;
+  });
+}
+
+// svgFileToArray("maze.svg", 128).then((arr) => console.log(arr));
+
 const shaderModule = device.createShaderModule({
   label: "Eikonal PDE shader",
   code: `
@@ -18,6 +52,9 @@ const shaderModule = device.createShaderModule({
       maxValue: f32,
       dt: f32,
       origin: f32,
+      contourCount: f32,
+      contourWidth: f32,
+      mazeMax: f32,
     };
       
     struct VertexInput {
@@ -28,11 +65,13 @@ const shaderModule = device.createShaderModule({
     struct VertexOutput {
       @builtin(position) pos: vec4f,
       @location(0) state: f32,
+      @location(1) inMaze: f32,
     };
 
     @group(0) @binding(0) var<uniform> uniforms: Uniforms;
     @group(0) @binding(1) var<storage> cellStateIn: array<f32>;
     @group(0) @binding(2) var<storage, read_write> cellStateOut: array<f32>;
+    @group(0) @binding(3) var<storage> maze: array<f32>;
 
     // Compute shaders
     fn cellIndex(cell: vec2u) -> u32 {
@@ -62,8 +101,10 @@ const shaderModule = device.createShaderModule({
       let dy = selectUpwind(dyForward, dyBackward);
 
       let i = cellIndex(cell.xy);
+      let cost = 1. / (1. + uniforms.mazeMax * (1 - maze[i]));
+      // let cost = 1. / (1. + 500. * maze[i]);
 
-      return 1. - sqrt(dx * dx + dy * dy);
+      return cost - sqrt(dx * dx + dy * dy);
     }
 
     @compute
@@ -91,20 +132,28 @@ const shaderModule = device.createShaderModule({
       var output: VertexOutput;
       output.pos = vec4f(gridPos, 0, 1);
       output.state = state;
+      output.inMaze = 1 - maze[input.instance];
       return output;
     }
 
     // Fragment shaders
     @fragment
     fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
-      let c = clamp(2. * input.state / uniforms.maxValue, 0., 1.);
-      return vec4f(c, 0.1, 1. - c, 1);
+      let frac = input.state / uniforms.maxValue;
+      let c = clamp(2. * frac, 0., 1.);
+      let distContour = modf(frac * (uniforms.contourCount * 2)).fract;
+      let onContour = step(1 - distContour, uniforms.contourWidth) * step(frac, 0.99);
+      // let contourMultiplier = (1. - onContour) + 0.1 * onContour;
+      let contourMultiplier = 1.;
+      let mazeMultiplier = input.inMaze + (1 - input.inMaze) * 0.1;
+      let cMultiplier = contourMultiplier * mazeMultiplier;
+      return vec4f(c * cMultiplier, 0.1 * cMultiplier, (1. - c) * cMultiplier, 1);
     }
   `,
 });
 
 // Square in grid
-const vertexSize = 0.99;
+const vertexSize = 1.0;
 const vertices = new Float32Array([
   -1, -1, 1, -1, 1, 1,
 
@@ -147,6 +196,11 @@ const bindGroupLayout = device.createBindGroupLayout({
       binding: 2,
       visibility: GPUShaderStage.COMPUTE,
       buffer: { type: "storage" },
+    },
+    {
+      binding: 3,
+      visibility: GPUShaderStage.VERTEX | GPUShaderStage.COMPUTE,
+      buffer: { type: "read-only-storage" },
     },
   ],
 });
@@ -197,23 +251,30 @@ function resizeCanvas(canvas, aspect) {
   canvas.height = Math.ceil(canvas.width * aspect);
 }
 
-function runSimulation() {
-  let gridHeight = parseFloat(document.getElementById("gridheight").value);
-  if (!gridHeight) {
-    gridHeight = 96;
-  }
+async function runSimulation() {
   let gridWidth = parseFloat(document.getElementById("gridwidth").value);
   if (!gridWidth) {
-    gridWidth = 128;
+    gridWidth = 1024;
   }
   let updateInterval = parseInt(document.getElementById("frametime").value);
   if (!updateInterval) {
-    updateInterval = 50;
+    updateInterval = 10;
   }
+  // let contourCount = parseFloat(document.getElementById("contourcount").value);
+  // if (!contourCount) {
+  //   contourCount = 10;
+  // }
+  const contourCount = 10;
 
-  const maxValue = Math.sqrt(gridHeight * gridHeight + gridWidth * gridWidth);
+  const { maze, height } = await svgFileToArray("maze.svg", gridWidth);
+  const gridHeight = height;
+
+  const mazeMax = 5000;
+  const maxValue =
+    (Math.sqrt(gridHeight * gridHeight + gridWidth * gridWidth) * 2) / mazeMax;
   const dt = 1 / Math.sqrt(2);
   const origin = Math.ceil((gridHeight / 2) * gridWidth + gridWidth / 2);
+  const contourWidth = 16 / Math.min(gridWidth, gridHeight);
 
   const aspect = gridHeight / gridWidth;
   resizeCanvas(canvas, aspect);
@@ -226,6 +287,9 @@ function runSimulation() {
     maxValue,
     dt,
     origin,
+    contourCount,
+    contourWidth,
+    mazeMax,
   ]);
   const uniformBuffer = device.createBuffer({
     label: "Grid uniforms",
@@ -255,6 +319,14 @@ function runSimulation() {
   device.queue.writeBuffer(cellStateStorage[0], 0, cellStateArray);
   device.queue.writeBuffer(cellStateStorage[1], 0, cellStateArray);
 
+  console.log(maze);
+  const mazeStorage = device.createBuffer({
+    label: "Maze",
+    size: maze.byteLength,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(mazeStorage, 0, maze);
+
   const bindGroups = [
     device.createBindGroup({
       label: "Cell renderer bind group A",
@@ -271,6 +343,10 @@ function runSimulation() {
         {
           binding: 2,
           resource: { buffer: cellStateStorage[1] },
+        },
+        {
+          binding: 3,
+          resource: { buffer: mazeStorage },
         },
       ],
     }),
@@ -289,6 +365,10 @@ function runSimulation() {
         {
           binding: 2,
           resource: { buffer: cellStateStorage[0] },
+        },
+        {
+          binding: 3,
+          resource: { buffer: mazeStorage },
         },
       ],
     }),
@@ -326,13 +406,13 @@ function runSimulation() {
   return setInterval(updateGrid, updateInterval);
 }
 
-function startSimulation() {
+async function startSimulation() {
   if (previousSimulation) {
     clearInterval(previousSimulation);
   }
-  previousSimulation = runSimulation();
+  previousSimulation = await runSimulation();
 }
 
-let previousSimulation = runSimulation();
+let previousSimulation = await runSimulation();
 const submit = document.getElementById("submit");
 submit.addEventListener("click", startSimulation);
