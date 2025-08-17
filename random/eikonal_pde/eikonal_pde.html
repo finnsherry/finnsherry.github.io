@@ -67,7 +67,7 @@
                 distances are the (viscosity) solutions of corresponding eikonal PDEs. Here I go over how we can solve
                 the eikonal PDE practically to recover the distance map. I also wrote some <a
                     href="https://www.shadertoy.com/view/wXdXW7">shaders
-                    (Shadertoy)</a> so we can see it in practice. WebGPU implementation coming soon<sup>TM</sup>.
+                    (Shadertoy)</a> so we can see it in practice. A preliminary WebGPU implementation is available at the bottom of the page.
             </p>
             <p>
                 By definition, a Riemannian manifold \((\mathcal{M}, \mathcal{G})\) has a Riemannian metric tensor field
@@ -132,10 +132,6 @@
                 <tr>
                     <td><label for="gridwidth">Grid width: </label></td>
                     <td><input type="text" id="gridwidth" name="gridwidth" placeholder="256" required></td>
-                </tr>
-                <tr>
-                    <td><label for="frametime">Time between frames (ms): </label></td>
-                    <td><input type="text" id="frametime" name="frametime" placeholder="20" required></td>
                 </tr>
                 <!-- <tr>
                     <td><label for="contourcount">Number of contours: </label></td>

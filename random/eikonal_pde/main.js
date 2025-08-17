@@ -52,8 +52,6 @@ const shaderModule = device.createShaderModule({
       maxValue: f32,
       dt: f32,
       origin: f32,
-      contourCount: f32,
-      contourWidth: f32,
       mazeMax: f32,
     };
       
@@ -135,13 +133,8 @@ const shaderModule = device.createShaderModule({
     fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
       let frac = input.state / uniforms.maxValue;
       let c = clamp(2. * frac, 0., 1.);
-      let distContour = modf(frac * (uniforms.contourCount * 2)).fract;
-      let onContour = step(1 - distContour, uniforms.contourWidth) * step(frac, 0.99);
-      // let contourMultiplier = (1. - onContour) + 0.1 * onContour;
-      let contourMultiplier = 1.;
       let mazeMultiplier = input.inMaze + (1 - input.inMaze) * 0.1;
-      let cMultiplier = contourMultiplier * mazeMultiplier;
-      return vec4f(c * cMultiplier, 0.1 * cMultiplier, (1. - c) * cMultiplier, 1);
+      return vec4f(c * mazeMultiplier, 0.1 * mazeMultiplier, (1. - c) * mazeMultiplier, 1);
     }
   `,
 });
@@ -246,19 +239,11 @@ function resizeCanvas(canvas, aspect) {
 }
 
 async function runSimulation() {
+  isRunning = true;
   let gridWidth = parseFloat(document.getElementById("gridwidth").value);
   if (!gridWidth) {
     gridWidth = 256;
   }
-  let updateInterval = parseInt(document.getElementById("frametime").value);
-  if (!updateInterval) {
-    updateInterval = 20;
-  }
-  // let contourCount = parseFloat(document.getElementById("contourcount").value);
-  // if (!contourCount) {
-  //   contourCount = 10;
-  // }
-  const contourCount = 10;
 
   const { maze, height } = await svgFileToArray("maze.svg", gridWidth);
   const gridHeight = height;
@@ -269,7 +254,6 @@ async function runSimulation() {
   const dt = 1 / Math.sqrt(2);
   const origin =
     Math.floor(gridHeight / 2) * gridWidth + Math.floor(gridWidth / 2);
-  const contourWidth = 16 / Math.min(gridWidth, gridHeight);
 
   const aspect = gridHeight / gridWidth;
   resizeCanvas(canvas, aspect);
@@ -282,8 +266,6 @@ async function runSimulation() {
     maxValue,
     dt,
     origin,
-    contourCount,
-    contourWidth,
     mazeMax,
   ]);
   const uniformBuffer = device.createBuffer({
@@ -368,7 +350,11 @@ async function runSimulation() {
     }),
   ];
 
+  let time = performance.now();
   function updateGrid() {
+    const newtime = performance.now();
+    const frametime = newtime - time;
+    time = newtime;
     const encoder = device.createCommandEncoder();
 
     step++;
@@ -395,18 +381,19 @@ async function runSimulation() {
     computePass.dispatchWorkgroups(workgroupWidth, workgroupHeight);
     computePass.end();
     device.queue.submit([encoder.finish()]);
+    if (isRunning) {
+      requestAnimationFrame(updateGrid);
+    }
   }
-  updateGrid();
-  return setInterval(updateGrid, updateInterval);
+  requestAnimationFrame(updateGrid);
 }
 
 async function startSimulation() {
-  if (previousSimulation) {
-    clearInterval(previousSimulation);
-  }
-  previousSimulation = await runSimulation();
+  isRunning = false;
+  await runSimulation();
 }
 
-let previousSimulation = await runSimulation();
+let isRunning = false;
+await runSimulation();
 const submit = document.getElementById("submit");
 submit.addEventListener("click", startSimulation);
