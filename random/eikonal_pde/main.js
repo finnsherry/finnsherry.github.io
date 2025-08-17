@@ -226,10 +226,7 @@ const simulationPipeline = device.createComputePipeline({
 });
 
 function roundUpToMultiple(number, multiplier) {
-  const div = Math.floor(number / multiplier);
-  const rem = number % multiplier;
-  const roundUp = rem > 0 ? 1 : 0;
-  return (div + roundUp) * multiplier;
+  return Math.ceil(number / multiplier) * multiplier;
 }
 
 function resizeCanvas(canvas, aspect) {
