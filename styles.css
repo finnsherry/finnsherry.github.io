@@ -143,6 +143,13 @@ img {
     }
 }
 
+.news-image {
+    display: block;
+    margin: 1em auto;
+    max-width: 100%;
+    height: auto;
+}
+
 video {
     display: block;
     width: 100%;
