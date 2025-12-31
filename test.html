@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .random-item {
+            display: flex;
+            flex-direction: row;
+            background: var(--pub-colour);
+            padding: 1em;
+            margin-bottom: 1em;
+            border-radius: calc(3 * var(--border-radius));
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease-in-out;
+            justify-content: space-between;
+            text-align: justify;
+        }
+
+        .random-item * {
+            cursor: pointer;
+        }
+
+        .random-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .random-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5em;
+        }
+
+        .random-text h3 {
+            font-size: 1.25em;
+            margin: 0;
+            margin-bottom: 0em;
+            color: var(--font-colour);
+        }
+
+        .random-text p {
+            margin: 0;
+            color: var(--font-colour);
+        }
+
+        .random-item img {
+            display: block;
+            aspect-ratio: 1 / 1;
+            width: 150px;
+            object-fit: cover;
+            margin-left: 1em;
+            box-shadow: var(--shadow);
+            border-radius: 0.5em;
+            border: none;
+        }
+
+        @media (max-width: 600px) {
+            .random-item {
+                flex-direction: column;
+            }
+
+            .random-item img {
+                margin-top: 1em;
+                margin-left: 0;
+                width: 100%;
+                max-height: 200px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div id="nav">
+            <a class="navlink" href="/">Home</a>
+            <a class="navlink" href="/publications">Publications</a>
+            <!-- <a class="navlink" href="/teaching">Teaching</a> -->
+            <a class="navlink" href="/random">Random</a>
+        </div>
+        <a id="home" href="/">Finn Sherry</a>
+        <button id="colourbutton">
+            🌙
+        </button>
+        <button id="navbutton" onclick="toggleNav()">
+            •••
+        </button>
+        <script>
+            function toggleNav() {
+                document.getElementById("nav").classList.toggle('expand')
+            }
+
+            const root = document.documentElement;
+            const storedScheme = localStorage.getItem('scheme');
+            console.log(storedScheme)
+            const colourButton = document.getElementById("colourbutton");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
+
+            applyScheme(scheme);
+
+            colourButton.addEventListener("click", () => {
+                const current = root.dataset.scheme === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyScheme(next);
+                localStorage.setItem('scheme', next);
+            });
+
+            function applyScheme(scheme) {
+                root.dataset.scheme = scheme
+                colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
+            }
+        </script>
+    </header>
+
+    <main>
+        <div class="content-container">
+        <a class="random-item" href="/test/conway/">
+            <div class="random-text">
+                <h3>Conway's Game of Life</h3>
+                <p>
+                    A WebGPU implementation of Conway's Game of Life.
+                </p>
+            </div>
+            <img src="/random/conway/conway.png">
+        </a>
+        </div>
+    </main>
+
+</body>
+
+</html>
