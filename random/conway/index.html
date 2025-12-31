@@ -7,6 +7,12 @@
     <title>Random: Conway's Game of Life</title>
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
     <script type="module" src='main.js' defer></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
@@ -57,7 +63,7 @@
     <main>
         <div class="content-container">
             <p>
-                This is an implementation of <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway's Game of Life</a>, based on the WebGPU tutorial by Brandon Jones and François Beaufort on <a href="https://codelabs.developers.google.com/your-first-webgpu-app">Google codelabs</a>.
+                This is an implementation of <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway's Game of Life</a>, now using storage textures.
             </p>
             
             <table class="form" id="parameters">
@@ -74,8 +80,8 @@
                     <td><input type="text" id="fraction" name="fraction" placeholder="0.4" required></td>
                 </tr>
                 <tr>
-                    <td><label for="frametime">Time between frames (ms): </label></td>
-                    <td><input type="text" id="frametime" name="frametime" placeholder="200" required></td>
+                    <td><label for="fps">Frames per second: </label></td>
+                    <td><input type="text" id="fps" name="fps" placeholder="60" required></td>
                 </tr>
                 <tr>
                     <td><button id="submit">Start</button></td>
