@@ -6,23 +6,21 @@ const canvas = document.getElementById("canvas");
 
 const context = canvas.getContext("webgpu");
 const format = navigator.gpu.getPreferredCanvasFormat();
-context.configure({ device, format });
-
-const WORKGROUP = 8;
-
 context.configure({
   device,
   format,
   alphaMode: "opaque",
 });
 
-const texFormat = "rgba8unorm";
+const WORKGROUP = 8;
+
+const texFormat = "r32float";
 
 const computeWGSL = `
   @group(0) @binding(0) var src : texture_storage_2d<rgba8unorm, read>;
   @group(0) @binding(1) var dst : texture_storage_2d<rgba8unorm, write>;
 
-  @compute @workgroup_size(8, 8)
+  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
     let dims = textureDimensions(src);
     if (id.x >= dims.x || id.y >= dims.y) {
