@@ -152,7 +152,7 @@ function runSimulation() {
   }
   let fps = parseInt(document.getElementById("fps").value);
   if (!fps) {
-    fps = 60;
+    fps = 10;
   }
   let updateInterval = 1000 / fps;
 

@@ -15,41 +15,22 @@ context.configure({
 const WORKGROUP = 8;
 
 async function svgFileToArray(filePath, width) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  const aspect = 1;
+  const height = Math.round(width * aspect);
+  canvas.height = height;
 
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      const aspect = img.naturalHeight / img.naturalWidth;
-      const height = Math.round(width * aspect);
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-
-      ctx.drawImage(img, 0, 0, width, height);
-      const { data } = ctx.getImageData(0, 0, width, height);
-
-      const maze = new Float32Array(width * height);
-      for (let i = 0; i < width * height; i++) {
-        if (data[i * 4 + 3] > 0) {
-          maze[i] = 0;
-        } else {
-          maze[i] = 1;
-        }
-      }
-      resolve({ maze, height });
-    };
-
-    img.onerror = reject;
-    img.src = filePath;
-  });
+  const maze = new Float32Array(width * height);
+  for (let i = 0; i < width * height; i++) {
+    maze[i] = 1;
+  }
+  return { maze, height };
 }
 
 const texFormat = "r32float";
 
-function makeComputePipeline() {
-  const computeWGSL = `
+const computeWGSL = `
   struct Uniforms {
     grid: vec2f,
     maxValue: f32,
@@ -106,42 +87,17 @@ function makeComputePipeline() {
   }
 `;
 
-  return device.createComputePipeline({
-    layout: "auto",
-    compute: {
-      module: device.createShaderModule({
-        code: computeWGSL,
-      }),
-      entryPoint: "main",
-    },
-  });
-}
+const computePipeline = device.createComputePipeline({
+  layout: "auto",
+  compute: {
+    module: device.createShaderModule({
+      code: computeWGSL,
+    }),
+    entryPoint: "main",
+  },
+});
 
-function makeRenderPipeline(colourScheme) {
-  let fragmentColouring = ``;
-  switch (colourScheme) {
-    case "blueRed":
-      fragmentColouring = `
-        let c = clamp(frac.r, 0., 1.);
-        return vec4f(c * mazeMultiplier, 0.1 * mazeMultiplier, (1. - c) * mazeMultiplier, 1);
-      `;
-      break;
-    case "blueGreen":
-      fragmentColouring = `
-        let c = clamp(0., frac.r, 1.);
-        return vec4f(0.1 * mazeMultiplier, c * mazeMultiplier, (1. - c) * mazeMultiplier, 1);
-      `;
-      break;
-    default:
-      // White-Black.
-      fragmentColouring = `
-        let c = clamp(1 - frac.r, 0., 1.);
-        return vec4f(c * mazeMultiplier, c * mazeMultiplier, c * mazeMultiplier, 1);
-      `;
-      break;
-  }
-
-  const renderWGSL = `
+const renderWGSL = `
   struct Uniforms {
     grid: vec2f,
     maxValue: f32,
@@ -174,26 +130,26 @@ function makeRenderPipeline(colourScheme) {
     let coord = vec2<i32>(p.xy);
     let state = textureLoad(tex, coord, 0);
     let frac = state / uniforms.maxValue;
+    let c = clamp(frac.r, 0., 1.);
     let inMaze = textureLoad(maze, coord).r;
     let mazeMultiplier = inMaze + (1 - inMaze) * 0.1;
-    ${fragmentColouring}
+    return vec4f(c * mazeMultiplier, 0.1 * mazeMultiplier, (1. - c) * mazeMultiplier, 1);
   }
 `;
 
-  return device.createRenderPipeline({
-    layout: "auto",
-    vertex: {
-      module: device.createShaderModule({ code: renderWGSL }),
-      entryPoint: "vs",
-    },
-    fragment: {
-      module: device.createShaderModule({ code: renderWGSL }),
-      entryPoint: "fs",
-      targets: [{ format }],
-    },
-    primitive: { topology: "triangle-list" },
-  });
-}
+const renderPipeline = device.createRenderPipeline({
+  layout: "auto",
+  vertex: {
+    module: device.createShaderModule({ code: renderWGSL }),
+    entryPoint: "vs",
+  },
+  fragment: {
+    module: device.createShaderModule({ code: renderWGSL }),
+    entryPoint: "fs",
+    targets: [{ format }],
+  },
+  primitive: { topology: "triangle-list" },
+});
 
 function createStateTexture(width, height) {
   return device.createTexture({
@@ -211,10 +167,7 @@ function roundUpToMultiple(number, multiplier) {
 }
 
 async function runSimulation() {
-  let step = 0;
   isRunning = true;
-
-  // User parameters.
   let gridWidth = parseFloat(document.getElementById("gridwidth").value);
   if (!gridWidth) {
     gridWidth = 256;
@@ -223,10 +176,7 @@ async function runSimulation() {
   if (!showEvery) {
     showEvery = 1;
   }
-  let colourScheme = document.getElementById("colourScheme").value;
-  console.log(colourScheme);
 
-  // Load maze and make canvas.
   const { maze, height } = await svgFileToArray("maze.svg", gridWidth);
   const gridHeight = height;
   let texMaze = createStateTexture(gridWidth, gridHeight);
@@ -236,15 +186,17 @@ async function runSimulation() {
     { bytesPerRow: gridWidth * 4 },
     [gridWidth, gridHeight]
   );
-  canvas.width = gridWidth;
-  canvas.height = gridHeight;
 
-  // Define uniforms.
   const mazeMax = 2000;
   const maxValue =
     (Math.sqrt(gridHeight * gridHeight + gridWidth * gridWidth) * 2) / mazeMax;
   const dt = 1 / Math.sqrt(2);
   const origin = 0;
+
+  canvas.width = gridWidth;
+  canvas.height = gridHeight;
+
+  let step = 0;
 
   const uniforms = new Float32Array([
     gridWidth,
@@ -261,36 +213,6 @@ async function runSimulation() {
   });
   device.queue.writeBuffer(uniformBuffer, 0, uniforms);
 
-  // Compute pipeline and bind groups.
-  const computePipeline = makeComputePipeline();
-
-  function computeBind(src, dst, maze) {
-    return device.createBindGroup({
-      layout: computePipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dst.createView() },
-        { binding: 3, resource: maze.createView() },
-      ],
-    });
-  }
-
-  // Render pipeline and bind groups.
-  const renderPipeline = makeRenderPipeline(colourScheme);
-
-  function renderBind(tex, maze) {
-    return device.createBindGroup({
-      layout: renderPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: tex.createView() },
-        { binding: 1, resource: { buffer: uniformBuffer } },
-        { binding: 2, resource: maze.createView() },
-      ],
-    });
-  }
-
-  // Create textures for ping-pong.
   const init = new Float32Array(gridHeight * gridWidth);
   for (let i = 0; i < init.length; i += 1) {
     init[i] = i == origin ? 0 : maxValue;
@@ -310,12 +232,35 @@ async function runSimulation() {
     [gridWidth, gridHeight]
   );
 
+  function computeBind(src, dst, maze) {
+    return device.createBindGroup({
+      layout: computePipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: uniformBuffer } },
+        { binding: 1, resource: src.createView() },
+        { binding: 2, resource: dst.createView() },
+        { binding: 3, resource: maze.createView() },
+      ],
+    });
+  }
+
+  function renderBind(tex, maze) {
+    return device.createBindGroup({
+      layout: renderPipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: tex.createView() },
+        { binding: 1, resource: { buffer: uniformBuffer } },
+        { binding: 2, resource: maze.createView() },
+      ],
+    });
+  }
+
   let time = performance.now();
   function updateGrid() {
     const newtime = performance.now();
     const frametime = newtime - time;
     time = newtime;
-    // console.log(frametime);
+    console.log(frametime);
 
     const encoder = device.createCommandEncoder();
 
