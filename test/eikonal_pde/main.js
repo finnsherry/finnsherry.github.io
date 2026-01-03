@@ -122,21 +122,18 @@ function makeRenderPipeline(colourScheme) {
   switch (colourScheme) {
     case "blueRed":
       fragmentColouring = `
-        let c = clamp(frac.r, 0., 1.);
         return vec4f(c * mazeMultiplier, 0.1 * mazeMultiplier, (1. - c) * mazeMultiplier, 1);
       `;
       break;
     case "blueGreen":
       fragmentColouring = `
-        let c = clamp(0., frac.r, 1.);
         return vec4f(0.1 * mazeMultiplier, c * mazeMultiplier, (1. - c) * mazeMultiplier, 1);
       `;
       break;
     default:
       // White-Black.
       fragmentColouring = `
-        let c = clamp(1 - frac.r, 0., 1.);
-        return vec4f(c * mazeMultiplier, c * mazeMultiplier, c * mazeMultiplier, 1);
+        return vec4f((1 - c) * mazeMultiplier, (1 - c) * mazeMultiplier, (1 - c) * mazeMultiplier, 1);
       `;
       break;
   }
@@ -176,6 +173,7 @@ function makeRenderPipeline(colourScheme) {
     let frac = state / uniforms.maxValue;
     let inMaze = textureLoad(maze, coord).r;
     let mazeMultiplier = inMaze + (1 - inMaze) * 0.1;
+    let c = clamp(frac.r, 0., 1.);
     ${fragmentColouring}
   }
 `;
