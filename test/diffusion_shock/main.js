@@ -16,6 +16,8 @@ context.configure({
 
 const WORKGROUP = 8;
 
+let rafId = null;
+
 async function pngFileToArray(filePath) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -176,13 +178,13 @@ function makeSobelPipeline() {
     textureStore(
       d_dx,
       id.xy,
-      (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) * vec4f(1)
+      (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) / 8 * vec4f(1)
     );
     
     textureStore(
       d_dy,
       id.xy,
-      (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) * vec4f(1)
+      (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) / 8 * vec4f(1)
     );
   }
 `;
@@ -201,7 +203,6 @@ function makeSobelPipeline() {
 function makeDSSwitchPipeline() {
   const computeWGSL = `
   struct Uniforms {
-    grid: vec2f,
     delta: f32,
     dt: f32,
     lambda: f32,
@@ -371,7 +372,6 @@ function makeSecondOrderPipeline() {
 function makeMorphologicalSwitchPipeline() {
   const computeWGSL = `
   struct Uniforms {
-    grid: vec2f,
     delta: f32,
     dt: f32,
     lambda: f32,
@@ -433,7 +433,6 @@ function makeMorphologicalSwitchPipeline() {
 function makeLaplacianPipeline() {
   const computeWGSL = `
   struct Uniforms {
-    grid: vec2f,
     delta: f32,
     dt: f32,
     lambda: f32,
@@ -501,7 +500,6 @@ function makeLaplacianPipeline() {
 function makeMorphologicalPipeline() {
   const computeWGSL = `
   struct Uniforms {
-    grid: vec2f,
     delta: f32,
     dt: f32,
     lambda: f32,
@@ -575,7 +573,7 @@ function makeMorphologicalPipeline() {
     textureStore(
       erosion_u,
       id.xy,
-      (
+      -(
         (1 - uniforms.delta) * sqrt(u_dx_ero * u_dx_ero + u_dy_ero * u_dy_ero) +
         (uniforms.delta / sqrt(2)) * sqrt(u_dp_ero * u_dp_ero + u_dm_ero * u_dm_ero)
       ) * vec4f(1)
@@ -597,7 +595,6 @@ function makeMorphologicalPipeline() {
 function makeStepPipeline() {
   const computeWGSL = `
   struct Uniforms {
-    grid: vec2f,
     delta: f32,
     dt: f32,
     lambda: f32,
@@ -744,7 +741,23 @@ async function runInpainting() {
   // User parameters.
   let showEvery = parseFloat(document.getElementById("showEvery").value);
   if (!showEvery) {
-    showEvery = 1;
+    showEvery = 25;
+  }
+  let lambda = parseFloat(document.getElementById("lambda").value);
+  if (!lambda) {
+    lambda = 2;
+  }
+  let nu = parseFloat(document.getElementById("nu").value);
+  if (!nu) {
+    nu = 2;
+  }
+  let sigma = parseFloat(document.getElementById("sigma").value);
+  if (!sigma) {
+    sigma = 2;
+  }
+  let rho = parseFloat(document.getElementById("rho").value);
+  if (!rho) {
+    rho = 5;
   }
 
   // Load data and make canvas.
@@ -767,26 +780,17 @@ async function runInpainting() {
 
   // Define uniforms.
   const delta = Math.sqrt(2) - 1;
-  const dt = 1 / Math.max(4 - 2 * delta, Math.sqrt(2) * (1 - delta) + delta);
-  const lambda = 2;
-  const epsilon = 0 * 0.15 * lambda;
-  const nu = 1;
-  const sigma = 1;
-  const rho = 2;
-  const radiusMultiplier = 4;
+  const dt_diffusion = 1 / (4 - 2 * delta);
+  const dt_shock = 1 / (Math.sqrt(2) * (1 - delta) + delta);
+  const dt = Math.min(dt_diffusion, dt_shock);
+  const epsilon = 0.15 * lambda;
+  const radiusMultiplier = 5;
 
   const k_nu = createGaussianKernel(nu, radiusMultiplier);
   const k_sigma = createGaussianKernel(sigma, radiusMultiplier);
   const k_rho = createGaussianKernel(rho, radiusMultiplier);
 
-  const uniforms = new Float32Array([
-    gridWidth,
-    gridHeight,
-    delta,
-    dt,
-    lambda,
-    epsilon,
-  ]);
+  const uniforms = new Float32Array([delta, dt, lambda, epsilon]);
   const uniformBuffer = device.createBuffer({
     label: "Grid uniforms",
     size: roundUpToMultiple(uniforms.byteLength, 16),
@@ -991,7 +995,7 @@ async function runInpainting() {
     const newtime = performance.now();
     const frametime = newtime - time;
     time = newtime;
-    console.log(frametime);
+    // console.log(frametime);
 
     const encoder = device.createCommandEncoder();
 
@@ -1199,6 +1203,7 @@ async function runInpainting() {
 
       step++;
     }
+    console.log(step);
 
     {
       const pass = encoder.beginRenderPass({
@@ -1217,15 +1222,16 @@ async function runInpainting() {
     }
 
     device.queue.submit([encoder.finish()]);
-    if (isRunning) {
-      requestAnimationFrame(updateGrid);
-    }
+    rafId = requestAnimationFrame(updateGrid);
   }
   requestAnimationFrame(updateGrid);
 }
 
 async function startInpainting() {
-  isRunning = false;
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
   await runInpainting();
 }
 
