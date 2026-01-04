@@ -195,17 +195,6 @@ function makeRenderPipeline(colourScheme) {
   });
 }
 
-function createStateTexture(width, height) {
-  return device.createTexture({
-    size: [width, height],
-    format: texFormat,
-    usage:
-      GPUTextureUsage.STORAGE_BINDING |
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST,
-  });
-}
-
 function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
@@ -227,7 +216,17 @@ async function runSimulation() {
   // Load maze and make canvas.
   const { maze, height } = await svgFileToArray("maze.svg", gridWidth);
   const gridHeight = height;
-  let texMaze = createStateTexture(gridWidth, gridHeight);
+  function createStateTexture() {
+    return device.createTexture({
+      size: [gridWidth, gridHeight],
+      format: texFormat,
+      usage:
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST,
+    });
+  }
+  let texMaze = createStateTexture();
   device.queue.writeTexture(
     { texture: texMaze },
     maze,
@@ -259,6 +258,26 @@ async function runSimulation() {
   });
   device.queue.writeBuffer(uniformBuffer, 0, uniforms);
 
+  // Create textures for ping-pong.
+  const init = new Float32Array(gridHeight * gridWidth);
+  for (let i = 0; i < init.length; i += 1) {
+    init[i] = i == origin ? 0 : maxValue;
+  }
+  let texA = createStateTexture();
+  device.queue.writeTexture(
+    { texture: texA },
+    init,
+    { bytesPerRow: gridWidth * 4 },
+    [gridWidth, gridHeight]
+  );
+  let texB = createStateTexture();
+  device.queue.writeTexture(
+    { texture: texB },
+    init,
+    { bytesPerRow: gridWidth * 4 },
+    [gridWidth, gridHeight]
+  );
+
   // Compute pipeline and bind groups.
   const computePipeline = makeComputePipeline();
 
@@ -273,6 +292,8 @@ async function runSimulation() {
       ],
     });
   }
+  let computeBindA = computeBind(texA, texB, texMaze);
+  let computeBindB = computeBind(texB, texA, texMaze);
 
   // Render pipeline and bind groups.
   const renderPipeline = makeRenderPipeline(colourScheme);
@@ -287,26 +308,8 @@ async function runSimulation() {
       ],
     });
   }
-
-  // Create textures for ping-pong.
-  const init = new Float32Array(gridHeight * gridWidth);
-  for (let i = 0; i < init.length; i += 1) {
-    init[i] = i == origin ? 0 : maxValue;
-  }
-  let texA = createStateTexture(gridWidth, gridHeight);
-  device.queue.writeTexture(
-    { texture: texA },
-    init,
-    { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
-  );
-  let texB = createStateTexture(gridWidth, gridHeight);
-  device.queue.writeTexture(
-    { texture: texB },
-    init,
-    { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
-  );
+  let renderBindA = renderBind(texA, texMaze);
+  let renderBindB = renderBind(texB, texMaze);
 
   let time = performance.now();
   function updateGrid() {
@@ -321,13 +324,14 @@ async function runSimulation() {
     for (let i = 0; i < showEvery; i++) {
       const pass = encoder.beginComputePass();
       pass.setPipeline(computePipeline);
-      pass.setBindGroup(0, computeBind(texA, texB, texMaze));
+      pass.setBindGroup(0, computeBindA);
       pass.dispatchWorkgroups(
         Math.ceil(gridWidth / WORKGROUP),
         Math.ceil(gridHeight / WORKGROUP)
       );
       pass.end();
       [texA, texB] = [texB, texA];
+      [computeBindA, computeBindB] = [computeBindB, computeBindA];
       step++;
     }
     console.log(step);
@@ -343,9 +347,10 @@ async function runSimulation() {
         ],
       });
       pass.setPipeline(renderPipeline);
-      pass.setBindGroup(0, renderBind(texB, texMaze));
+      pass.setBindGroup(0, renderBindB);
       pass.draw(6);
       pass.end();
+      [renderBindA, renderBindB] = [renderBindB, renderBindA];
     }
 
     device.queue.submit([encoder.finish()]);
