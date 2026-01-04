@@ -697,17 +697,6 @@ function makeRenderPipeline() {
   });
 }
 
-function createStateTexture(width, height) {
-  return device.createTexture({
-    size: [width, height],
-    format: texFormat,
-    usage:
-      GPUTextureUsage.STORAGE_BINDING |
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST,
-  });
-}
-
 function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
@@ -764,14 +753,6 @@ async function runInpainting() {
     width: gridWidth,
     height: gridHeight,
   } = await pngFileToArray("mask.png");
-
-  let texMask = createStateTexture(gridWidth, gridHeight);
-  device.queue.writeTexture(
-    { texture: texMask },
-    mask,
-    { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
-  );
   canvas.width = gridWidth;
   canvas.height = gridHeight;
 
@@ -796,36 +777,60 @@ async function runInpainting() {
   device.queue.writeBuffer(uniformBuffer, 0, uniforms);
 
   // (Intermediate) textures.
-  let u = createStateTexture(gridWidth, gridHeight);
+  function createStateTexture() {
+    return device.createTexture({
+      size: [gridWidth, gridHeight],
+      format: texFormat,
+      usage:
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST,
+    });
+  }
+  const u = createStateTexture();
   device.queue.writeTexture(
     { texture: u },
     u0,
     { bytesPerRow: gridWidth * 4 },
     [gridWidth, gridHeight]
   );
-  const laplacian_u = createStateTexture(gridWidth, gridHeight);
-  const dilation_u = createStateTexture(gridWidth, gridHeight);
-  const erosion_u = createStateTexture(gridWidth, gridHeight);
-  const convolutionStorage = createStateTexture(gridWidth, gridHeight);
-  const d_dx_DS = createStateTexture(gridWidth, gridHeight);
-  const d_dy_DS = createStateTexture(gridWidth, gridHeight);
-  const switch_DS = createStateTexture(gridWidth, gridHeight);
-  const u_sigma = createStateTexture(gridWidth, gridHeight);
-  const d_dx_morph = createStateTexture(gridWidth, gridHeight);
-  const d_dy_morph = createStateTexture(gridWidth, gridHeight);
-  const J_11 = createStateTexture(gridWidth, gridHeight);
-  const J_12 = createStateTexture(gridWidth, gridHeight);
-  const J_22 = createStateTexture(gridWidth, gridHeight);
-  const J_rho_11 = createStateTexture(gridWidth, gridHeight);
-  const J_rho_12 = createStateTexture(gridWidth, gridHeight);
-  const J_rho_22 = createStateTexture(gridWidth, gridHeight);
-  const d_dxx = createStateTexture(gridWidth, gridHeight);
-  const d_dxy = createStateTexture(gridWidth, gridHeight);
-  const d_dyy = createStateTexture(gridWidth, gridHeight);
-  const switch_morph = createStateTexture(gridWidth, gridHeight);
+  const texMask = createStateTexture();
+  device.queue.writeTexture(
+    { texture: texMask },
+    mask,
+    { bytesPerRow: gridWidth * 4 },
+    [gridWidth, gridHeight]
+  );
+  const laplacian_u = createStateTexture();
+  const dilation_u = createStateTexture();
+  const erosion_u = createStateTexture();
+  const convolutionStorage = createStateTexture();
+  const d_dx_DS = createStateTexture();
+  const d_dy_DS = createStateTexture();
+  const switch_DS = createStateTexture();
+  const u_sigma = createStateTexture();
+  const d_dx_morph = createStateTexture();
+  const d_dy_morph = createStateTexture();
+  const J_11 = createStateTexture();
+  const J_12 = createStateTexture();
+  const J_22 = createStateTexture();
+  const J_rho_11 = createStateTexture();
+  const J_rho_12 = createStateTexture();
+  const J_rho_22 = createStateTexture();
+  const d_dxx = createStateTexture();
+  const d_dxy = createStateTexture();
+  const d_dyy = createStateTexture();
+  const switch_morph = createStateTexture();
 
   // Compute pipeline and bind groups.
-
+  function passMaker(pass, pipeline, bindGroup) {
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(
+      Math.ceil(gridWidth / WORKGROUP),
+      Math.ceil(gridHeight / WORKGROUP)
+    );
+  }
   const [horizontalConvolutionPipeline, verticalConvolutionPipeline] =
     makeConvolutionPipelines();
   function horizontalConvolutionBind(k, src, dst) {
@@ -849,6 +854,79 @@ async function runInpainting() {
     });
   }
 
+  const horizontalConvolutionNuBind = horizontalConvolutionBind(
+    k_nu,
+    u,
+    convolutionStorage
+  );
+  const verticalConvolutionNuBind = verticalConvolutionBind(
+    k_nu,
+    convolutionStorage,
+    switch_DS
+  );
+  function convolutionNuPass(pass) {
+    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolutionNuBind);
+    passMaker(pass, verticalConvolutionPipeline, verticalConvolutionNuBind);
+  }
+
+  const horizontalConvolutionSigmaBind = horizontalConvolutionBind(
+    k_sigma,
+    u,
+    convolutionStorage
+  );
+  const verticalConvolutionSigmaBind = verticalConvolutionBind(
+    k_sigma,
+    convolutionStorage,
+    u_sigma
+  );
+  function convolutionSigmaPass(pass) {
+    passMaker(
+      pass,
+      horizontalConvolutionPipeline,
+      horizontalConvolutionSigmaBind
+    );
+    passMaker(pass, verticalConvolutionPipeline, verticalConvolutionSigmaBind);
+  }
+
+  const horizontalConvolution11Bind = horizontalConvolutionBind(
+    k_rho,
+    J_11,
+    convolutionStorage
+  );
+  const verticalConvolution11Bind = verticalConvolutionBind(
+    k_rho,
+    convolutionStorage,
+    J_rho_11
+  );
+  const horizontalConvolution12Bind = horizontalConvolutionBind(
+    k_rho,
+    J_12,
+    convolutionStorage
+  );
+  const verticalConvolution12Bind = verticalConvolutionBind(
+    k_rho,
+    convolutionStorage,
+    J_rho_12
+  );
+  const horizontalConvolution22Bind = horizontalConvolutionBind(
+    k_rho,
+    J_22,
+    convolutionStorage
+  );
+  const verticalConvolution22Bind = verticalConvolutionBind(
+    k_rho,
+    convolutionStorage,
+    J_rho_22
+  );
+  function regulariseStructureTensorPass(pass) {
+    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolution11Bind);
+    passMaker(pass, verticalConvolutionPipeline, verticalConvolution11Bind);
+    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolution12Bind);
+    passMaker(pass, verticalConvolutionPipeline, verticalConvolution12Bind);
+    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolution22Bind);
+    passMaker(pass, verticalConvolutionPipeline, verticalConvolution22Bind);
+  }
+
   const sobelPipeline = makeSobelPipeline();
   function sobelBind(src, d_dx, d_dy) {
     return device.createBindGroup({
@@ -860,131 +938,127 @@ async function runInpainting() {
       ],
     });
   }
+  const DSSobelBind = sobelBind(switch_DS, d_dx_DS, d_dy_DS);
+  function DSSobelPass(pass) {
+    passMaker(pass, sobelPipeline, DSSobelBind);
+  }
+  const MorphologicalSobelBind = sobelBind(u_sigma, d_dx_morph, d_dy_morph);
+  function morphologicalSobelPass(pass) {
+    passMaker(pass, sobelPipeline, MorphologicalSobelBind);
+  }
 
   const DSSwitchPipeline = makeDSSwitchPipeline();
-  function DSSwitchBind(d_dx, d_dy, switchDS) {
-    return device.createBindGroup({
-      layout: DSSwitchPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: d_dx.createView() },
-        { binding: 2, resource: d_dy.createView() },
-        { binding: 3, resource: switchDS.createView() },
-      ],
-    });
+  const DSSwitchBind = device.createBindGroup({
+    layout: DSSwitchPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: d_dx_DS.createView() },
+      { binding: 2, resource: d_dy_DS.createView() },
+      { binding: 3, resource: switch_DS.createView() },
+    ],
+  });
+  function DSSwitchPass(pass) {
+    passMaker(pass, DSSwitchPipeline, DSSwitchBind);
   }
 
   const structureTensorPipeline = makeStructureTensorPipeline();
-  function structureTensorBind(d_dx, d_dy, J_11, J_12, J_22) {
-    return device.createBindGroup({
-      layout: structureTensorPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: d_dx.createView() },
-        { binding: 1, resource: d_dy.createView() },
-        { binding: 2, resource: J_11.createView() },
-        { binding: 3, resource: J_12.createView() },
-        { binding: 4, resource: J_22.createView() },
-      ],
-    });
+  const structureTensorBind = device.createBindGroup({
+    layout: structureTensorPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: d_dx_morph.createView() },
+      { binding: 1, resource: d_dy_morph.createView() },
+      { binding: 2, resource: J_11.createView() },
+      { binding: 3, resource: J_12.createView() },
+      { binding: 4, resource: J_22.createView() },
+    ],
+  });
+  function structureTensorPass(pass) {
+    passMaker(pass, structureTensorPipeline, structureTensorBind);
   }
 
   const secondOrderPipeline = makeSecondOrderPipeline();
-  function secondOrderBind(src, d_dxx, d_dxy, d_dyy) {
-    return device.createBindGroup({
-      layout: secondOrderPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: src.createView() },
-        { binding: 1, resource: d_dxx.createView() },
-        { binding: 2, resource: d_dxy.createView() },
-        { binding: 3, resource: d_dyy.createView() },
-      ],
-    });
+  const secondOrderBind = device.createBindGroup({
+    layout: secondOrderPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: u_sigma.createView() },
+      { binding: 1, resource: d_dxx.createView() },
+      { binding: 2, resource: d_dxy.createView() },
+      { binding: 3, resource: d_dyy.createView() },
+    ],
+  });
+  function secondOrderPass(pass) {
+    passMaker(pass, secondOrderPipeline, secondOrderBind);
   }
 
   const morphologicalSwitchPipeline = makeMorphologicalSwitchPipeline();
-  function morphologicalSwitchBind(
-    d_dxx,
-    d_dxy,
-    d_dyy,
-    J_rho_11,
-    J_rho_12,
-    J_rho_22,
-    switchMorph
-  ) {
-    return device.createBindGroup({
-      layout: morphologicalSwitchPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: d_dxx.createView() },
-        { binding: 2, resource: d_dxy.createView() },
-        { binding: 3, resource: d_dyy.createView() },
-        { binding: 4, resource: J_rho_11.createView() },
-        { binding: 5, resource: J_rho_12.createView() },
-        { binding: 6, resource: J_rho_22.createView() },
-        { binding: 7, resource: switchMorph.createView() },
-      ],
-    });
+  const morphologicalSwitchBind = device.createBindGroup({
+    layout: morphologicalSwitchPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: d_dxx.createView() },
+      { binding: 2, resource: d_dxy.createView() },
+      { binding: 3, resource: d_dyy.createView() },
+      { binding: 4, resource: J_rho_11.createView() },
+      { binding: 5, resource: J_rho_12.createView() },
+      { binding: 6, resource: J_rho_22.createView() },
+      { binding: 7, resource: switch_morph.createView() },
+    ],
+  });
+  function morphologicalSwitchPass(pass) {
+    passMaker(pass, morphologicalSwitchPipeline, morphologicalSwitchBind);
   }
 
   const laplacianPipeline = makeLaplacianPipeline();
-  function laplacianBind(src, laplacian_u) {
-    return device.createBindGroup({
-      layout: laplacianPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: laplacian_u.createView() },
-      ],
-    });
+  const laplacianBind = device.createBindGroup({
+    layout: laplacianPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: u.createView() },
+      { binding: 2, resource: laplacian_u.createView() },
+    ],
+  });
+  function laplacianPass(pass) {
+    passMaker(pass, laplacianPipeline, laplacianBind);
   }
 
   const morphologicalPipeline = makeMorphologicalPipeline();
-  function morphologicalBind(src, dilation_u, erosion_u) {
-    return device.createBindGroup({
-      layout: morphologicalPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dilation_u.createView() },
-        { binding: 3, resource: erosion_u.createView() },
-      ],
-    });
+  const morphologicalBind = device.createBindGroup({
+    layout: morphologicalPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: u.createView() },
+      { binding: 2, resource: dilation_u.createView() },
+      { binding: 3, resource: erosion_u.createView() },
+    ],
+  });
+  function morphologicalPass(pass) {
+    passMaker(pass, morphologicalPipeline, morphologicalBind);
   }
 
   const stepPipeline = makeStepPipeline();
-  function stepBind(
-    mask,
-    switchDS,
-    switchMorph,
-    laplacian_u,
-    dilation_u,
-    erosion_u,
-    u
-  ) {
-    return device.createBindGroup({
-      layout: stepPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: mask.createView() },
-        { binding: 2, resource: switchDS.createView() },
-        { binding: 3, resource: switchMorph.createView() },
-        { binding: 4, resource: laplacian_u.createView() },
-        { binding: 5, resource: dilation_u.createView() },
-        { binding: 6, resource: erosion_u.createView() },
-        { binding: 7, resource: u.createView() },
-      ],
-    });
+  const stepBind = device.createBindGroup({
+    layout: stepPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: texMask.createView() },
+      { binding: 2, resource: switch_DS.createView() },
+      { binding: 3, resource: switch_morph.createView() },
+      { binding: 4, resource: laplacian_u.createView() },
+      { binding: 5, resource: dilation_u.createView() },
+      { binding: 6, resource: erosion_u.createView() },
+      { binding: 7, resource: u.createView() },
+    ],
+  });
+  function stepPass(pass) {
+    passMaker(pass, stepPipeline, stepBind);
   }
 
   // Render pipeline and bind groups.
   const renderPipeline = makeRenderPipeline();
-
-  function renderBind(tex) {
-    return device.createBindGroup({
-      layout: renderPipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: tex.createView() }],
-    });
-  }
+  const renderBind = device.createBindGroup({
+    layout: renderPipeline.getBindGroupLayout(0),
+    entries: [{ binding: 0, resource: u.createView() }],
+  });
 
   let time = performance.now();
   function updateGrid() {
@@ -999,203 +1073,24 @@ async function runInpainting() {
     for (let i = 0; i < showEvery; i++) {
       const pass = encoder.beginComputePass();
       // DS switch
-      {
-        pass.setPipeline(horizontalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          horizontalConvolutionBind(k_nu, u, convolutionStorage)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(verticalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          verticalConvolutionBind(k_nu, convolutionStorage, switch_DS)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(sobelPipeline);
-        pass.setBindGroup(0, sobelBind(switch_DS, d_dx_DS, d_dy_DS));
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(DSSwitchPipeline);
-        pass.setBindGroup(0, DSSwitchBind(d_dx_DS, d_dy_DS, switch_DS));
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-      }
+      convolutionNuPass(pass);
+      DSSobelPass(pass);
+      DSSwitchPass(pass);
 
       // Morphological switch
-      {
-        pass.setPipeline(horizontalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          horizontalConvolutionBind(k_sigma, u, convolutionStorage)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(verticalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          verticalConvolutionBind(k_sigma, convolutionStorage, u_sigma)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(sobelPipeline);
-        pass.setBindGroup(0, sobelBind(u_sigma, d_dx_morph, d_dy_morph));
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(structureTensorPipeline);
-        pass.setBindGroup(
-          0,
-          structureTensorBind(d_dx_morph, d_dy_morph, J_11, J_12, J_22)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(horizontalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          horizontalConvolutionBind(k_rho, J_11, convolutionStorage)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(verticalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          verticalConvolutionBind(k_rho, convolutionStorage, J_rho_11)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(horizontalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          horizontalConvolutionBind(k_rho, J_12, convolutionStorage)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(verticalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          verticalConvolutionBind(k_rho, convolutionStorage, J_rho_12)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(horizontalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          horizontalConvolutionBind(k_rho, J_22, convolutionStorage)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(verticalConvolutionPipeline);
-        pass.setBindGroup(
-          0,
-          verticalConvolutionBind(k_rho, convolutionStorage, J_rho_22)
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(secondOrderPipeline);
-        pass.setBindGroup(0, secondOrderBind(u_sigma, d_dxx, d_dxy, d_dyy));
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(morphologicalSwitchPipeline);
-        pass.setBindGroup(
-          0,
-          morphologicalSwitchBind(
-            d_dxx,
-            d_dxy,
-            d_dyy,
-            J_rho_11,
-            J_rho_12,
-            J_rho_22,
-            switch_morph
-          )
-        );
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-      }
+      convolutionSigmaPass(pass);
+      morphologicalSobelPass(pass);
+      structureTensorPass(pass);
+      regulariseStructureTensorPass(pass);
+      secondOrderPass(pass);
+      morphologicalSwitchPass(pass);
 
       // Derivatives
-      {
-        pass.setPipeline(laplacianPipeline);
-        pass.setBindGroup(0, laplacianBind(u, laplacian_u));
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-
-        pass.setPipeline(morphologicalPipeline);
-        pass.setBindGroup(0, morphologicalBind(u, dilation_u, erosion_u));
-        pass.dispatchWorkgroups(
-          Math.ceil(gridWidth / WORKGROUP),
-          Math.ceil(gridHeight / WORKGROUP)
-        );
-      }
+      laplacianPass(pass);
+      morphologicalPass(pass);
 
       // Step
-      pass.setPipeline(stepPipeline);
-      pass.setBindGroup(
-        0,
-        stepBind(
-          texMask,
-          switch_DS,
-          switch_morph,
-          laplacian_u,
-          dilation_u,
-          erosion_u,
-          u
-        )
-      );
-      pass.dispatchWorkgroups(
-        Math.ceil(gridWidth / WORKGROUP),
-        Math.ceil(gridHeight / WORKGROUP)
-      );
-
+      stepPass(pass);
       pass.end();
 
       step++;
@@ -1213,7 +1108,7 @@ async function runInpainting() {
         ],
       });
       pass.setPipeline(renderPipeline);
-      pass.setBindGroup(0, renderBind(u));
+      pass.setBindGroup(0, renderBind);
       pass.draw(6);
       pass.end();
     }
