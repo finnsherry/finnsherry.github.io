@@ -210,10 +210,8 @@ function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
 
+let rafId = null;
 async function runSimulation() {
-  let step = 0;
-  isRunning = true;
-
   // User parameters.
   let gridWidth = parseFloat(document.getElementById("gridwidth").value);
   if (!gridWidth) {
@@ -312,6 +310,7 @@ async function runSimulation() {
 
   let time = performance.now();
   function updateGrid() {
+    let step = 0;
     const newtime = performance.now();
     const frametime = newtime - time;
     time = newtime;
@@ -331,6 +330,7 @@ async function runSimulation() {
       [texA, texB] = [texB, texA];
       step++;
     }
+    console.log(step);
 
     {
       const pass = encoder.beginRenderPass({
@@ -349,19 +349,19 @@ async function runSimulation() {
     }
 
     device.queue.submit([encoder.finish()]);
-    if (isRunning) {
-      requestAnimationFrame(updateGrid);
-    }
+    rafId = requestAnimationFrame(updateGrid);
   }
   requestAnimationFrame(updateGrid);
 }
 
 async function startSimulation() {
-  isRunning = false;
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
   await runSimulation();
 }
 
-let isRunning = false;
 await runSimulation();
 const submit = document.getElementById("submit");
 submit.addEventListener("click", startSimulation);

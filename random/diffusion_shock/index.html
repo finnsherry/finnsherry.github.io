@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random: Eikonal PDE</title>
+    <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+    <script type="module" src='main.js' defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4.0.0/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <header>
+        <div id="nav">
+            <a class="navlink" href="/">Home</a>
+            <a class="navlink" href="/publications">Publications</a>
+            <!-- <a class="navlink" href="/teaching">Teaching</a> -->
+            <a class="navlink" href="/random">Random</a>
+        </div>
+        <a id="home" href="/">Finn Sherry</a>
+        <button id="colourbutton">
+            🌙
+        </button>
+        <button id="navbutton" onclick="toggleNav()">
+            •••
+        </button>
+        <script>
+            function toggleNav() {
+                document.getElementById("nav").classList.toggle('expand')
+            }
+
+            const root = document.documentElement;
+            const storedScheme = localStorage.getItem('scheme');
+            console.log(storedScheme)
+            const colourButton = document.getElementById("colourbutton");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
+
+            applyScheme(scheme);
+
+            colourButton.addEventListener("click", () => {
+                const current = root.dataset.scheme === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyScheme(next);
+                localStorage.setItem('scheme', next);
+            });
+
+            function applyScheme(scheme) {
+                root.dataset.scheme = scheme
+                colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
+            }
+        </script>
+    </header>
+
+    <main>
+        <div class="content-container">
+            <h1>Diffusion-Shock Filtering</h1>
+            <p>
+                We extended Diffusion-Shock (DS) filtering to Position-Orientation space for SSVM 2025 (<a href="https://arxiv.org/abs/2502.17146" target="_blank">🔓arXiv</a>, <a href="https://github.com/finnsherry/M2RDSFiltering" target="_blank">🧑‍💻code</a>, <a href="https://1drv.ms/u/c/33e7d63e062ccc5a/EVhrJy5DBDdOr6FsRY_tRxoBPaLeE3cM3BWKBEdfpYV17A?e=UVfyxO" target="_blank">🧑‍🏫slides</a>). DS filtering can be used to denoise images and to inpaint missing structures. I made a WebGPU implementation of DS filtering on Euclidean space.
+            </p>
+            <p>
+                DS filtering, first developed by <a href="https://doi.org/10.1007/978-3-031-31975-4_45">Schaefer and Weickert for SSVM 2023</a>, combines homogeneous diffusion and coherence enhancing shock filtering. Since these two elements are well-understood, deriving stability conditions is straightforward, unlike many alternative inpainting PDEs.
+            </p>
+            <p>
+                The (<a href="https://doi.org/10.1007/s10851-024-01175-0">Regularised</a>) DS PDE is given by
+                \[
+                \partial_t u = g_\lambda(\Vert \nabla u_\nu\Vert^2) \Delta u - (1 - g_\lambda(\Vert \nabla u_\nu\Vert^2)) S_\epsilon(\partial_{\bf w w} u_\sigma) \vert \nabla u \vert.
+                \]
+                In this, we can identify 4 main terms:
+                <ol>
+                    <li>The diffusion generator \(\Delta u\): the Laplace operator \(\Delta\) simply generates diffusion. For inpainting tasks, this can be useful to fill in large areas. For denoising tasks, this can remove noise in otherwise flat areas.</li>
+                    <li>The shock generator \(\vert \nabla u\vert\): depending on the sign, in front of the generator, we get either dilation or erosion. Dilation expands light areas, while erosion expands dark areas. Note that we perform erosion in our iterative scheme to solve the <a href="https://finnsherry.github.io/random/eikonal_pde/">eikonal PDE</a>.</li>
+                    <li>The diffusion-shock switch \(g_\lambda(\Vert \nabla u_\nu\Vert^2)\): wherever \(g_\lambda(\Vert \nabla u_\nu\Vert^2) \approx 1\), only diffusion is performed, while wherever \(g_\lambda(\Vert \nabla u_\nu\Vert^2) \approx 0\) only shock occurs. First, the input \(u\) is regularised by Gaussian convolution: \(u_\nu := K_\nu * u\), with \(\nu\) the standard deviation of the Gaussian kernel \(K_\nu\).                        
+                    The guidance term uses the Charbonnier weight,
+                    \[
+                    g_\lambda(\Vert \nabla u_\nu\Vert^2) := \frac{1}{\sqrt{1 + \Vert \nabla u_\nu\Vert^2 / \lambda^2}};
+                    \]
+                    when \(\Vert \nabla u_\nu\Vert\) is large, e.g. on an edge in the image, the guidance term will be small, so shock will be performed. This ensures edges will be preserved. The contrast parameter \(\lambda\) can be used to tune the balance between diffusion and shock: increasing \(\lambda\) will increase the amount of diffusion.
+                    </li>
+                    <li>The morphological switch \(S_\epsilon(\partial_{\bf w w} u_\sigma)\): wherever \(S_\epsilon(\partial_{\bf w w} u_\sigma) > 0\), erosion is performed, while dilation is performed wherever \(S_\epsilon(\partial_{\bf w w} u_\sigma) < 0\). In essence, this guidance term measures the local convexity of the image: points that are dark with respect to their surrounding are convex. To preserve edges, we want to extend local extrema. Hence, we want to perform dilation in relatively light/concave areas and erosion in relatively dark/convex areas. We again first regularise the input by Gaussian convolution, now with standard deviation \(\sigma\). Then, we compute the dominant eigenvector \({\bf w}\) of the structure tensor, regularised at scale \(\rho\): this should point orthogonal to the local orientation. We then compute the second derivative along this direction, and pass it through a sigmoid. The slope of the sigmoid is controlled by the parameter \(\epsilon\).</li>
+                </ol>
+            </p>
+            <p>
+                Here is a WebGPU implementation of DS inpainting:
+            </p>
+            <table class="form" id="parameters">
+                <tr>
+                    <td><label for="showEvery">Show every #th frame: </label></td>
+                    <td><input type="text" id="showEvery" name="showEvery" placeholder="1" required></td>
+                </tr>
+                <tr>
+                    <td><label for="lambda">\(\lambda\): </label></td>
+                    <td><input type="text" id="lambda" name="lambda" placeholder="2" required></td>
+                </tr>
+                <tr>
+                    <td><label for="nu">\(\nu\): </label></td>
+                    <td><input type="text" id="nu" name="nu" placeholder="2" required></td>
+                </tr>
+                <tr>
+                    <td><label for="sigma">\(\sigma\): </label></td>
+                    <td><input type="text" id="sigma" name="sigma" placeholder="2" required></td>
+                </tr>
+                <tr>
+                    <td><label for="rho">\(\rho\): </label></td>
+                    <td><input type="text" id="rho" name="rho" placeholder="5" required></td>
+                </tr>
+                <tr>
+                    <td><button id="submit">Start</button></td>
+                </tr>
+            </table>
+            
+            <canvas id="canvas" style="width: 100%;"></canvas>
+        </div>
+    </main>
+</body>
+
+</html>
