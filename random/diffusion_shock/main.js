@@ -15,6 +15,9 @@ context.configure({
 });
 
 const WORKGROUP = 8;
+const texFormat = "r32float";
+const texVec2Format = "rg32float";
+const texVec3Format = "rgba32float";
 
 async function pngFileToArray(filePath) {
   return new Promise((resolve, reject) => {
@@ -46,7 +49,6 @@ async function pngFileToArray(filePath) {
     img.src = filePath;
   });
 }
-const texFormat = "r32float";
 
 function makeConvolutionPipelines() {
   const computeWGSL = `
@@ -135,12 +137,98 @@ function makeConvolutionPipelines() {
   ];
 }
 
+function makeConvolutionVec3Pipelines() {
+  const computeWGSL = `
+
+  @group(0) @binding(0) var<storage, read> k : array<f32>;
+  @group(0) @binding(1) var u : texture_storage_2d<${texVec3Format}, read>;
+  @group(0) @binding(2) var u_reg : texture_storage_2d<${texVec3Format}, write>;
+
+  fn sanitise_index(i : i32, n : i32) -> i32 {
+    let m = abs(i);
+    return select(m, 2 * n - m - 2, m >= n);
+  }
+
+  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
+  fn convolve_horizontal(@builtin(global_invocation_id) id : vec3<u32>) {
+    let dims = textureDimensions(u);
+    if (id.x >= dims.x || id.y >= dims.y) {
+      return;
+    }
+
+    let dimx = i32(dims.x);
+    let x = i32(id.x);
+    let y = i32(id.y);
+    let r = i32(arrayLength(&k)) - 1;
+
+    var out = textureLoad(u, vec2<i32>(x, y)).rgb * k[0];
+    for (var i = 1; i <= r; i++) {
+      let xl = sanitise_index(x - i , dimx);
+      let xr = sanitise_index(x + i , dimx);
+      out += (textureLoad(u, vec2<i32>(xl, y)).rgb + textureLoad(u, vec2<i32>(xr, y)).rgb) * k[i];
+    }
+
+    textureStore(
+      u_reg,
+      id.xy,
+      vec4f(out, 1)
+    );
+  }
+
+  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
+  fn convolve_vertical(@builtin(global_invocation_id) id : vec3<u32>) {
+    let dims = textureDimensions(u);
+    if (id.x >= dims.x || id.y >= dims.y) {
+      return;
+    }
+
+    let dimy = i32(dims.y);
+    let x = i32(id.x);
+    let y = i32(id.y);
+    let r = i32(arrayLength(&k)) - 1;
+
+    var out = textureLoad(u, vec2<i32>(x, y)).rgb * k[0];
+    for (var i = 1; i <= r; i++) {
+      let yl = sanitise_index(y - i , dimy);
+      let yr = sanitise_index(y + i , dimy);
+      out += (textureLoad(u, vec2<i32>(x, yl)).rgb + textureLoad(u, vec2<i32>(x, yr)).rgb)* k[i];
+    }
+
+    textureStore(
+      u_reg,
+      id.xy,
+      vec4f(out, 1)
+    );
+  }
+`;
+
+  return [
+    device.createComputePipeline({
+      layout: "auto",
+      compute: {
+        module: device.createShaderModule({
+          code: computeWGSL,
+        }),
+        entryPoint: "convolve_horizontal",
+      },
+    }),
+    device.createComputePipeline({
+      layout: "auto",
+      compute: {
+        module: device.createShaderModule({
+          code: computeWGSL,
+        }),
+        entryPoint: "convolve_vertical",
+      },
+    }),
+  ];
+}
+
 function makeSobelPipeline() {
   const computeWGSL = `
 
   @group(0) @binding(0) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(1) var d_dx : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(2) var d_dy : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(1) var d_d : texture_storage_2d<${texVec2Format}, write>;
 
   fn sanitise_index(i : i32, n : i32) -> i32 {
     let m = abs(i);
@@ -174,15 +262,13 @@ function makeSobelPipeline() {
     let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
 
     textureStore(
-      d_dx,
+      d_d,
       id.xy,
-      (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) / 8 * vec4f(1)
-    );
-    
-    textureStore(
-      d_dy,
-      id.xy,
-      (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) / 8 * vec4f(1)
+      vec4f(
+        (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) / 8,
+        (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) / 8,
+        1, 1
+      )
     );
   }
 `;
@@ -208,9 +294,8 @@ function makeDSSwitchPipeline() {
   };
 
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-  @group(0) @binding(1) var d_dx : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var d_dy : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(3) var switchDS : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(1) var d_d : texture_storage_2d<${texVec2Format}, read>;
+  @group(0) @binding(2) var switchDS : texture_storage_2d<${texFormat}, write>;
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -219,13 +304,12 @@ function makeDSSwitchPipeline() {
       return;
     }
 
-    let dx = textureLoad(d_dx, id.xy).r;
-    let dy = textureLoad(d_dy, id.xy).r;
+    let d = textureLoad(d_d, id.xy).rg;
 
     textureStore(
       switchDS,
       id.xy,
-      1 / sqrt(1 + (dx*dx + dy*dy) / (uniforms.lambda * uniforms.lambda)) * vec4f(1)
+      1 / sqrt(1 + (d.x*d.x + d.y*d.y) / (uniforms.lambda * uniforms.lambda)) * vec4f(1)
     );
   }
 `;
@@ -244,15 +328,12 @@ function makeDSSwitchPipeline() {
 function makeStructureTensorPipeline() {
   const computeWGSL = `
 
-  @group(0) @binding(0) var d_dx : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(1) var d_dy : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var J_11 : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(3) var J_12 : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(4) var J_22 : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(0) var d_d : texture_storage_2d<${texVec2Format}, read>;
+  @group(0) @binding(1) var J : texture_storage_2d<${texVec3Format}, write>;
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(d_dx);
+    let dims = textureDimensions(d_d);
     if (id.x >= dims.x || id.y >= dims.y) {
       return;
     }
@@ -262,25 +343,17 @@ function makeStructureTensorPipeline() {
     let x = i32(id.x);
     let y = i32(id.y);
 
-    let dx = textureLoad(d_dx, vec2<i32>(x, y)).r;
-    let dy = textureLoad(d_dy, vec2<i32>(x, y)).r;
+    let d = textureLoad(d_d, vec2<i32>(x, y)).rg;
 
     textureStore(
-      J_11,
+      J,
       id.xy,
-      (dx * dx) * vec4f(1)
-    );
-    
-    textureStore(
-      J_12,
-      id.xy,
-      (dx * dy) * vec4f(1)
-    );
-    
-    textureStore(
-      J_22,
-      id.xy,
-      (dy * dy) * vec4f(1)
+      vec4f(
+        d.x * d.x,
+        d.x * d.y,
+        d.y * d.y,
+        1
+      )
     );
   }
 `;
@@ -300,9 +373,7 @@ function makeSecondOrderPipeline() {
   const computeWGSL = `
 
   @group(0) @binding(0) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(1) var d_dxx : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(2) var d_dxy : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(3) var d_dyy : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(1) var d_dd : texture_storage_2d<${texVec3Format}, write>;
 
   fn sanitise_index(i : i32, n : i32) -> i32 {
     let m = abs(i);
@@ -337,21 +408,14 @@ function makeSecondOrderPipeline() {
     let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
 
     textureStore(
-      d_dxx,
+      d_dd,
       id.xy,
-      (u_dxf - 2 * u_c + u_dxb) * vec4f(1)
-    );
-    
-    textureStore(
-      d_dxy,
-      id.xy,
-      (u_dpf - u_dmf - u_dmb + u_dpb) * vec4f(1)
-    );
-    
-    textureStore(
-      d_dyy,
-      id.xy,
-      (u_dyf - 2 * u_c + u_dyb) * vec4f(1)
+      vec4f(
+        u_dxf - 2 * u_c + u_dxb,
+        u_dpf - u_dmf - u_dmb + u_dpb,
+        u_dyf - 2 * u_c + u_dyb,
+        1
+      )
     );
   }
 `;
@@ -377,13 +441,9 @@ function makeMorphologicalSwitchPipeline() {
   };
 
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-  @group(0) @binding(1) var d_dxx : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var d_dxy : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(3) var d_dyy : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(4) var J_rho_11 : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(5) var J_rho_12 : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(6) var J_rho_22 : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(7) var switchMorph : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(1) var d_dd : texture_storage_2d<${texVec3Format}, read>;
+  @group(0) @binding(2) var J_rho : texture_storage_2d<${texVec3Format}, read>;
+  @group(0) @binding(3) var switchMorph : texture_storage_2d<${texFormat}, write>;
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -392,12 +452,14 @@ function makeMorphologicalSwitchPipeline() {
       return;
     }
 
-    let dxx = textureLoad(d_dxx, id.xy).r;
-    let dxy = textureLoad(d_dxy, id.xy).r;
-    let dyy = textureLoad(d_dyy, id.xy).r;
-    let A11 = textureLoad(J_rho_11, id.xy).r;
-    let A12 = textureLoad(J_rho_12, id.xy).r;
-    let A22 = textureLoad(J_rho_22, id.xy).r;
+    let dd = textureLoad(d_dd, id.xy).rgb;
+    let dxx = dd.r;
+    let dxy = dd.g;
+    let dyy = dd.b;
+    let A = textureLoad(J_rho, id.xy).rgb;
+    let A11 = A.r;
+    let A12 = A.g;
+    let A22 = A.b;
 
     let v1 = -(-A11 + A22 - sqrt((A11 - A22)*(A11 - A22) + 4 * A12 * A12));
     let norm = sqrt(v1 * v1 + 4 * A12 * A12) + 0.000001;
@@ -677,8 +739,8 @@ function makeRenderPipeline() {
   @fragment
   fn fs(@builtin(position) p : vec4<f32>) -> @location(0) vec4<f32> {
     let coord = vec2<i32>(p.xy);
-    let state = textureLoad(tex, coord, 0).r;
-    return (state / 255.) * vec4f(1);
+    let c = textureLoad(tex, coord, 0).r / 255.;
+    return vec4f(c, c, c, 1);
   }
 `;
 
@@ -787,6 +849,26 @@ async function runInpainting() {
         GPUTextureUsage.COPY_DST,
     });
   }
+  function createStateTextureVec2() {
+    return device.createTexture({
+      size: [gridWidth, gridHeight],
+      format: texVec2Format,
+      usage:
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST,
+    });
+  }
+  function createStateTextureVec3() {
+    return device.createTexture({
+      size: [gridWidth, gridHeight],
+      format: texVec3Format,
+      usage:
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.COPY_DST,
+    });
+  }
   const u = createStateTexture();
   device.queue.writeTexture(
     { texture: u },
@@ -805,21 +887,14 @@ async function runInpainting() {
   const dilation_u = createStateTexture();
   const erosion_u = createStateTexture();
   const convolutionStorage = createStateTexture();
-  const d_dx_DS = createStateTexture();
-  const d_dy_DS = createStateTexture();
+  const d_d_DS = createStateTextureVec2();
   const switch_DS = createStateTexture();
   const u_sigma = createStateTexture();
-  const d_dx_morph = createStateTexture();
-  const d_dy_morph = createStateTexture();
-  const J_11 = createStateTexture();
-  const J_12 = createStateTexture();
-  const J_22 = createStateTexture();
-  const J_rho_11 = createStateTexture();
-  const J_rho_12 = createStateTexture();
-  const J_rho_22 = createStateTexture();
-  const d_dxx = createStateTexture();
-  const d_dxy = createStateTexture();
-  const d_dyy = createStateTexture();
+  const d_d_morph = createStateTextureVec2();
+  const J = createStateTextureVec3();
+  const J_rho = createStateTextureVec3();
+  const convolutionStorageVec3 = createStateTextureVec3();
+  const d_dd = createStateTextureVec3();
   const switch_morph = createStateTexture();
 
   // Compute pipeline and bind groups.
@@ -888,61 +963,62 @@ async function runInpainting() {
     passMaker(pass, verticalConvolutionPipeline, verticalConvolutionSigmaBind);
   }
 
-  const horizontalConvolution11Bind = horizontalConvolutionBind(
+  const [horizontalConvolutionVec3Pipeline, verticalConvolutionVec3Pipeline] =
+    makeConvolutionVec3Pipelines();
+  function horizontalConvolutionVec3Bind(k, src, dst) {
+    return device.createBindGroup({
+      layout: horizontalConvolutionVec3Pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: k } },
+        { binding: 1, resource: src.createView() },
+        { binding: 2, resource: dst.createView() },
+      ],
+    });
+  }
+  function verticalConvolutionVec3Bind(k, src, dst) {
+    return device.createBindGroup({
+      layout: verticalConvolutionVec3Pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: k } },
+        { binding: 1, resource: src.createView() },
+        { binding: 2, resource: dst.createView() },
+      ],
+    });
+  }
+  const horizontalConvolutionJBind = horizontalConvolutionVec3Bind(
     k_rho,
-    J_11,
-    convolutionStorage
+    J,
+    convolutionStorageVec3
   );
-  const verticalConvolution11Bind = verticalConvolutionBind(
+  const verticalConvolutionJBind = verticalConvolutionVec3Bind(
     k_rho,
-    convolutionStorage,
-    J_rho_11
-  );
-  const horizontalConvolution12Bind = horizontalConvolutionBind(
-    k_rho,
-    J_12,
-    convolutionStorage
-  );
-  const verticalConvolution12Bind = verticalConvolutionBind(
-    k_rho,
-    convolutionStorage,
-    J_rho_12
-  );
-  const horizontalConvolution22Bind = horizontalConvolutionBind(
-    k_rho,
-    J_22,
-    convolutionStorage
-  );
-  const verticalConvolution22Bind = verticalConvolutionBind(
-    k_rho,
-    convolutionStorage,
-    J_rho_22
+    convolutionStorageVec3,
+    J_rho
   );
   function regulariseStructureTensorPass(pass) {
-    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolution11Bind);
-    passMaker(pass, verticalConvolutionPipeline, verticalConvolution11Bind);
-    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolution12Bind);
-    passMaker(pass, verticalConvolutionPipeline, verticalConvolution12Bind);
-    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolution22Bind);
-    passMaker(pass, verticalConvolutionPipeline, verticalConvolution22Bind);
+    passMaker(
+      pass,
+      horizontalConvolutionVec3Pipeline,
+      horizontalConvolutionJBind
+    );
+    passMaker(pass, verticalConvolutionVec3Pipeline, verticalConvolutionJBind);
   }
 
   const sobelPipeline = makeSobelPipeline();
-  function sobelBind(src, d_dx, d_dy) {
+  function sobelBind(src, d_d) {
     return device.createBindGroup({
       layout: sobelPipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: src.createView() },
-        { binding: 1, resource: d_dx.createView() },
-        { binding: 2, resource: d_dy.createView() },
+        { binding: 1, resource: d_d.createView() },
       ],
     });
   }
-  const DSSobelBind = sobelBind(switch_DS, d_dx_DS, d_dy_DS);
+  const DSSobelBind = sobelBind(switch_DS, d_d_DS);
   function DSSobelPass(pass) {
     passMaker(pass, sobelPipeline, DSSobelBind);
   }
-  const MorphologicalSobelBind = sobelBind(u_sigma, d_dx_morph, d_dy_morph);
+  const MorphologicalSobelBind = sobelBind(u_sigma, d_d_morph);
   function morphologicalSobelPass(pass) {
     passMaker(pass, sobelPipeline, MorphologicalSobelBind);
   }
@@ -952,9 +1028,8 @@ async function runInpainting() {
     layout: DSSwitchPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
-      { binding: 1, resource: d_dx_DS.createView() },
-      { binding: 2, resource: d_dy_DS.createView() },
-      { binding: 3, resource: switch_DS.createView() },
+      { binding: 1, resource: d_d_DS.createView() },
+      { binding: 2, resource: switch_DS.createView() },
     ],
   });
   function DSSwitchPass(pass) {
@@ -965,11 +1040,8 @@ async function runInpainting() {
   const structureTensorBind = device.createBindGroup({
     layout: structureTensorPipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: d_dx_morph.createView() },
-      { binding: 1, resource: d_dy_morph.createView() },
-      { binding: 2, resource: J_11.createView() },
-      { binding: 3, resource: J_12.createView() },
-      { binding: 4, resource: J_22.createView() },
+      { binding: 0, resource: d_d_morph.createView() },
+      { binding: 1, resource: J.createView() },
     ],
   });
   function structureTensorPass(pass) {
@@ -981,9 +1053,7 @@ async function runInpainting() {
     layout: secondOrderPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: u_sigma.createView() },
-      { binding: 1, resource: d_dxx.createView() },
-      { binding: 2, resource: d_dxy.createView() },
-      { binding: 3, resource: d_dyy.createView() },
+      { binding: 1, resource: d_dd.createView() },
     ],
   });
   function secondOrderPass(pass) {
@@ -995,13 +1065,9 @@ async function runInpainting() {
     layout: morphologicalSwitchPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
-      { binding: 1, resource: d_dxx.createView() },
-      { binding: 2, resource: d_dxy.createView() },
-      { binding: 3, resource: d_dyy.createView() },
-      { binding: 4, resource: J_rho_11.createView() },
-      { binding: 5, resource: J_rho_12.createView() },
-      { binding: 6, resource: J_rho_22.createView() },
-      { binding: 7, resource: switch_morph.createView() },
+      { binding: 1, resource: d_dd.createView() },
+      { binding: 2, resource: J_rho.createView() },
+      { binding: 3, resource: switch_morph.createView() },
     ],
   });
   function morphologicalSwitchPass(pass) {
