@@ -14,7 +14,6 @@ context.configure({
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
-const texVec2Format = "rg32float";
 const texVec3Format = "rgba32float";
 
 async function pngFileToArray(filePath) {
@@ -433,11 +432,11 @@ function makeMorphologicalSwitchPipeline() {
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
   @group(0) @binding(1) var d_dd : texture_storage_2d<${texVec3Format}, read>;
   @group(0) @binding(2) var J_rho : texture_storage_2d<${texVec3Format}, read>;
-  @group(0) @binding(3) var switchMorph : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(3) var switch_morph : texture_storage_2d<${texFormat}, write>;
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(switchMorph);
+    let dims = textureDimensions(switch_morph);
     if (id.x >= dims.x || id.y >= dims.y) {
       return;
     }
@@ -458,7 +457,7 @@ function makeMorphologicalSwitchPipeline() {
     let d_dww = c * c * dxx + 2 * c * s * dxy + s * s * dyy;
 
     textureStore(
-      switchMorph,
+      switch_morph,
       id.xy,
       select(
         2 * atan2(d_dww, uniforms.epsilon) / 3.1416,
@@ -480,73 +479,6 @@ function makeMorphologicalSwitchPipeline() {
     },
   });
 }
-
-// function makeLaplacianPipeline() {
-//   const computeWGSL = `
-//   struct Uniforms {
-//     delta: f32,
-//     dt: f32,
-//     lambda: f32,
-//     epsilon: f32,
-//   };
-
-//   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-//   @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
-//   @group(0) @binding(2) var laplacian_u : texture_storage_2d<${texFormat}, write>;
-
-//   fn sanitise_index(i : i32, n : i32) -> i32 {
-//     let m = abs(i);
-//     return select(m, 2 * n - m - 2, m >= n);
-//   }
-
-//   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-//   fn laplacian(@builtin(global_invocation_id) id : vec3<u32>) {
-//     let dims = textureDimensions(u);
-//     if (id.x >= dims.x || id.y >= dims.y) {
-//       return;
-//     }
-
-//     let dimx = i32(dims.x);
-//     let dimy = i32(dims.y);
-//     let x = i32(id.x);
-//     let y = i32(id.y);
-
-//     let I_dxf = sanitise_index(x + 1, dimx);
-//     let I_dxb = sanitise_index(x - 1, dimx);
-//     let I_dyf = sanitise_index(y + 1, dimy);
-//     let I_dyb = sanitise_index(y - 1, dimy);
-
-//     let u_c = textureLoad(u, vec2<i32>(x, y)).r;
-//     let u_dxf = textureLoad(u, vec2<i32>(I_dxf, y)).r;
-//     let u_dxb = textureLoad(u, vec2<i32>(I_dxb, y)).r;
-//     let u_dyf = textureLoad(u, vec2<i32>(x, I_dyf)).r;
-//     let u_dyb = textureLoad(u, vec2<i32>(x, I_dyb)).r;
-//     let u_dpf = textureLoad(u, vec2<i32>(I_dxf, I_dyf)).r;
-//     let u_dpb = textureLoad(u, vec2<i32>(I_dxb, I_dyb)).r;
-//     let u_dmf = textureLoad(u, vec2<i32>(I_dxf, I_dyb)).r;
-//     let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
-
-//     textureStore(
-//       laplacian_u,
-//       id.xy,
-//       (
-//         (1 - uniforms.delta) * (u_dxf + u_dxb + u_dyf + u_dyb - 4 * u_c) +
-//         (uniforms.delta / 2) * (u_dpf + u_dpb + u_dmf + u_dmb - 4 * u_c)
-//       ) * vec4f(1)
-//     );
-//   }
-// `;
-
-//   return device.createComputePipeline({
-//     layout: "auto",
-//     compute: {
-//       module: device.createShaderModule({
-//         code: computeWGSL,
-//       }),
-//       entryPoint: "laplacian",
-//     },
-//   });
-// }
 
 function makeDiffusionPipeline() {
   const computeWGSL = `
@@ -928,9 +860,6 @@ async function runInpainting() {
     { bytesPerRow: gridWidth * 4 },
     [gridWidth, gridHeight]
   );
-  // const laplacian_u = createStateTexture();
-  const diffusion = createStateTexture();
-  const shock = createStateTexture();
   const convolutionStorage = createStateTexture();
   const u_nu = createStateTexture();
   const switch_DS = createStateTexture();
@@ -940,6 +869,8 @@ async function runInpainting() {
   const convolutionStorageVec3 = createStateTextureVec3();
   const d_dd = createStateTextureVec3();
   const switch_morph = createStateTexture();
+  const diffusion = createStateTexture();
+  const shock = createStateTexture();
 
   // Compute pipeline and bind groups.
   function passMaker(pass, pipeline, bindGroup) {
@@ -1107,19 +1038,6 @@ async function runInpainting() {
     passMaker(pass, morphologicalSwitchPipeline, morphologicalSwitchBind);
   }
 
-  // const laplacianPipeline = makeLaplacianPipeline();
-  // const laplacianBind = device.createBindGroup({
-  //   layout: laplacianPipeline.getBindGroupLayout(0),
-  //   entries: [
-  //     { binding: 0, resource: { buffer: uniformBuffer } },
-  //     { binding: 1, resource: u.createView() },
-  //     { binding: 2, resource: laplacian_u.createView() },
-  //   ],
-  // });
-  // function laplacianPass(pass) {
-  //   passMaker(pass, laplacianPipeline, laplacianBind);
-  // }
-
   const diffusionPipeline = makeDiffusionPipeline();
   const diffusionBind = device.createBindGroup({
     label: "diffusion",
@@ -1181,7 +1099,7 @@ async function runInpainting() {
     const newtime = performance.now();
     const frametime = newtime - time;
     time = newtime;
-    // console.log(frametime);
+    // console.log("fps", 1000 / frametime);
 
     const encoder = device.createCommandEncoder();
 

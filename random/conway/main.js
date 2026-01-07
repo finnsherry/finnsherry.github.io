@@ -201,6 +201,12 @@ function runSimulation() {
     [gridWidth, gridHeight]
   );
 
+  let computeBindA = computeBind(texA, texB);
+  let computeBindB = computeBind(texB, texA);
+
+  let renderBindA = renderBind(texA);
+  let renderBindB = renderBind(texB);
+
   let time = performance.now();
   function updateGrid() {
     const newtime = performance.now();
@@ -212,7 +218,7 @@ function runSimulation() {
     {
       const pass = encoder.beginComputePass();
       pass.setPipeline(computePipeline);
-      pass.setBindGroup(0, computeBind(texA, texB));
+      pass.setBindGroup(0, computeBindA);
       pass.dispatchWorkgroups(
         Math.ceil(gridWidth / WORKGROUP),
         Math.ceil(gridHeight / WORKGROUP)
@@ -231,7 +237,7 @@ function runSimulation() {
         ],
       });
       pass.setPipeline(renderPipeline);
-      pass.setBindGroup(0, renderBind(texB));
+      pass.setBindGroup(0, renderBindB);
       pass.draw(6);
       pass.end();
     }
@@ -240,6 +246,7 @@ function runSimulation() {
 
     device.queue.submit([encoder.finish()]);
     [texA, texB] = [texB, texA];
+    [computeBindA, computeBindB] = [computeBindB, computeBindA];
   }
   updateGrid();
   return setInterval(updateGrid, updateInterval);
