@@ -1,7 +1,5 @@
 const adapter = await navigator.gpu?.requestAdapter();
-const requiredLimits = {};
-requiredLimits.maxStorageTexturesPerShaderStage = 8;
-const device = await adapter?.requestDevice({ requiredLimits });
+const device = await adapter?.requestDevice();
 if (!device) throw new Error("WebGPU not supported");
 
 const canvas = document.getElementById("canvas");
@@ -117,6 +115,7 @@ function makeConvolutionPipelines() {
 
   return [
     device.createComputePipeline({
+      label: "horizontal convolution",
       layout: "auto",
       compute: {
         module: device.createShaderModule({
@@ -126,6 +125,7 @@ function makeConvolutionPipelines() {
       },
     }),
     device.createComputePipeline({
+      label: "vertical convolution",
       layout: "auto",
       compute: {
         module: device.createShaderModule({
@@ -204,6 +204,7 @@ function makeConvolutionVec3Pipelines() {
 
   return [
     device.createComputePipeline({
+      label: "horizontal 3d convolution",
       layout: "auto",
       compute: {
         module: device.createShaderModule({
@@ -213,6 +214,7 @@ function makeConvolutionVec3Pipelines() {
       },
     }),
     device.createComputePipeline({
+      label: "vertical 3d convolution",
       layout: "auto",
       compute: {
         module: device.createShaderModule({
@@ -224,11 +226,18 @@ function makeConvolutionVec3Pipelines() {
   ];
 }
 
-function makeSobelPipeline() {
+function makeDSSwitchPipeline() {
   const computeWGSL = `
+  struct Uniforms {
+    delta: f32,
+    dt: f32,
+    lambda: f32,
+    epsilon: f32,
+  };
 
-  @group(0) @binding(0) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(1) var d_d : texture_storage_2d<${texVec2Format}, write>;
+  @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+  @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(2) var switchDS : texture_storage_2d<${texFormat}, write>;\
 
   fn sanitise_index(i : i32, n : i32) -> i32 {
     let m = abs(i);
@@ -236,7 +245,67 @@ function makeSobelPipeline() {
   }
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn sobel_gradient(@builtin(global_invocation_id) id : vec3<u32>) {
+  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
+    let dims = textureDimensions(switchDS);
+    if (id.x >= dims.x || id.y >= dims.y) {
+      return;
+    }
+
+    let dimx = i32(dims.x);
+    let dimy = i32(dims.y);
+    let x = i32(id.x);
+    let y = i32(id.y);
+
+    let I_dxf = sanitise_index(x + 1, dimx);
+    let I_dxb = sanitise_index(x - 1, dimx);
+    let I_dyf = sanitise_index(y + 1, dimy);
+    let I_dyb = sanitise_index(y - 1, dimy);
+
+    let u_dxf = textureLoad(u, vec2<i32>(I_dxf, y)).r;
+    let u_dxb = textureLoad(u, vec2<i32>(I_dxb, y)).r;
+    let u_dyf = textureLoad(u, vec2<i32>(x, I_dyf)).r;
+    let u_dyb = textureLoad(u, vec2<i32>(x, I_dyb)).r;
+    let u_dpf = textureLoad(u, vec2<i32>(I_dxf, I_dyf)).r;
+    let u_dpb = textureLoad(u, vec2<i32>(I_dxb, I_dyb)).r;
+    let u_dmf = textureLoad(u, vec2<i32>(I_dxf, I_dyb)).r;
+    let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
+
+    let dx = (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) / 8;
+    let dy = (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) / 8;
+
+    textureStore(
+      switchDS,
+      id.xy,
+      1 / sqrt(1 + (dx*dx + dy*dy) / (uniforms.lambda * uniforms.lambda)) * vec4f(1)
+    );
+  }
+`;
+
+  return device.createComputePipeline({
+    label: "DS switch",
+    layout: "auto",
+    compute: {
+      module: device.createShaderModule({
+        code: computeWGSL,
+      }),
+      entryPoint: "main",
+    },
+  });
+}
+
+function makeStructureTensorPipeline() {
+  const computeWGSL = `
+
+  @group(0) @binding(0) var u : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(1) var J : texture_storage_2d<${texVec3Format}, write>;
+
+  fn sanitise_index(i : i32, n : i32) -> i32 {
+    let m = abs(i);
+    return select(m, 2 * n - m - 2, m >= n);
+  }
+
+  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
+  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
     let dims = textureDimensions(u);
     if (id.x >= dims.x || id.y >= dims.y) {
       return;
@@ -261,97 +330,16 @@ function makeSobelPipeline() {
     let u_dmf = textureLoad(u, vec2<i32>(I_dxf, I_dyb)).r;
     let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
 
-    textureStore(
-      d_d,
-      id.xy,
-      vec4f(
-        (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) / 8,
-        (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) / 8,
-        1, 1
-      )
-    );
-  }
-`;
-
-  return device.createComputePipeline({
-    layout: "auto",
-    compute: {
-      module: device.createShaderModule({
-        code: computeWGSL,
-      }),
-      entryPoint: "sobel_gradient",
-    },
-  });
-}
-
-function makeDSSwitchPipeline() {
-  const computeWGSL = `
-  struct Uniforms {
-    delta: f32,
-    dt: f32,
-    lambda: f32,
-    epsilon: f32,
-  };
-
-  @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-  @group(0) @binding(1) var d_d : texture_storage_2d<${texVec2Format}, read>;
-  @group(0) @binding(2) var switchDS : texture_storage_2d<${texFormat}, write>;
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(switchDS);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let d = textureLoad(d_d, id.xy).rg;
-
-    textureStore(
-      switchDS,
-      id.xy,
-      1 / sqrt(1 + (d.x*d.x + d.y*d.y) / (uniforms.lambda * uniforms.lambda)) * vec4f(1)
-    );
-  }
-`;
-
-  return device.createComputePipeline({
-    layout: "auto",
-    compute: {
-      module: device.createShaderModule({
-        code: computeWGSL,
-      }),
-      entryPoint: "main",
-    },
-  });
-}
-
-function makeStructureTensorPipeline() {
-  const computeWGSL = `
-
-  @group(0) @binding(0) var d_d : texture_storage_2d<${texVec2Format}, read>;
-  @group(0) @binding(1) var J : texture_storage_2d<${texVec3Format}, write>;
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(d_d);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let dimx = i32(dims.x);
-    let dimy = i32(dims.y);
-    let x = i32(id.x);
-    let y = i32(id.y);
-
-    let d = textureLoad(d_d, vec2<i32>(x, y)).rg;
+    let dx = (-1 * u_dmb - 2 * u_dxb - 1 * u_dpb + 1 * u_dmf + 2 * u_dxf + 1 * u_dpf) / 8;
+    let dy = (-1 * u_dmf - 2 * u_dyb - 1 * u_dpb + 1 * u_dmb + 2 * u_dyf + 1 * u_dpf) / 8;
 
     textureStore(
       J,
       id.xy,
       vec4f(
-        d.x * d.x,
-        d.x * d.y,
-        d.y * d.y,
+        dx * dx,
+        dx * dy,
+        dy * dy,
         1
       )
     );
@@ -359,6 +347,7 @@ function makeStructureTensorPipeline() {
 `;
 
   return device.createComputePipeline({
+    label: "structure tensor",
     layout: "auto",
     compute: {
       module: device.createShaderModule({
@@ -421,6 +410,7 @@ function makeSecondOrderPipeline() {
 `;
 
   return device.createComputePipeline({
+    label: "second order",
     layout: "auto",
     compute: {
       module: device.createShaderModule({
@@ -480,6 +470,7 @@ function makeMorphologicalSwitchPipeline() {
 `;
 
   return device.createComputePipeline({
+    label: "morphological switch",
     layout: "auto",
     compute: {
       module: device.createShaderModule({
@@ -490,7 +481,74 @@ function makeMorphologicalSwitchPipeline() {
   });
 }
 
-function makeLaplacianPipeline() {
+// function makeLaplacianPipeline() {
+//   const computeWGSL = `
+//   struct Uniforms {
+//     delta: f32,
+//     dt: f32,
+//     lambda: f32,
+//     epsilon: f32,
+//   };
+
+//   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+//   @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
+//   @group(0) @binding(2) var laplacian_u : texture_storage_2d<${texFormat}, write>;
+
+//   fn sanitise_index(i : i32, n : i32) -> i32 {
+//     let m = abs(i);
+//     return select(m, 2 * n - m - 2, m >= n);
+//   }
+
+//   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
+//   fn laplacian(@builtin(global_invocation_id) id : vec3<u32>) {
+//     let dims = textureDimensions(u);
+//     if (id.x >= dims.x || id.y >= dims.y) {
+//       return;
+//     }
+
+//     let dimx = i32(dims.x);
+//     let dimy = i32(dims.y);
+//     let x = i32(id.x);
+//     let y = i32(id.y);
+
+//     let I_dxf = sanitise_index(x + 1, dimx);
+//     let I_dxb = sanitise_index(x - 1, dimx);
+//     let I_dyf = sanitise_index(y + 1, dimy);
+//     let I_dyb = sanitise_index(y - 1, dimy);
+
+//     let u_c = textureLoad(u, vec2<i32>(x, y)).r;
+//     let u_dxf = textureLoad(u, vec2<i32>(I_dxf, y)).r;
+//     let u_dxb = textureLoad(u, vec2<i32>(I_dxb, y)).r;
+//     let u_dyf = textureLoad(u, vec2<i32>(x, I_dyf)).r;
+//     let u_dyb = textureLoad(u, vec2<i32>(x, I_dyb)).r;
+//     let u_dpf = textureLoad(u, vec2<i32>(I_dxf, I_dyf)).r;
+//     let u_dpb = textureLoad(u, vec2<i32>(I_dxb, I_dyb)).r;
+//     let u_dmf = textureLoad(u, vec2<i32>(I_dxf, I_dyb)).r;
+//     let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
+
+//     textureStore(
+//       laplacian_u,
+//       id.xy,
+//       (
+//         (1 - uniforms.delta) * (u_dxf + u_dxb + u_dyf + u_dyb - 4 * u_c) +
+//         (uniforms.delta / 2) * (u_dpf + u_dpb + u_dmf + u_dmb - 4 * u_c)
+//       ) * vec4f(1)
+//     );
+//   }
+// `;
+
+//   return device.createComputePipeline({
+//     layout: "auto",
+//     compute: {
+//       module: device.createShaderModule({
+//         code: computeWGSL,
+//       }),
+//       entryPoint: "laplacian",
+//     },
+//   });
+// }
+
+function makeDiffusionPipeline() {
   const computeWGSL = `
   struct Uniforms {
     delta: f32,
@@ -501,7 +559,8 @@ function makeLaplacianPipeline() {
 
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
   @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var laplacian_u : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(2) var switch_DS : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(3) var diffusion : texture_storage_2d<${texFormat}, write>;
 
   fn sanitise_index(i : i32, n : i32) -> i32 {
     let m = abs(i);
@@ -509,7 +568,7 @@ function makeLaplacianPipeline() {
   }
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn laplacian(@builtin(global_invocation_id) id : vec3<u32>) {
+  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
     let dims = textureDimensions(u);
     if (id.x >= dims.x || id.y >= dims.y) {
       return;
@@ -535,10 +594,12 @@ function makeLaplacianPipeline() {
     let u_dmf = textureLoad(u, vec2<i32>(I_dxf, I_dyb)).r;
     let u_dmb = textureLoad(u, vec2<i32>(I_dxb, I_dyf)).r;
 
+    let switch_DS_cur = textureLoad(switch_DS, vec2<i32>(x, y)).r;
+
     textureStore(
-      laplacian_u,
+      diffusion,
       id.xy,
-      (
+      switch_DS_cur * (
         (1 - uniforms.delta) * (u_dxf + u_dxb + u_dyf + u_dyb - 4 * u_c) +
         (uniforms.delta / 2) * (u_dpf + u_dpb + u_dmf + u_dmb - 4 * u_c)
       ) * vec4f(1)
@@ -547,17 +608,18 @@ function makeLaplacianPipeline() {
 `;
 
   return device.createComputePipeline({
+    label: "diffusion",
     layout: "auto",
     compute: {
       module: device.createShaderModule({
         code: computeWGSL,
       }),
-      entryPoint: "laplacian",
+      entryPoint: "main",
     },
   });
 }
 
-function makeMorphologicalPipeline() {
+function makeShockPipeline() {
   const computeWGSL = `
   struct Uniforms {
     delta: f32,
@@ -568,8 +630,9 @@ function makeMorphologicalPipeline() {
 
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
   @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var dilation_u : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(3) var erosion_u : texture_storage_2d<${texFormat}, write>;
+  @group(0) @binding(2) var switch_DS : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(3) var switch_morph : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(4) var shock : texture_storage_2d<${texFormat}, write>;
 
   fn sanitise_index(i : i32, n : i32) -> i32 {
     let m = abs(i);
@@ -621,27 +684,30 @@ function makeMorphologicalPipeline() {
     let u_dp_ero = upwind_erosion(u_dpf, u_dpb);
     let u_dm_ero = upwind_erosion(u_dmf, u_dmb);
 
-    textureStore(
-      dilation_u,
-      id.xy,
-      (
+    let dilation_u = (
         (1 - uniforms.delta) * sqrt(u_dx_dil * u_dx_dil + u_dy_dil * u_dy_dil) +
         (uniforms.delta / sqrt(2)) * sqrt(u_dp_dil * u_dp_dil + u_dm_dil * u_dm_dil)
-      ) * vec4f(1)
     );
-
-    textureStore(
-      erosion_u,
-      id.xy,
-      -(
+    let erosion_u = -(
         (1 - uniforms.delta) * sqrt(u_dx_ero * u_dx_ero + u_dy_ero * u_dy_ero) +
         (uniforms.delta / sqrt(2)) * sqrt(u_dp_ero * u_dp_ero + u_dm_ero * u_dm_ero)
+    );
+
+    let switch_DS_cur = textureLoad(switch_DS, vec2<i32>(x, y)).r;
+    let switch_morph_cur = textureLoad(switch_morph, vec2<i32>(x, y)).r;
+
+    textureStore(
+      shock,
+      id.xy,
+      (1 - switch_DS_cur) * (
+        select(dilation_u, erosion_u, switch_morph_cur > 0) * abs(switch_morph_cur)
       ) * vec4f(1)
     );
   }
 `;
 
   return device.createComputePipeline({
+    label: "shock",
     layout: "auto",
     compute: {
       module: device.createShaderModule({
@@ -663,12 +729,9 @@ function makeStepPipeline() {
 
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
   @group(0) @binding(1) var mask : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var switch_DS : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(3) var switch_morph : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(4) var laplacian_u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(5) var dilation_u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(6) var erosion_u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(7) var u : texture_storage_2d<${texFormat}, read_write>;
+  @group(0) @binding(2) var diffusion : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(3) var shock : texture_storage_2d<${texFormat}, read>;
+  @group(0) @binding(4) var u : texture_storage_2d<${texFormat}, read_write>;
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -684,28 +747,19 @@ function makeStepPipeline() {
 
     let u_cur = textureLoad(u, vec2<i32>(x, y)).r;
     let mask_cur = textureLoad(mask, vec2<i32>(x, y)).r;
-    let switch_DS_cur = textureLoad(switch_DS, vec2<i32>(x, y)).r;
-    let switch_morph_cur = textureLoad(switch_morph, vec2<i32>(x, y)).r;
-    let laplacian_u_cur = textureLoad(laplacian_u, vec2<i32>(x, y)).r;
-    let dilation_u_cur = textureLoad(dilation_u, vec2<i32>(x, y)).r;
-    let erosion_u_cur = textureLoad(erosion_u, vec2<i32>(x, y)).r;
+    let diffusion_cur = textureLoad(diffusion, vec2<i32>(x, y)).r;
+    let shock_cur = textureLoad(shock, vec2<i32>(x, y)).r;
 
     textureStore(
       u,
       id.xy,
-      (
-        u_cur + uniforms.dt * (mask_cur / 255) * (
-          laplacian_u_cur * switch_DS_cur +
-          (1 - switch_DS_cur) * (
-            select(dilation_u_cur, erosion_u_cur, switch_morph_cur > 0) * abs(switch_morph_cur)
-          )
-        )
-      ) * vec4f(1)
+      u_cur + uniforms.dt * (mask_cur / 255) * (diffusion_cur + shock_cur) * vec4f(1)
     );
   }
 `;
 
   return device.createComputePipeline({
+    label: "step",
     layout: "auto",
     compute: {
       module: device.createShaderModule({
@@ -745,6 +799,7 @@ function makeRenderPipeline() {
 `;
 
   return device.createRenderPipeline({
+    label: "render",
     layout: "auto",
     vertex: {
       module: device.createShaderModule({ code: renderWGSL }),
@@ -849,16 +904,6 @@ async function runInpainting() {
         GPUTextureUsage.COPY_DST,
     });
   }
-  function createStateTextureVec2() {
-    return device.createTexture({
-      size: [gridWidth, gridHeight],
-      format: texVec2Format,
-      usage:
-        GPUTextureUsage.STORAGE_BINDING |
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_DST,
-    });
-  }
   function createStateTextureVec3() {
     return device.createTexture({
       size: [gridWidth, gridHeight],
@@ -883,14 +928,13 @@ async function runInpainting() {
     { bytesPerRow: gridWidth * 4 },
     [gridWidth, gridHeight]
   );
-  const laplacian_u = createStateTexture();
-  const dilation_u = createStateTexture();
-  const erosion_u = createStateTexture();
+  // const laplacian_u = createStateTexture();
+  const diffusion = createStateTexture();
+  const shock = createStateTexture();
   const convolutionStorage = createStateTexture();
-  const d_d_DS = createStateTextureVec2();
+  const u_nu = createStateTexture();
   const switch_DS = createStateTexture();
   const u_sigma = createStateTexture();
-  const d_d_morph = createStateTextureVec2();
   const J = createStateTextureVec3();
   const J_rho = createStateTextureVec3();
   const convolutionStorageVec3 = createStateTextureVec3();
@@ -910,6 +954,7 @@ async function runInpainting() {
     makeConvolutionPipelines();
   function horizontalConvolutionBind(k, src, dst) {
     return device.createBindGroup({
+      label: "horizontal convolution",
       layout: horizontalConvolutionPipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: k } },
@@ -920,6 +965,7 @@ async function runInpainting() {
   }
   function verticalConvolutionBind(k, src, dst) {
     return device.createBindGroup({
+      label: "vertical convolution",
       layout: verticalConvolutionPipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: k } },
@@ -937,7 +983,7 @@ async function runInpainting() {
   const verticalConvolutionNuBind = verticalConvolutionBind(
     k_nu,
     convolutionStorage,
-    switch_DS
+    u_nu
   );
   function convolutionNuPass(pass) {
     passMaker(pass, horizontalConvolutionPipeline, horizontalConvolutionNuBind);
@@ -967,6 +1013,7 @@ async function runInpainting() {
     makeConvolutionVec3Pipelines();
   function horizontalConvolutionVec3Bind(k, src, dst) {
     return device.createBindGroup({
+      label: "horizontal 3d convolution",
       layout: horizontalConvolutionVec3Pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: k } },
@@ -977,6 +1024,7 @@ async function runInpainting() {
   }
   function verticalConvolutionVec3Bind(k, src, dst) {
     return device.createBindGroup({
+      label: "vertical 3d convolution",
       layout: verticalConvolutionVec3Pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: k } },
@@ -1004,31 +1052,13 @@ async function runInpainting() {
     passMaker(pass, verticalConvolutionVec3Pipeline, verticalConvolutionJBind);
   }
 
-  const sobelPipeline = makeSobelPipeline();
-  function sobelBind(src, d_d) {
-    return device.createBindGroup({
-      layout: sobelPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: src.createView() },
-        { binding: 1, resource: d_d.createView() },
-      ],
-    });
-  }
-  const DSSobelBind = sobelBind(switch_DS, d_d_DS);
-  function DSSobelPass(pass) {
-    passMaker(pass, sobelPipeline, DSSobelBind);
-  }
-  const MorphologicalSobelBind = sobelBind(u_sigma, d_d_morph);
-  function morphologicalSobelPass(pass) {
-    passMaker(pass, sobelPipeline, MorphologicalSobelBind);
-  }
-
   const DSSwitchPipeline = makeDSSwitchPipeline();
   const DSSwitchBind = device.createBindGroup({
+    label: "DS switch",
     layout: DSSwitchPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
-      { binding: 1, resource: d_d_DS.createView() },
+      { binding: 1, resource: u_nu.createView() },
       { binding: 2, resource: switch_DS.createView() },
     ],
   });
@@ -1038,9 +1068,10 @@ async function runInpainting() {
 
   const structureTensorPipeline = makeStructureTensorPipeline();
   const structureTensorBind = device.createBindGroup({
+    label: "structure tensor",
     layout: structureTensorPipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: d_d_morph.createView() },
+      { binding: 0, resource: u_sigma.createView() },
       { binding: 1, resource: J.createView() },
     ],
   });
@@ -1050,6 +1081,7 @@ async function runInpainting() {
 
   const secondOrderPipeline = makeSecondOrderPipeline();
   const secondOrderBind = device.createBindGroup({
+    label: "second order",
     layout: secondOrderPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: u_sigma.createView() },
@@ -1062,6 +1094,7 @@ async function runInpainting() {
 
   const morphologicalSwitchPipeline = makeMorphologicalSwitchPipeline();
   const morphologicalSwitchBind = device.createBindGroup({
+    label: "morphological switch",
     layout: morphologicalSwitchPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
@@ -1074,45 +1107,60 @@ async function runInpainting() {
     passMaker(pass, morphologicalSwitchPipeline, morphologicalSwitchBind);
   }
 
-  const laplacianPipeline = makeLaplacianPipeline();
-  const laplacianBind = device.createBindGroup({
-    layout: laplacianPipeline.getBindGroupLayout(0),
+  // const laplacianPipeline = makeLaplacianPipeline();
+  // const laplacianBind = device.createBindGroup({
+  //   layout: laplacianPipeline.getBindGroupLayout(0),
+  //   entries: [
+  //     { binding: 0, resource: { buffer: uniformBuffer } },
+  //     { binding: 1, resource: u.createView() },
+  //     { binding: 2, resource: laplacian_u.createView() },
+  //   ],
+  // });
+  // function laplacianPass(pass) {
+  //   passMaker(pass, laplacianPipeline, laplacianBind);
+  // }
+
+  const diffusionPipeline = makeDiffusionPipeline();
+  const diffusionBind = device.createBindGroup({
+    label: "diffusion",
+    layout: diffusionPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
       { binding: 1, resource: u.createView() },
-      { binding: 2, resource: laplacian_u.createView() },
+      { binding: 2, resource: switch_DS.createView() },
+      { binding: 3, resource: diffusion.createView() },
     ],
   });
-  function laplacianPass(pass) {
-    passMaker(pass, laplacianPipeline, laplacianBind);
+  function diffusionPass(pass) {
+    passMaker(pass, diffusionPipeline, diffusionBind);
   }
 
-  const morphologicalPipeline = makeMorphologicalPipeline();
-  const morphologicalBind = device.createBindGroup({
-    layout: morphologicalPipeline.getBindGroupLayout(0),
+  const shockPipeline = makeShockPipeline();
+  const shockBind = device.createBindGroup({
+    label: "shock",
+    layout: shockPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
       { binding: 1, resource: u.createView() },
-      { binding: 2, resource: dilation_u.createView() },
-      { binding: 3, resource: erosion_u.createView() },
+      { binding: 2, resource: switch_DS.createView() },
+      { binding: 3, resource: switch_morph.createView() },
+      { binding: 4, resource: shock.createView() },
     ],
   });
-  function morphologicalPass(pass) {
-    passMaker(pass, morphologicalPipeline, morphologicalBind);
+  function shockPass(pass) {
+    passMaker(pass, shockPipeline, shockBind);
   }
 
   const stepPipeline = makeStepPipeline();
   const stepBind = device.createBindGroup({
+    label: "step",
     layout: stepPipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: { buffer: uniformBuffer } },
       { binding: 1, resource: texMask.createView() },
-      { binding: 2, resource: switch_DS.createView() },
-      { binding: 3, resource: switch_morph.createView() },
-      { binding: 4, resource: laplacian_u.createView() },
-      { binding: 5, resource: dilation_u.createView() },
-      { binding: 6, resource: erosion_u.createView() },
-      { binding: 7, resource: u.createView() },
+      { binding: 2, resource: diffusion.createView() },
+      { binding: 3, resource: shock.createView() },
+      { binding: 4, resource: u.createView() },
     ],
   });
   function stepPass(pass) {
@@ -1122,6 +1170,7 @@ async function runInpainting() {
   // Render pipeline and bind groups.
   const renderPipeline = makeRenderPipeline();
   const renderBind = device.createBindGroup({
+    label: "render",
     layout: renderPipeline.getBindGroupLayout(0),
     entries: [{ binding: 0, resource: u.createView() }],
   });
@@ -1140,20 +1189,18 @@ async function runInpainting() {
       const pass = encoder.beginComputePass();
       // DS switch
       convolutionNuPass(pass);
-      DSSobelPass(pass);
       DSSwitchPass(pass);
 
       // Morphological switch
       convolutionSigmaPass(pass);
-      morphologicalSobelPass(pass);
       structureTensorPass(pass);
       regulariseStructureTensorPass(pass);
       secondOrderPass(pass);
       morphologicalSwitchPass(pass);
 
       // Derivatives
-      laplacianPass(pass);
-      morphologicalPass(pass);
+      diffusionPass(pass);
+      shockPass(pass);
 
       // Step
       stepPass(pass);
