@@ -757,7 +757,7 @@ function createGaussianKernel(sigma, radiusMultiplier) {
   for (let i = 0; i < r + 1; i++) {
     const s = Math.exp(-(i * i) / (2 * sigma * sigma));
     k[i] = s;
-    sum += s;
+    sum += i == 0 ? s : 2 * s;
   }
   for (let i = 0; i < r + 1; i++) {
     k[i] /= sum;
