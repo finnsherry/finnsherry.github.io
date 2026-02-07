@@ -21,14 +21,14 @@ async function pngFileToArray(filePath) {
     const img = new Image();
     img.crossOrigin = "anonymous";
 
-    img.onload = () => {
+    img.onload = async () => {
+      await img.decode();
       const width = img.naturalWidth;
       const height = img.naturalHeight;
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const ctx = canvas.getContext("2d");
-
+      const ctx = canvas.getContext("2d", { alpha: false });
       ctx.drawImage(img, 0, 0, width, height);
       const { data } = ctx.getImageData(0, 0, width, height);
 
@@ -851,14 +851,14 @@ async function runInpainting() {
     { texture: u },
     u0,
     { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
+    [gridWidth, gridHeight],
   );
   const texMask = createStateTexture();
   device.queue.writeTexture(
     { texture: texMask },
     mask,
     { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
+    [gridWidth, gridHeight],
   );
   const convolutionStorage = createStateTexture();
   const u_nu = createStateTexture();
@@ -873,13 +873,15 @@ async function runInpainting() {
   const shock = createStateTexture();
 
   // Compute pipeline and bind groups.
-  function passMaker(pass, pipeline, bindGroup) {
+  function passMaker(encoder, pipeline, bindGroup) {
+    const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.dispatchWorkgroups(
       Math.ceil(gridWidth / WORKGROUP),
-      Math.ceil(gridHeight / WORKGROUP)
+      Math.ceil(gridHeight / WORKGROUP),
     );
+    pass.end();
   }
   const [horizontalConvolutionPipeline, verticalConvolutionPipeline] =
     makeConvolutionPipelines();
@@ -909,35 +911,43 @@ async function runInpainting() {
   const horizontalConvolutionNuBind = horizontalConvolutionBind(
     k_nu,
     u,
-    convolutionStorage
+    convolutionStorage,
   );
   const verticalConvolutionNuBind = verticalConvolutionBind(
     k_nu,
     convolutionStorage,
-    u_nu
+    u_nu,
   );
-  function convolutionNuPass(pass) {
-    passMaker(pass, horizontalConvolutionPipeline, horizontalConvolutionNuBind);
-    passMaker(pass, verticalConvolutionPipeline, verticalConvolutionNuBind);
+  function convolutionNuPass(encoder) {
+    passMaker(
+      encoder,
+      horizontalConvolutionPipeline,
+      horizontalConvolutionNuBind,
+    );
+    passMaker(encoder, verticalConvolutionPipeline, verticalConvolutionNuBind);
   }
 
   const horizontalConvolutionSigmaBind = horizontalConvolutionBind(
     k_sigma,
     u,
-    convolutionStorage
+    convolutionStorage,
   );
   const verticalConvolutionSigmaBind = verticalConvolutionBind(
     k_sigma,
     convolutionStorage,
-    u_sigma
+    u_sigma,
   );
-  function convolutionSigmaPass(pass) {
+  function convolutionSigmaPass(encoder) {
     passMaker(
-      pass,
+      encoder,
       horizontalConvolutionPipeline,
-      horizontalConvolutionSigmaBind
+      horizontalConvolutionSigmaBind,
     );
-    passMaker(pass, verticalConvolutionPipeline, verticalConvolutionSigmaBind);
+    passMaker(
+      encoder,
+      verticalConvolutionPipeline,
+      verticalConvolutionSigmaBind,
+    );
   }
 
   const [horizontalConvolutionVec3Pipeline, verticalConvolutionVec3Pipeline] =
@@ -967,20 +977,24 @@ async function runInpainting() {
   const horizontalConvolutionJBind = horizontalConvolutionVec3Bind(
     k_rho,
     J,
-    convolutionStorageVec3
+    convolutionStorageVec3,
   );
   const verticalConvolutionJBind = verticalConvolutionVec3Bind(
     k_rho,
     convolutionStorageVec3,
-    J_rho
+    J_rho,
   );
-  function regulariseStructureTensorPass(pass) {
+  function regulariseStructureTensorPass(encoder) {
     passMaker(
-      pass,
+      encoder,
       horizontalConvolutionVec3Pipeline,
-      horizontalConvolutionJBind
+      horizontalConvolutionJBind,
     );
-    passMaker(pass, verticalConvolutionVec3Pipeline, verticalConvolutionJBind);
+    passMaker(
+      encoder,
+      verticalConvolutionVec3Pipeline,
+      verticalConvolutionJBind,
+    );
   }
 
   const DSSwitchPipeline = makeDSSwitchPipeline();
@@ -993,8 +1007,8 @@ async function runInpainting() {
       { binding: 2, resource: switch_DS.createView() },
     ],
   });
-  function DSSwitchPass(pass) {
-    passMaker(pass, DSSwitchPipeline, DSSwitchBind);
+  function DSSwitchPass(encoder) {
+    passMaker(encoder, DSSwitchPipeline, DSSwitchBind);
   }
 
   const structureTensorPipeline = makeStructureTensorPipeline();
@@ -1006,8 +1020,8 @@ async function runInpainting() {
       { binding: 1, resource: J.createView() },
     ],
   });
-  function structureTensorPass(pass) {
-    passMaker(pass, structureTensorPipeline, structureTensorBind);
+  function structureTensorPass(encoder) {
+    passMaker(encoder, structureTensorPipeline, structureTensorBind);
   }
 
   const secondOrderPipeline = makeSecondOrderPipeline();
@@ -1019,8 +1033,8 @@ async function runInpainting() {
       { binding: 1, resource: d_dd.createView() },
     ],
   });
-  function secondOrderPass(pass) {
-    passMaker(pass, secondOrderPipeline, secondOrderBind);
+  function secondOrderPass(encoder) {
+    passMaker(encoder, secondOrderPipeline, secondOrderBind);
   }
 
   const morphologicalSwitchPipeline = makeMorphologicalSwitchPipeline();
@@ -1034,8 +1048,8 @@ async function runInpainting() {
       { binding: 3, resource: switch_morph.createView() },
     ],
   });
-  function morphologicalSwitchPass(pass) {
-    passMaker(pass, morphologicalSwitchPipeline, morphologicalSwitchBind);
+  function morphologicalSwitchPass(encoder) {
+    passMaker(encoder, morphologicalSwitchPipeline, morphologicalSwitchBind);
   }
 
   const diffusionPipeline = makeDiffusionPipeline();
@@ -1049,8 +1063,8 @@ async function runInpainting() {
       { binding: 3, resource: diffusion.createView() },
     ],
   });
-  function diffusionPass(pass) {
-    passMaker(pass, diffusionPipeline, diffusionBind);
+  function diffusionPass(encoder) {
+    passMaker(encoder, diffusionPipeline, diffusionBind);
   }
 
   const shockPipeline = makeShockPipeline();
@@ -1065,8 +1079,8 @@ async function runInpainting() {
       { binding: 4, resource: shock.createView() },
     ],
   });
-  function shockPass(pass) {
-    passMaker(pass, shockPipeline, shockBind);
+  function shockPass(encoder) {
+    passMaker(encoder, shockPipeline, shockBind);
   }
 
   const stepPipeline = makeStepPipeline();
@@ -1081,8 +1095,8 @@ async function runInpainting() {
       { binding: 4, resource: u.createView() },
     ],
   });
-  function stepPass(pass) {
-    passMaker(pass, stepPipeline, stepBind);
+  function stepPass(encoder) {
+    passMaker(encoder, stepPipeline, stepBind);
   }
 
   // Render pipeline and bind groups.
@@ -1104,25 +1118,23 @@ async function runInpainting() {
     const encoder = device.createCommandEncoder();
 
     for (let i = 0; i < showEvery; i++) {
-      const pass = encoder.beginComputePass();
       // DS switch
-      convolutionNuPass(pass);
-      DSSwitchPass(pass);
+      convolutionNuPass(encoder);
+      DSSwitchPass(encoder);
 
       // Morphological switch
-      convolutionSigmaPass(pass);
-      structureTensorPass(pass);
-      regulariseStructureTensorPass(pass);
-      secondOrderPass(pass);
-      morphologicalSwitchPass(pass);
+      convolutionSigmaPass(encoder);
+      structureTensorPass(encoder);
+      regulariseStructureTensorPass(encoder);
+      secondOrderPass(encoder);
+      morphologicalSwitchPass(encoder);
 
       // Derivatives
-      diffusionPass(pass);
-      shockPass(pass);
+      diffusionPass(encoder);
+      shockPass(encoder);
 
       // Step
-      stepPass(pass);
-      pass.end();
+      stepPass(encoder);
 
       step++;
     }
