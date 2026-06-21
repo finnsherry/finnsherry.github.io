@@ -106,7 +106,7 @@
             </p>
             <p>
                 In <a href="https://doi.org/10.1007/978-3-032-03918-7_4" target="_blank">Roto-Translation Invariant
-                    Metrics on Position-Orienation Space</a>, Bellaard & Smets pick the generator with the
+                    Metrics on Position-Orientation Space</a>, Bellaard & Smets pick the generator with the
                 <b>m</b>inimal <b>a</b>ngular <b>v</b>elocity \(M_\mathrm{mav}\). This corresponds to the
                 exponential curve which rotates the least. Another interesting choice is the pure rotation generator
                 \(M_\mathrm{rot}\), which connects the pair by only rotating around some point. Generically, the
@@ -128,7 +128,13 @@
                 \end{aligned}
                 \]
             </p>
-
+            <p>
+                The position-orientations \(p_1, p_2\), shown as black arrows, and the generator parameter \(\phi\) can
+                be edited in the form below; press "Submit" to update these values in the visualisation. The camera is
+                centred on the origin \((0, 0, 0)\), and can be rotated around the origin
+                by dragging over the canvas. Scrolling up and down over the canvas will increase and decrease the
+                rotation speed, respectively.
+            </p>
             <table class="form" id="parameters">
                 <tr>
                     <td><label for="x1">\(x_1\): </label></td>
@@ -159,7 +165,7 @@
                     <td><input type="text" size="3" id="phi" name="phi" placeholder="0.5" required> \(\pi\)</td>
                 </tr>
                 <tr>
-                    <td><button id="submit">Start</button></td>
+                    <td><button id="submit">Submit</button></td>
                 </tr>
             </table>
 
