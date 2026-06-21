@@ -29,12 +29,12 @@ inputState.attach(canvas);
 
 const camera = new Camera(vec3(0, 3, 3), origin);
 camera.perspective = true;
-camera.zoom = 1/5;
+camera.zoom = 1 / 5;
 
 function project(point, perspective) {
   const projected = NDArray.matmul(perspective, vec4(point.x, point.y, point.z, 2));
   return vec2(
-    width / 2 + length * projected.x / projected.w, 
+    width / 2 + length * projected.x / projected.w,
     height - (height / 2 + length * projected.y / projected.w),
   );
 }
@@ -86,34 +86,34 @@ class Generator {
     return matrix;
   }
 
-//   exp() {
-//     // Rodrigues
-//     const omega_vec = vec3(-this.omega.data[5], this.omega.data[2], -this.omega.data[1]);
-//     const theta = NDArray.norm(omega_vec);
-//     if (theta < epsilon) {
-//       const R = NDArray.eye(3)
-//     } else {
-//       const omega_s = NDArray.mul(this.omega, 1 / theta);
-//       const cos = Math.cos(theta);
-//       const sin = Math.sin(theta);
-//       const R = NDArray.add(
-//         NDArray.eye(3),
-//         NDArray.add(
-//           NDArray.mul(
-//             omega_s,
-//             sin,
-//           ),
-//           NDArray.mul(
-//             NDArray.matmul(omega_s, omega_s),
-//             (1 - cos),
-//           ),
-//         ),
-//       );
-//     }
+  //   exp() {
+  //     // Rodrigues
+  //     const omega_vec = vec3(-this.omega.data[5], this.omega.data[2], -this.omega.data[1]);
+  //     const theta = NDArray.norm(omega_vec);
+  //     if (theta < epsilon) {
+  //       const R = NDArray.eye(3)
+  //     } else {
+  //       const omega_s = NDArray.mul(this.omega, 1 / theta);
+  //       const cos = Math.cos(theta);
+  //       const sin = Math.sin(theta);
+  //       const R = NDArray.add(
+  //         NDArray.eye(3),
+  //         NDArray.add(
+  //           NDArray.mul(
+  //             omega_s,
+  //             sin,
+  //           ),
+  //           NDArray.mul(
+  //             NDArray.matmul(omega_s, omega_s),
+  //             (1 - cos),
+  //           ),
+  //         ),
+  //       );
+  //     }
 
-    
-//     return 
-//   }
+
+  //     return 
+  //   }
 }
 
 class PositionOrientation {
@@ -128,7 +128,7 @@ class PositionOrientation {
         this.x.x, this.n.x,
         this.x.y, this.n.y,
         this.x.z, this.n.z,
-        1,        0,
+        1, 0,
       ],
       [4, 2],
     );
@@ -146,7 +146,7 @@ class PositionOrientation {
   }
 
   static getGenerator(p1, p2, generator) {
-    if (!(generator === "mav" || generator === "pure_rotation" || typeof(generator) === "number")) {
+    if (!(generator === "mav" || generator === "pure_rotation" || typeof (generator) === "number")) {
       throw new Error("Generator.getGenerator: generator must be either 'mav', 'pure_rotation', or a number.");
     }
 
@@ -166,7 +166,7 @@ class PositionOrientation {
       console.log("Small angle so only translating.");
       return new Generator(x_diff, NDArray.zeros([3, 3]));
     }
-    
+
     const k0 = NDArray.mul(cross_n, sinTheta);
     const x_perp_mav = NDArray.mul(k0, NDArray.dot(k0, x_diff));
     const x_par_mav = NDArray.sub(x_diff, x_perp_mav);
@@ -181,9 +181,9 @@ class PositionOrientation {
     const v_mav = x_perp_mav;
     const omega_vec_mav = NDArray.mul(k0, theta_mav);
     const omega_mav = mat3([
-      0,                -omega_vec_mav.z, omega_vec_mav.y,
-      omega_vec_mav.z,  0,                -omega_vec_mav.x,
-      -omega_vec_mav.y, omega_vec_mav.x,  0,
+      0, -omega_vec_mav.z, omega_vec_mav.y,
+      omega_vec_mav.z, 0, -omega_vec_mav.x,
+      -omega_vec_mav.y, omega_vec_mav.x, 0,
     ]);
 
     if (NDArray.norm(x_diff) < epsilon) {
@@ -206,7 +206,7 @@ class PositionOrientation {
           case "pure_rotation":
             k = NDArray.cross(x_diff, NDArray.sub(n2, n1));
             break;
-            
+
         }
         break;
 
@@ -242,9 +242,9 @@ class PositionOrientation {
 
     const omega_vec = NDArray.mul(k, theta);
     const omega = mat3([
-      0,            -omega_vec.z, omega_vec.y,
-      omega_vec.z,  0,            -omega_vec.x,
-      -omega_vec.y, omega_vec.x,  0,
+      0, -omega_vec.z, omega_vec.y,
+      omega_vec.z, 0, -omega_vec.x,
+      -omega_vec.y, omega_vec.x, 0,
     ]);
 
     return new Generator(
@@ -311,7 +311,7 @@ function runSimulation() {
       const p = PositionOrientation.fromMat(NDArray.matmul(inbetween, p1.mat));
       p.draw(perspective, royalBlue, 0.85);
     }
-    
+
     p1.draw(perspective, black, 0.85);
     p2.draw(perspective, black, 0.85);
   }
