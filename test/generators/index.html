@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random: Eikonal PDE</title>
+    <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+    <script type="module" src='main.js' defer></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4.0.0/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <header>
+        <div id="nav">
+            <a class="navlink" href="/">Home</a>
+            <a class="navlink" href="/publications">Publications</a>
+            <!-- <a class="navlink" href="/teaching">Teaching</a> -->
+            <a class="navlink" href="/random">Random</a>
+        </div>
+        <a id="home" href="/">Finn Sherry</a>
+        <button id="colourbutton">
+            🌙
+        </button>
+        <button id="navbutton" onclick="toggleNav()">
+            •••
+        </button>
+        <script>
+            function toggleNav() {
+                document.getElementById("nav").classList.toggle('expand')
+            }
+
+            const root = document.documentElement;
+            const storedScheme = localStorage.getItem('scheme');
+            console.log(storedScheme)
+            const colourButton = document.getElementById("colourbutton");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
+
+            applyScheme(scheme);
+
+            colourButton.addEventListener("click", () => {
+                const current = root.dataset.scheme === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyScheme(next);
+                localStorage.setItem('scheme', next);
+            });
+
+            function applyScheme(scheme) {
+                root.dataset.scheme = scheme
+                colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
+            }
+        </script>
+    </header>
+
+    <main>
+        <div class="content-container">
+            <h1>Generators</h1>
+            <p>
+                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Qui sequi ad quae nostrum modi consequuntur accusamus unde tempore libero, ab amet velit consequatur nam voluptatum maiores, debitis quisquam voluptatibus quis.
+            </p>
+
+            <table class="form" id="parameters">
+                <tr>
+                    <td><label for="x1">\(x_1\): </label></td>
+                    <td>(<input type="text" size="3" id="x1x" name="x1x" placeholder="0" required>,</td>
+                    <td><input type="text" size="3" id="x1y" name="x1y" placeholder="0" required>,</td>
+                    <td><input type="text" size="3" id="x1z" name="x1z" placeholder="0" required>)</td>
+                </tr>
+                <tr>
+                    <td><label for="n1">\(n_1\): </label></td>
+                    <td>(<input type="text" size="3" id="n1x" name="n1x" placeholder="0" required>,</td>
+                    <td><input type="text" size="3" id="n1y" name="n1y" placeholder="1" required>,</td>
+                    <td><input type="text" size="3" id="n1z" name="n1z" placeholder="0" required>)</td>
+                </tr>
+                <tr>
+                    <td><label for="x2">\(x_2\): </label></td>
+                    <td>(<input type="text" size="3" id="x2x" name="x2x" placeholder="1" required>,</td>
+                    <td><input type="text" size="3" id="x2y" name="x2y" placeholder="0" required>,</td>
+                    <td><input type="text" size="3" id="x2z" name="x2z" placeholder="0" required>)</td>
+                </tr>
+                <tr>
+                    <td><label for="n2">\(n_2\): </label></td>
+                    <td>(<input type="text" size="3" id="n2x" name="n2x" placeholder="1" required>,</td>
+                    <td><input type="text" size="3" id="n2y" name="n2y" placeholder="0" required>,</td>
+                    <td><input type="text" size="3" id="n2z" name="n2z" placeholder="0" required>)</td>
+                </tr>
+                <tr>
+                    <td><button id="submit">Start</button></td>
+                </tr>
+            </table>
+            
+            <canvas id="canvas" style="width: 100%;"></canvas>
+        </div>
+    </main>
+</body>
+
+</html>
