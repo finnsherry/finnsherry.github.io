@@ -1,7 +1,8 @@
 import { NDArray, vec3, mat3, mat4, rotateTogether } from "/utils/linalg.js";
 
 export class Camera {
-    
+    // Adapted from https://bellaard.com/js/3dcamera.js
+    // This camera only rotates around a fixed target.
     constructor(position, target = vec3(0, 0, 0)) {
         this.position = position;
         this.target = target;
@@ -14,7 +15,7 @@ export class Camera {
         this.perspective = true;
         
         this.rollSpeed = 0.5; // radians per second
-        this.lookSensitivity = 0.005; // radians per pixel
+        this.lookSensitivity = 0.03; // radians per pixel
         this.wheelSensitivity = 0.5;
 
         this.looked = false;
@@ -131,6 +132,8 @@ export class Camera {
                 this.changed = true;
             }
         }
+
+        this.lookSensitivity *= Math.pow(2, - S.wheelTicks.y * this.wheelSensitivity);
 
         const copy = this.changed;
 

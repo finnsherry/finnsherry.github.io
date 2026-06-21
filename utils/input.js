@@ -1,4 +1,5 @@
 export class InputState {
+    // Copied from https://bellaard.com/js/inputstate.js
     constructor() {
         this.pointers = new Map();
         this.pointersMovementX = new Map();

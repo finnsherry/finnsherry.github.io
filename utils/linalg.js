@@ -1,4 +1,6 @@
 export class NDArray {
+    // Adapted from https://bellaard.com/js/linalg.js
+    // Added matrix exponential for 3 x 3 and 4 x 4 matrices based on 5th order Pade approximation.
     constructor(data, shape) {
         this.data = data instanceof Float32Array ? data : new Float32Array(data);
         this.shape = shape.slice();

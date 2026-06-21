@@ -16,7 +16,7 @@ const white = `rgb(255 255 255)`;
 const brickRed = `rgb(${11 * 16 + 6}, ${3 * 16 + 2}, ${1 * 16 + 12})`;  // B6321C
 const forestGreen = `rgb(${0 * 16 + 0}, ${9 * 11 + 2}, ${5 * 16 + 5})`; // 009B55
 const royalBlue = `rgb(${0 * 16 + 0}, ${7 * 16 + 1}, ${11 * 16 + 12})`; // 0071BC
-const axisColour = `rgb(0 0 0 / 0.5)`;
+const axisColour = `rgb(0 0 0 / 0.1)`;
 
 const origin = vec3(0, 0, 0);
 const nx = vec3(1, 0, 0);
@@ -30,7 +30,6 @@ inputState.attach(canvas);
 const camera = new Camera(vec3(0, 3, 3), origin);
 camera.perspective = true;
 camera.zoom = 1/5;
-camera.moveSpeed = 10;
 
 function project(point, perspective) {
   const projected = NDArray.matmul(perspective, vec4(point.x, point.y, point.z, 2));
@@ -257,7 +256,7 @@ class PositionOrientation {
 
 let rafId = null;
 function runSimulation() {
-  const x1x = getInputNumber("x1x", 0);
+  const x1x = getInputNumber("x1x", -1);
   const x1y = getInputNumber("x1y", 0);
   const x1z = getInputNumber("x1z", 0);
 
