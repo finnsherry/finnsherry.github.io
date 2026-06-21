@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random</title>
+    <title>Curiosa</title>
     <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/styles.css">
     <style>
-        .random-item {
+        .curiosa-item {
             display: flex;
             flex-direction: row;
             background: var(--pub-colour);
@@ -21,34 +21,34 @@
             text-align: justify;
         }
 
-        .random-item * {
+        .curiosa-item * {
             cursor: pointer;
         }
 
-        .random-item:hover {
+        .curiosa-item:hover {
             transform: translateY(-5px);
             box-shadow: var(--shadow-hover);
         }
 
-        .random-text {
+        .curiosa-text {
             display: flex;
             flex-direction: column;
             gap: 0.5em;
         }
 
-        .random-text h3 {
+        .curiosa-text h3 {
             font-size: 1.25em;
             margin: 0;
             margin-bottom: 0em;
             color: var(--font-colour);
         }
 
-        .random-text p {
+        .curiosa-text p {
             margin: 0;
             color: var(--font-colour);
         }
 
-        .random-item img {
+        .curiosa-item img {
             display: block;
             aspect-ratio: 1 / 1;
             width: 150px;
@@ -60,11 +60,11 @@
         }
 
         @media (max-width: 600px) {
-            .random-item {
+            .curiosa-item {
                 flex-direction: column;
             }
 
-            .random-item img {
+            .curiosa-item img {
                 margin-top: 1em;
                 margin-left: 0;
                 width: 100%;
@@ -80,7 +80,7 @@
             <a class="navlink" href="/">Home</a>
             <a class="navlink" href="/publications">Publications</a>
             <!-- <a class="navlink" href="/teaching">Teaching</a> -->
-            <a class="navlink" href="/random">Random</a>
+            <a class="navlink" href="/curiosa">Curiosa</a>
         </div>
         <a id="home" href="/">Finn Sherry</a>
         <button id="colourbutton">
@@ -121,8 +121,8 @@
         <div class="content-container" id="maths">
             <h1>Maths</h1>
 
-            <a class="random-item" href="/random/generators/">
-                <div class="random-text">
+            <a class="curiosa-item" href="/curiosa/generators/">
+                <div class="curiosa-text">
                     <h3>Generators for Pairs of Position-Orientations</h3>
                     <p>
                         In our group, we frequently work with data on position-orientation space. I made a visualisation
@@ -130,11 +130,11 @@
                         Invariant Metrics on Position-Orientation Space" by Bellaard & Smets.
                     </p>
                 </div>
-                <img src="/random/generators/generators.png">
+                <img src="/curiosa/generators/generators.png">
             </a>
 
-            <a class="random-item" href="/random/diffusion_shock/">
-                <div class="random-text">
+            <a class="curiosa-item" href="/curiosa/diffusion_shock/">
+                <div class="curiosa-text">
                     <h3>Diffusion-Shock Filtering</h3>
                     <p>
                         We extended Diffusion-Shock (DS) filtering to Position-Orientation space for SSVM 2025. DS
@@ -142,11 +142,11 @@
                         implementation of DS filtering on Euclidean space.
                     </p>
                 </div>
-                <img src="/random/diffusion_shock/diffusion_shock.png">
+                <img src="/curiosa/diffusion_shock/diffusion_shock.png">
             </a>
 
-            <a class="random-item" href="/random/eikonal_pde/">
-                <div class="random-text">
+            <a class="curiosa-item" href="/curiosa/eikonal_pde/">
+                <div class="curiosa-text">
                     <h3>Eikonal PDE</h3>
                     <p>
                         In "Crossing-Preserving Geodesic Tracking on Spherical Images", we model blood vessels as
@@ -156,21 +156,21 @@
                         can see it in practice.
                     </p>
                 </div>
-                <img src="/random/eikonal_pde/eikonal_pde.png">
+                <img src="/curiosa/eikonal_pde/eikonal_pde.png">
             </a>
 
-            <a class="random-item" href="/random/conway/">
-                <div class="random-text">
+            <a class="curiosa-item" href="/curiosa/conway/">
+                <div class="curiosa-text">
                     <h3>Conway's Game of Life</h3>
                     <p>
                         A WebGPU implementation of Conway's Game of Life.
                     </p>
                 </div>
-                <img src="/random/conway/conway.png">
+                <img src="/curiosa/conway/conway.png">
             </a>
 
-            <a class="random-item" href="/random/flow_matching_on_lie_groups/">
-                <div class="random-text">
+            <a class="curiosa-item" href="/curiosa/flow_matching_on_lie_groups/">
+                <div class="curiosa-text">
                     <h3>Flow Matching on Lie Groups</h3>
                     <p>
                         In "Flow Matching on Lie Groups", we developed a new technique for generative modelling on Lie
@@ -179,7 +179,7 @@
                         from an initial to a target distribution. Here are some nice videos of this in action.
                     </p>
                 </div>
-                <img src="/random/flow_matching_on_lie_groups/flow_matching_on_lie_groups.png">
+                <img src="/curiosa/flow_matching_on_lie_groups/flow_matching_on_lie_groups.png">
             </a>
         </div>
     </main>
