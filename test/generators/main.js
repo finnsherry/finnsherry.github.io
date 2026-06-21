@@ -1,6 +1,7 @@
 import { NDArray, vec2, vec3, vec4, mat3, mat4 } from "/utils/linalg.js";
 import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
-import { Camera, InputState } from "/utils/camera.js";
+import { Camera } from "/utils/camera.js";
+import { InputState, getInputNumber } from "/utils/input.js";
 
 const canvas = document.getElementById("canvas");
 resizeCanvasToDisplaySize(canvas);
@@ -15,7 +16,7 @@ const white = `rgb(255 255 255)`;
 const brickRed = `rgb(${11 * 16 + 6}, ${3 * 16 + 2}, ${1 * 16 + 12})`;  // B6321C
 const forestGreen = `rgb(${0 * 16 + 0}, ${9 * 11 + 2}, ${5 * 16 + 5})`; // 009B55
 const royalBlue = `rgb(${0 * 16 + 0}, ${7 * 16 + 1}, ${11 * 16 + 12})`; // 0071BC
-    const axisColour = `rgb(0 0 0 / 0.5)`
+const axisColour = `rgb(0 0 0 / 0.5)`;
 
 const origin = vec3(0, 0, 0);
 const nx = vec3(1, 0, 0);
@@ -28,7 +29,7 @@ inputState.attach(canvas);
 
 const camera = new Camera(vec3(0, 3, 3), origin);
 camera.perspective = true;
-camera.zoom = 1/2;
+camera.zoom = 1/5;
 camera.moveSpeed = 10;
 
 function project(point, perspective) {
@@ -85,6 +86,35 @@ class Generator {
     matrix.data[4 * 3 + 3] = 0;
     return matrix;
   }
+
+//   exp() {
+//     // Rodrigues
+//     const omega_vec = vec3(-this.omega.data[5], this.omega.data[2], -this.omega.data[1]);
+//     const theta = NDArray.norm(omega_vec);
+//     if (theta < epsilon) {
+//       const R = NDArray.eye(3)
+//     } else {
+//       const omega_s = NDArray.mul(this.omega, 1 / theta);
+//       const cos = Math.cos(theta);
+//       const sin = Math.sin(theta);
+//       const R = NDArray.add(
+//         NDArray.eye(3),
+//         NDArray.add(
+//           NDArray.mul(
+//             omega_s,
+//             sin,
+//           ),
+//           NDArray.mul(
+//             NDArray.matmul(omega_s, omega_s),
+//             (1 - cos),
+//           ),
+//         ),
+//       );
+//     }
+
+    
+//     return 
+//   }
 }
 
 class PositionOrientation {
@@ -116,7 +146,11 @@ class PositionOrientation {
     drawArrow(this.x, NDArray.add(this.x, this.n), perspective, colour, headLength, width);
   }
 
-  static mavGenerator(p1, p2) {
+  static getGenerator(p1, p2, generator) {
+    if (!(generator === "mav" || generator === "pure_rotation" || typeof(generator) === "number")) {
+      throw new Error("Generator.getGenerator: generator must be either 'mav', 'pure_rotation', or a number.");
+    }
+
     const x1 = p1.x;
     const n1 = p1.n;
     const x2 = p2.x;
@@ -127,79 +161,123 @@ class PositionOrientation {
     const cross_n = NDArray.cross(n1, n2);
     const sinTheta = NDArray.norm(cross_n);
     const cosTheta = NDArray.dot(n1, n2);
-    const theta = Math.atan2(sinTheta, cosTheta);
+    const theta_mav = Math.atan2(sinTheta, cosTheta);
 
-    const parallel = (theta < epsilon);
-    let k0 = NDArray.mul(cross_n, sinTheta);
+    if (theta_mav < epsilon) {
+      console.log("Small angle so only translating.");
+      return new Generator(x_diff, NDArray.zeros([3, 3]));
+    }
+    
+    const k0 = NDArray.mul(cross_n, sinTheta);
+    const x_perp_mav = NDArray.mul(k0, NDArray.dot(k0, x_diff));
+    const x_par_mav = NDArray.sub(x_diff, x_perp_mav);
 
-    if (parallel) {
-      k0 = vec3(0, 0, 0);
+    const centre_mav = NDArray.add(
+      x_m,
+      NDArray.mul(
+        NDArray.cross(k0, x_par_mav),
+        (0.5 / Math.tan(theta_mav / 2.0))
+      )
+    );
+    const v_mav = x_perp_mav;
+    const omega_vec_mav = NDArray.mul(k0, theta_mav);
+    const omega_mav = mat3([
+      0,                -omega_vec_mav.z, omega_vec_mav.y,
+      omega_vec_mav.z,  0,                -omega_vec_mav.x,
+      -omega_vec_mav.y, omega_vec_mav.x,  0,
+    ]);
+
+    if (NDArray.norm(x_diff) < epsilon) {
+      return new Generator(
+        NDArray.sub(v_mav, NDArray.cross(omega_vec_mav, centre_mav)),
+        omega_mav
+      );
     }
 
-    const x_perp = NDArray.mul(k0, NDArray.dot(k0, x_diff));
+    let k
+    switch (typeof generator) {
+      case "string":
+        switch (generator) {
+          case "mav":
+            return new Generator(
+              NDArray.sub(v_mav, NDArray.cross(omega_vec_mav, centre_mav)),
+              omega_mav
+            );
+
+          case "pure_rotation":
+            k = NDArray.cross(x_diff, NDArray.sub(n2, n1));
+            break;
+            
+        }
+        break;
+
+      case "number":
+        const phi = generator;
+        const n1plusn2 = NDArray.add(n1, n2);
+        const khalfpi = NDArray.mul(n1plusn2, 1 / NDArray.norm(n1plusn2))
+        k = NDArray.add(
+          NDArray.mul(k0, Math.cos(phi)),
+          NDArray.mul(khalfpi, Math.sin(phi)),
+        );
+        break;
+    }
+    k = NDArray.normalize(k);
+
+    const n1p = NDArray.sub(n1, NDArray.mul(k, NDArray.dot(k, n1)));
+    const n2p = NDArray.sub(n2, NDArray.mul(k, NDArray.dot(k, n2)));
+    const theta = Math.atan2(
+      NDArray.dot(k, NDArray.cross(n1p, n2p)),
+      NDArray.dot(n1p, n2p),
+    );
+
+    const x_perp = NDArray.mul(k, NDArray.dot(k, x_diff));
     const x_par = NDArray.sub(x_diff, x_perp);
 
     const centre = NDArray.add(
-      x_m,
-      NDArray.mul(
-        NDArray.cross(k0, x_par),
+      x_m, NDArray.mul(
+        NDArray.cross(k, x_par),
         (0.5 / Math.tan(theta / 2.0))
       )
     );
     const v = x_perp;
-    const omega_vec = NDArray.mul(k0, theta);
+
+    const omega_vec = NDArray.mul(k, theta);
     const omega = mat3([
       0,            -omega_vec.z, omega_vec.y,
       omega_vec.z,  0,            -omega_vec.x,
       -omega_vec.y, omega_vec.x,  0,
-    ])
+    ]);
 
-    let generator
-    if (parallel) {
-      console.log("Small angle so only translating.")
-      generator = new Generator(x_diff, NDArray.zeros([3, 3]));
-    } else {
-      generator = new Generator(
-        NDArray.sub(v, NDArray.cross(omega_vec, centre)),
-        omega
-      );
-    }
-
-    return generator
+    return new Generator(
+      NDArray.sub(v, NDArray.cross(omega_vec, centre)),
+      omega
+    );
   }
-}
-
-function getValue(label, def) {
-  let value = document.getElementById(label).value;
-  if (value === '' || value === null || value === undefined) {
-    value = def;
-  } else {
-    value = parseFloat(value);
-  }
-  return value;
 }
 
 let rafId = null;
 function runSimulation() {
-  x1x = getValue("x1x", 0);
-  x1y = getValue("x1y", 0);
-  x1z = getValue("x1z", 0);
+  const x1x = getInputNumber("x1x", 0);
+  const x1y = getInputNumber("x1y", 0);
+  const x1z = getInputNumber("x1z", 0);
 
-  n1x = getValue("n1x", 0);
-  n1y = getValue("n1y", 1);
-  n1z = getValue("n1z", 0);
+  const n1x = getInputNumber("n1x", 0);
+  const n1y = getInputNumber("n1y", 1);
+  const n1z = getInputNumber("n1z", 0);
 
-  x2x = getValue("x2x", 1);
-  x2y = getValue("x2y", 0);
-  x2z = getValue("x2z", 0);
+  const x2x = getInputNumber("x2x", 1);
+  const x2y = getInputNumber("x2y", 0);
+  const x2z = getInputNumber("x2z", 0);
 
-  n2x = getValue("n2x", 0);
-  n2y = getValue("n2y", 0);
-  n2z = getValue("n2z", 1);
+  const n2x = getInputNumber("n2x", 0);
+  const n2y = getInputNumber("n2y", 0);
+  const n2z = getInputNumber("n2z", 1);
+
+  const phioverpi = getInputNumber("phi", 0.5);
+  const phi = phioverpi * Math.PI;
 
   const p1 = new PositionOrientation(vec3(x1x, x1y, x1z), NDArray.normalize(vec3(n1x, n1y, n1z)));
   const p2 = new PositionOrientation(vec3(x2x, x2y, x2z), NDArray.normalize(vec3(n2x, n2y, n2z)));
-  console.log(p1);
 
   function render() {
     ctx.fillStyle = white;
@@ -213,16 +291,30 @@ function runSimulation() {
     drawArrow(origin, NDArray.mul(ny, 0.5), perspective, axisColour);
     drawArrow(origin, NDArray.mul(nz, 0.5), perspective, axisColour);
 
-    const generator = PositionOrientation.mavGenerator(p1, p2);
+    let generator = PositionOrientation.getGenerator(p1, p2, "mav");
     for (let i = 1; i < 10; i++) {
-      let t = i / 10;
+      const t = i / 10;
       const inbetween = NDArray.expm(NDArray.mul(generator.mat, t), 4);
-      let p = PositionOrientation.fromMat(NDArray.matmul(inbetween, p1.mat));
+      const p = PositionOrientation.fromMat(NDArray.matmul(inbetween, p1.mat));
+      p.draw(perspective, brickRed, 0.85);
+    }
+    generator = PositionOrientation.getGenerator(p1, p2, "pure_rotation");
+    for (let i = 1; i < 10; i++) {
+      const t = i / 10;
+      const inbetween = NDArray.expm(NDArray.mul(generator.mat, t), 4);
+      const p = PositionOrientation.fromMat(NDArray.matmul(inbetween, p1.mat));
+      p.draw(perspective, forestGreen, 0.85);
+    }
+    generator = PositionOrientation.getGenerator(p1, p2, phi);
+    for (let i = 1; i < 10; i++) {
+      const t = i / 10;
+      const inbetween = NDArray.expm(NDArray.mul(generator.mat, t), 4);
+      const p = PositionOrientation.fromMat(NDArray.matmul(inbetween, p1.mat));
       p.draw(perspective, royalBlue, 0.85);
     }
     
-    p1.draw(perspective, brickRed, 0.85);
-    p2.draw(perspective, forestGreen, 0.85);
+    p1.draw(perspective, black, 0.85);
+    p2.draw(perspective, black, 0.85);
   }
 
   render();

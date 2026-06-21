@@ -1,3 +1,5 @@
+import { getInputNumber } from "/utils/input.js";
+
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
 if (!device) throw new Error("WebGPU not supported");
@@ -774,26 +776,11 @@ function createGaussianKernel(sigma, radiusMultiplier) {
 let rafId = null;
 async function runInpainting() {
   // User parameters.
-  let showEvery = parseFloat(document.getElementById("showEvery").value);
-  if (!showEvery) {
-    showEvery = 1;
-  }
-  let lambda = parseFloat(document.getElementById("lambda").value);
-  if (!lambda) {
-    lambda = 2;
-  }
-  let nu = parseFloat(document.getElementById("nu").value);
-  if (!nu) {
-    nu = 2;
-  }
-  let sigma = parseFloat(document.getElementById("sigma").value);
-  if (!sigma) {
-    sigma = 2;
-  }
-  let rho = parseFloat(document.getElementById("rho").value);
-  if (!rho) {
-    rho = 5;
-  }
+  const showEvery = getInputNumber("showEvery", 1, true);
+  const lambda = getInputNumber("lambda", 2);
+  const nu = getInputNumber("nu", 2);
+  const sigma = getInputNumber("sigma", 2);
+  const rho = getInputNumber("rho", 5);
 
   // Load data and make canvas.
   const { array: u0 } = await pngFileToArray("cross.png");

@@ -1,3 +1,5 @@
+import { getInputNumber } from "/utils/input.js";
+
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
 if (!device) throw new Error("WebGPU not supported");
@@ -138,22 +140,10 @@ function createLifeTexture(width, height) {
 }
 
 function runSimulation() {
-  let gridHeight = parseFloat(document.getElementById("gridheight").value);
-  if (!gridHeight) {
-    gridHeight = 128;
-  }
-  let gridWidth = parseFloat(document.getElementById("gridwidth").value);
-  if (!gridWidth) {
-    gridWidth = 128;
-  }
-  let aliveFraction = parseFloat(document.getElementById("fraction").value);
-  if (!aliveFraction) {
-    aliveFraction = 0.4;
-  }
-  let fps = parseInt(document.getElementById("fps").value);
-  if (!fps) {
-    fps = 10;
-  }
+  const gridHeight = getInputNumber("gridheight", 128, true);
+  const gridWidth = getInputNumber("gridwidth", 128, true);
+  const aliveFraction = getInputNumber("fraction", 0.4);
+  const fps = getInputNumber("fps", 10, true)
   let updateInterval = 1000 / fps;
 
   const size = gridWidth * gridHeight;

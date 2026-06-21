@@ -1,3 +1,5 @@
+import { getInputNumber } from "/utils/input.js";
+
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
 if (!device) throw new Error("WebGPU not supported");
@@ -202,14 +204,8 @@ function roundUpToMultiple(number, multiplier) {
 let rafId = null;
 async function runSimulation() {
   // User parameters.
-  let gridWidth = parseFloat(document.getElementById("gridwidth").value);
-  if (!gridWidth) {
-    gridWidth = 256;
-  }
-  let showEvery = parseFloat(document.getElementById("showEvery").value);
-  if (!showEvery) {
-    showEvery = 1;
-  }
+  const gridWidth = getInputNumber("gridwidth", 256, true);
+  const showEvery = getInputNumber("showEvery", 1, true);
   let colourScheme = document.getElementById("colourScheme").value;
   console.log(colourScheme);
 
