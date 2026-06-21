@@ -62,12 +62,71 @@
 
     <main>
         <div class="content-container">
-            <h1>Generators</h1>
+            <h1>Generators for Pairs of Position-Orientations</h1>
             <p>
-                Lorem ipsum dolor, sit amet consectetur adipisicing elit. Qui sequi ad quae nostrum modi consequuntur accusamus unde tempore libero, ab amet velit consequatur nam voluptatum maiores, debitis quisquam voluptatibus quis.
+                In our group, we frequently work with data on position-orientation space \(\mathbb{M}_d := \mathbb{R}^d
+                \times S^{d - 1}\). Position-orientation space
+                \(\mathbb{M}_d\) is naturally acted on by the roto-translation group \(\operatorname{SE}(d)\):
+                \[
+                g := (y, R) \in \operatorname{SE}(d), p := (x, n) \in \mathbb{M}_d \mapsto g p := (y + R x, R n).
+                \]
+                It can therefore be desirable to perform processing on \(\mathbb{M}_d\) that is <em>equivariant</em> to
+                \(\operatorname{SE}(d)\), which essentially means that roto-translations commute with the processing.
             </p>
             <p>
-                mav = red, pure rotation = green, phi = blue.
+                A particularly interesting situation is when we want to process point clouds of position-orientations.
+                Suppose we are looking for equivariant functions (e.g. neural networks) \(\Phi: \mathbb{M}_d \to
+                \mathbb{R}\). It is not so hard to see that this permits only constant functions \(\Phi\): since
+                \(\mathbb{M}_d\) is a <em>homogeneous space</em> of \(\operatorname{SE}(d)\), for any \(p_1, p_2 \in
+                \mathbb{M}_d\), there exists a \(g \in \operatorname{SE}(d)\) such that \(g p_1 = p_2\), so necessarily
+                \(\Phi(p_1) = \Phi(p_2)\).
+            </p>
+            <p>
+                Since this is rather restrictive, we now look instead for equivariant functions \(\Phi: \mathbb{M}_d
+                \times \mathbb{M}_d \to \mathbb{R}\). Fortunately, there are actually non-trivial equivariant scalar
+                functions on pairs of position-orientations. In <a href="https://doi.org/10.1007/978-3-032-03918-7_4"
+                    target="_blank">Roto-Translation Invariant Metrics on Position-Orienation Space</a>, Bellaard &
+                Smets classify a whole family of such functions in the case \(d = 3\). These functions are the lengths
+                of specific exponential curves connecting pairs of position-orientations: we get different functions by
+                varying the parameters of the \(\operatorname{SE}(3)\)-invariant metric. An exponential curve \(\eta:
+                [0,
+                1] \to \mathbb{M}_3\)
+                \[
+                \eta(t) := \exp(t M) p
+                \]
+                for some position-orientation \(p \in \mathbb{M}_3\) and generator \(M \in \mathfrak{se}(3)\); its
+                length can easily be computed using
+                \[
+                L_\mathcal{G}(\eta) = \|M p\|_\mathcal{G},
+                \]
+                where \(\mathcal{G}\) is the \(\operatorname{SE}(3)\)-invariant metric. It turns out that for any pair
+                \(p_1, p_2 \in
+                \mathbb{M}_3\) there exist many generators \(M(p_1, p_2)\)
+                such that \(\eta(0) = p_1\) and \(\eta(1) = p_2\), with \(\eta(t) := \exp(t M(p_1, p_2)) p_1\).
+            </p>
+            <p>
+                In <a href="https://doi.org/10.1007/978-3-032-03918-7_4" target="_blank">Roto-Translation Invariant
+                    Metrics on Position-Orienation Space</a>, Bellaard & Smets pick the generator with the
+                <em>m</em>inimal <em>a</em>ngular <em>v</em>elocity \(M_\mathrm{mav}\). This corresponds to the
+                exponential curve which rotates the least. Another interesting choice is the pure rotation generator
+                \(M_\mathrm{rot}\), which connects the pair by only rotating around some point. Generically, the
+                collection of all possible connecting generators is diffeomorphic to the circle \(S^1\). It is therefore
+                possible to parametrise all such generators using an angle \(\phi \in [-\pi, \pi)\), where by convention
+                \(M_0 := M_\mathrm{mav}\).
+            </p>
+            <p>
+                In this visualisation, we show a pair of position-orientations \(p_1 := (x_1, n_1), p_2 := (x_2, n_2)
+                \in \mathbb{M}_3\) in black, and three connecting exponential curves:
+                \[
+                \begin{aligned}
+                \textcolor[rgb]{0.7137254901960784, 0.19607843137254902, 0.10980392156862745}{\eta_\mathrm{mav}(t)} & :=
+                \exp(t M_\mathrm{mav}(p_1, p_2)) p_1, \\
+                \textcolor[rgb]{0, 0.6078431372549019, 0.3333333333333333}{\eta_\mathrm{rot}(t)} & := \exp(t
+                M_\mathrm{rot}(p_1, p_2)) p_1, \\
+                \textcolor[rgb]{0, 0.44313725490196076, 0.7372549019607844}{\eta_\phi(t)} & := \exp(t M_\phi(p_1, p_2))
+                p_1.
+                \end{aligned}
+                \]
             </p>
 
             <table class="form" id="parameters">
@@ -103,7 +162,7 @@
                     <td><button id="submit">Start</button></td>
                 </tr>
             </table>
-            
+
             <canvas id="canvas" style="width: 100%;"></canvas>
         </div>
     </main>
