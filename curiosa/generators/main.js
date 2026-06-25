@@ -383,7 +383,7 @@ function startRandomSimulation() {
   setInput("n2y", (2. * (Math.random() - 0.5).toFixed(2)));
   setInput("n2z", (2. * (Math.random() - 0.5).toFixed(2)));
 
-  setInput("phi", Math.random().toFixed(3));
+  setInput("phi", (2. * (Math.random() - 0.5).toFixed(2)));
 
   if (rafId !== null) {
     cancelAnimationFrame(rafId);

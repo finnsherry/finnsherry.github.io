@@ -89,8 +89,7 @@
                 Smets classify a whole family of such functions in the case \(d = 3\). These functions are the lengths
                 of specific exponential curves connecting pairs of position-orientations: we get different functions by
                 varying the parameters of the \(\operatorname{SE}(3)\)-invariant metric. An exponential curve \(\eta:
-                [0,
-                1] \to \mathbb{M}_3\)
+                [0, 1] \to \mathbb{M}_3\) is then
                 \[
                 \eta(t) := \exp(t M) p
                 \]
@@ -135,6 +134,10 @@
                 by dragging over the canvas. Scrolling up and down over the canvas will increase and decrease the
                 rotation speed, respectively.
             </p>
+            <p>
+                The camera has been adapted from <a href="https://bellaard.com" target="_blank">bellaard.com</a> to be
+                exclusively an orbit camera.
+            </p>
             <table class="form" id="parameters">
                 <tr>
                     <td><label for="x1">\(x_1\): </label></td>
@@ -164,6 +167,8 @@
                     <td><label for="phi">\(\phi\): </label></td>
                     <td><input type="text" size="3" id="phi" name="phi" required> \(\pi\)</td>
                 </tr>
+            </table>
+            <table>
                 <tr>
                     <td><button id="submit">Submit</button></td>
                     <td><button id="randomise">Randomise</button></td>
