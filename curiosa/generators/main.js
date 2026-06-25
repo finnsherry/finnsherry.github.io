@@ -1,7 +1,7 @@
 import { NDArray, vec2, vec3, vec4, mat3, mat4 } from "/utils/linalg.js";
 import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
 import { Camera } from "/utils/camera.js";
-import { InputState, getInputNumber } from "/utils/input.js";
+import { InputState, getInputNumber, setInput } from "/utils/input.js";
 
 const canvas = document.getElementById("canvas");
 resizeCanvasToDisplaySize(canvas);
@@ -167,7 +167,7 @@ class PositionOrientation {
       return new Generator(x_diff, NDArray.zeros([3, 3]));
     }
 
-    const k0 = NDArray.mul(cross_n, sinTheta);
+    const k0 = NDArray.mul(cross_n, 1 / sinTheta);
     const x_perp_mav = NDArray.mul(k0, NDArray.dot(k0, x_diff));
     const x_par_mav = NDArray.sub(x_diff, x_perp_mav);
 
@@ -253,6 +253,23 @@ class PositionOrientation {
     );
   }
 }
+setInput("x1x", -1);
+setInput("x1y", 0);
+setInput("x1z", 0);
+
+setInput("n1x", 0);
+setInput("n1y", 1);
+setInput("n1z", 0);
+
+setInput("x2x", 1);
+setInput("x2y", 0);
+setInput("x2z", 0);
+
+setInput("n2x", 0);
+setInput("n2y", 0);
+setInput("n2z", 1);
+
+setInput("phi", 0.5);
 
 let rafId = null;
 function runSimulation() {
@@ -348,3 +365,30 @@ document.addEventListener('keydown', (event) => {
     startSimulation();
   }
 });
+
+function startRandomSimulation() {
+  setInput("x1x", (2. * (Math.random() - 0.5)).toFixed(2));
+  setInput("x1y", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("x1z", (2. * (Math.random() - 0.5).toFixed(2)));
+
+  setInput("n1x", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("n1y", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("n1z", (2. * (Math.random() - 0.5).toFixed(2)));
+
+  setInput("x2x", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("x2y", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("x2z", (2. * (Math.random() - 0.5).toFixed(2)));
+
+  setInput("n2x", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("n2y", (2. * (Math.random() - 0.5).toFixed(2)));
+  setInput("n2z", (2. * (Math.random() - 0.5).toFixed(2)));
+
+  setInput("phi", Math.random().toFixed(3));
+
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  runSimulation();
+}
+randomise.addEventListener("click", startRandomSimulation);

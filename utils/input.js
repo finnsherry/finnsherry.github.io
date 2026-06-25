@@ -54,8 +54,8 @@ export class InputState {
             const movementY = (prev ? e.clientY - prev.clientY : 0) + this.pointersMovementY.get(e.pointerId) || 0;
 
             this.pointers.set(e.pointerId, e);
-            this.pointersMovementX.set(e.pointerId, movementX );
-            this.pointersMovementY.set(e.pointerId, movementY );
+            this.pointersMovementX.set(e.pointerId, movementX);
+            this.pointersMovementY.set(e.pointerId, movementY);
         });
 
         element.addEventListener("pointerup", e => {
@@ -113,15 +113,20 @@ export class InputState {
 
 
 export function getInputNumber(label, def, isInt = false) {
-  let value = document.getElementById(label).value;
-  if (value === '' || value === null || value === undefined) {
-    value = def;
-  } else {
-    if (isInt) {
-        value = parseInt(value);
+    let value = document.getElementById(label).value;
+    if (value === '' || value === null || value === undefined) {
+        value = def;
     } else {
-        value = parseFloat(value);
+        if (isInt) {
+            value = parseInt(value);
+        } else {
+            value = parseFloat(value);
+        }
     }
-  }
-  return value;
+    return value;
+}
+
+
+export function setInput(label, value) {
+    document.getElementById(label).value = value;
 }
