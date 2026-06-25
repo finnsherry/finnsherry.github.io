@@ -1,4 +1,4 @@
-import { getInputNumber } from "/utils/input.js";
+import { getInputNumber, setInput } from "/utils/input.js";
 
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
@@ -772,6 +772,12 @@ function createGaussianKernel(sigma, radiusMultiplier) {
   device.queue.writeBuffer(kBuffer, 0, k);
   return kBuffer;
 }
+
+setInputNumber("showEvery", 1);
+setInputNumber("lambda", 2);
+setInputNumber("nu", 2);
+setInputNumber("sigma", 2);
+setInputNumber("rho", 5);
 
 let rafId = null;
 async function runInpainting() {

@@ -1,4 +1,4 @@
-import { getInputNumber } from "/utils/input.js";
+import { getInputNumber, setInput } from "/utils/input.js";
 
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
@@ -138,6 +138,12 @@ function createLifeTexture(width, height) {
       GPUTextureUsage.COPY_DST,
   });
 }
+
+
+setInput("gridheight", 128);
+setInput("gridwidth", 128);
+setInput("fraction", 0.4);
+setInput("fps", 10);
 
 function runSimulation() {
   const gridHeight = getInputNumber("gridheight", 128, true);

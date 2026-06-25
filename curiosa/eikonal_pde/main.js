@@ -1,4 +1,4 @@
-import { getInputNumber } from "/utils/input.js";
+import { getInputNumber, setInput } from "/utils/input.js";
 
 const adapter = await navigator.gpu?.requestAdapter();
 const device = await adapter?.requestDevice();
@@ -200,6 +200,10 @@ function makeRenderPipeline(colourScheme) {
 function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
+
+
+setInput("gridwidth", 256);
+setInput("showEvery", 1);
 
 let rafId = null;
 async function runSimulation() {
