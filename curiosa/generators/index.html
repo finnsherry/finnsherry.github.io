@@ -14,7 +14,9 @@
         }
     </style>
     <script type="module" src='main.js' defer></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@4.0.0/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="/utils/katex/katex.min.css">
+    <script defer src="/utils/katex/katex.min.js"></script>
+    <script defer src="/utils/katex/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
 </head>
 
 <body>
@@ -117,14 +119,14 @@
                 In this visualisation, we show a pair of position-orientations \(p_1 := (x_1, n_1), p_2 := (x_2, n_2)
                 \in \mathbb{M}_3\) in black, and three connecting exponential curves:
                 \[
-                \begin{aligned}
-                \textcolor[rgb]{0.7137254901960784, 0.19607843137254902, 0.10980392156862745}{\eta_\mathrm{mav}(t)} & :=
+                \begin{align*}
+                \textcolor{#B6321C}{\eta_\mathrm{mav}(t)} & :=
                 \exp(t M_\mathrm{mav}(p_1, p_2)) p_1, \\
-                \textcolor[rgb]{0, 0.6078431372549019, 0.3333333333333333}{\eta_\mathrm{rot}(t)} & := \exp(t
+                \textcolor{#009B55}{\eta_\mathrm{rot}(t)} & := \exp(t
                 M_\mathrm{rot}(p_1, p_2)) p_1, \\
-                \textcolor[rgb]{0, 0.44313725490196076, 0.7372549019607844}{\eta_\phi(t)} & := \exp(t M_\phi(p_1, p_2))
+                \textcolor{#0071BC}{\eta_\phi(t)} & := \exp(t M_\phi(p_1, p_2))
                 p_1.
-                \end{aligned}
+                \end{align*}
                 \]
             </p>
             <p>
