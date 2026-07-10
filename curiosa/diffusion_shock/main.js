@@ -773,11 +773,11 @@ function createGaussianKernel(sigma, radiusMultiplier) {
   return kBuffer;
 }
 
-setInputNumber("showEvery", 1);
-setInputNumber("lambda", 2);
-setInputNumber("nu", 2);
-setInputNumber("sigma", 2);
-setInputNumber("rho", 5);
+setInput("showEvery", 1);
+setInput("lambda", 2);
+setInput("nu", 2);
+setInput("sigma", 2);
+setInput("rho", 5);
 
 let rafId = null;
 async function runInpainting() {
