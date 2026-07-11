@@ -1,231 +1,15 @@
 import { getInputNumber, setInput } from "/utils/input.js";
+import { pngFileToArray } from "/utils/imageio.js";
+import { TextureMaker, setup, ComputePipelineMaker, sanitise_index, upwind_dilation, upwind_erosion, passMaker } from "/utils/webgpu.js";
 
-const adapter = await navigator.gpu?.requestAdapter();
-const device = await adapter?.requestDevice();
-if (!device) throw new Error("WebGPU not supported");
-
-const canvas = document.getElementById("canvas");
-
-const context = canvas.getContext("webgpu");
-const format = navigator.gpu.getPreferredCanvasFormat();
-context.configure({
-  device,
-  format,
-  alphaMode: "opaque",
-});
+const { device: device, canvas: canvas, context: context, format: format } = await setup();
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
 const texVec3Format = "rgba32float";
 
-async function pngFileToArray(filePath) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
+const computePipelineMaker = new ComputePipelineMaker(device, texFormat, texVec3Format, WORKGROUP);
 
-    img.onload = async () => {
-      await img.decode();
-      const width = img.naturalWidth;
-      const height = img.naturalHeight;
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d", { alpha: false });
-      ctx.drawImage(img, 0, 0, width, height);
-      const { data } = ctx.getImageData(0, 0, width, height);
-
-      const array = new Float32Array(width * height);
-      for (let i = 0; i < width * height; i++) {
-        const R = data[i * 4];
-        const G = data[i * 4 + 1];
-        const B = data[i * 4 + 2];
-        array[i] = 0.2126 * R + 0.7152 * G + 0.0722 * B;
-      }
-      resolve({ array, width, height });
-    };
-
-    img.onerror = reject;
-    img.src = filePath;
-  });
-}
-
-function makeConvolutionPipelines() {
-  const computeWGSL = `
-
-  @group(0) @binding(0) var<storage, read> k : array<f32>;
-  @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var u_reg : texture_storage_2d<${texFormat}, write>;
-
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn convolve_horizontal(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(u);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let dimx = i32(dims.x);
-    let x = i32(id.x);
-    let y = i32(id.y);
-    let r = i32(arrayLength(&k)) - 1;
-
-    var out = textureLoad(u, vec2<i32>(x, y)).r * k[0];
-    for (var i = 1; i <= r; i++) {
-      let xl = sanitise_index(x - i , dimx);
-      let xr = sanitise_index(x + i , dimx);
-      out += (textureLoad(u, vec2<i32>(xl, y)).r + textureLoad(u, vec2<i32>(xr, y)).r)* k[i];
-    }
-
-    textureStore(
-      u_reg,
-      id.xy,
-      out * vec4f(1)
-    );
-  }
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn convolve_vertical(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(u);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let dimy = i32(dims.y);
-    let x = i32(id.x);
-    let y = i32(id.y);
-    let r = i32(arrayLength(&k)) - 1;
-
-    var out = textureLoad(u, vec2<i32>(x, y)).r * k[0];
-    for (var i = 1; i <= r; i++) {
-      let yl = sanitise_index(y - i , dimy);
-      let yr = sanitise_index(y + i , dimy);
-      out += (textureLoad(u, vec2<i32>(x, yl)).r + textureLoad(u, vec2<i32>(x, yr)).r)* k[i];
-    }
-
-    textureStore(
-      u_reg,
-      id.xy,
-      out * vec4f(1)
-    );
-  }
-`;
-
-  return [
-    device.createComputePipeline({
-      label: "horizontal convolution",
-      layout: "auto",
-      compute: {
-        module: device.createShaderModule({
-          code: computeWGSL,
-        }),
-        entryPoint: "convolve_horizontal",
-      },
-    }),
-    device.createComputePipeline({
-      label: "vertical convolution",
-      layout: "auto",
-      compute: {
-        module: device.createShaderModule({
-          code: computeWGSL,
-        }),
-        entryPoint: "convolve_vertical",
-      },
-    }),
-  ];
-}
-
-function makeConvolutionVec3Pipelines() {
-  const computeWGSL = `
-
-  @group(0) @binding(0) var<storage, read> k : array<f32>;
-  @group(0) @binding(1) var u : texture_storage_2d<${texVec3Format}, read>;
-  @group(0) @binding(2) var u_reg : texture_storage_2d<${texVec3Format}, write>;
-
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn convolve_horizontal(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(u);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let dimx = i32(dims.x);
-    let x = i32(id.x);
-    let y = i32(id.y);
-    let r = i32(arrayLength(&k)) - 1;
-
-    var out = textureLoad(u, vec2<i32>(x, y)).rgb * k[0];
-    for (var i = 1; i <= r; i++) {
-      let xl = sanitise_index(x - i , dimx);
-      let xr = sanitise_index(x + i , dimx);
-      out += (textureLoad(u, vec2<i32>(xl, y)).rgb + textureLoad(u, vec2<i32>(xr, y)).rgb) * k[i];
-    }
-
-    textureStore(
-      u_reg,
-      id.xy,
-      vec4f(out, 1)
-    );
-  }
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn convolve_vertical(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(u);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let dimy = i32(dims.y);
-    let x = i32(id.x);
-    let y = i32(id.y);
-    let r = i32(arrayLength(&k)) - 1;
-
-    var out = textureLoad(u, vec2<i32>(x, y)).rgb * k[0];
-    for (var i = 1; i <= r; i++) {
-      let yl = sanitise_index(y - i , dimy);
-      let yr = sanitise_index(y + i , dimy);
-      out += (textureLoad(u, vec2<i32>(x, yl)).rgb + textureLoad(u, vec2<i32>(x, yr)).rgb)* k[i];
-    }
-
-    textureStore(
-      u_reg,
-      id.xy,
-      vec4f(out, 1)
-    );
-  }
-`;
-
-  return [
-    device.createComputePipeline({
-      label: "horizontal 3d convolution",
-      layout: "auto",
-      compute: {
-        module: device.createShaderModule({
-          code: computeWGSL,
-        }),
-        entryPoint: "convolve_horizontal",
-      },
-    }),
-    device.createComputePipeline({
-      label: "vertical 3d convolution",
-      layout: "auto",
-      compute: {
-        module: device.createShaderModule({
-          code: computeWGSL,
-        }),
-        entryPoint: "convolve_vertical",
-      },
-    }),
-  ];
-}
 
 function makeDSSwitchPipeline() {
   const computeWGSL = `
@@ -238,12 +22,9 @@ function makeDSSwitchPipeline() {
 
   @group(0) @binding(0) var<uniform> uniforms: Uniforms;
   @group(0) @binding(1) var u : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var switchDS : texture_storage_2d<${texFormat}, write>;\
+  @group(0) @binding(2) var switchDS : texture_storage_2d<${texFormat}, write>;
 
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
+  ${sanitise_index}
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -300,10 +81,7 @@ function makeStructureTensorPipeline() {
   @group(0) @binding(0) var u : texture_storage_2d<${texFormat}, read>;
   @group(0) @binding(1) var J : texture_storage_2d<${texVec3Format}, write>;
 
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
+  ${sanitise_index}
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -365,10 +143,7 @@ function makeSecondOrderPipeline() {
   @group(0) @binding(0) var u : texture_storage_2d<${texFormat}, read>;
   @group(0) @binding(1) var d_dd : texture_storage_2d<${texVec3Format}, write>;
 
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
+  ${sanitise_index}
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn central_derivatives_second_order(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -496,10 +271,7 @@ function makeDiffusionPipeline() {
   @group(0) @binding(2) var switch_DS : texture_storage_2d<${texFormat}, read>;
   @group(0) @binding(3) var diffusion : texture_storage_2d<${texFormat}, write>;
 
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
+  ${sanitise_index}
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -568,18 +340,11 @@ function makeShockPipeline() {
   @group(0) @binding(3) var switch_morph : texture_storage_2d<${texFormat}, read>;
   @group(0) @binding(4) var shock : texture_storage_2d<${texFormat}, write>;
 
-  fn sanitise_index(i : i32, n : i32) -> i32 {
-    let m = abs(i);
-    return select(m, 2 * n - m - 2, m >= n);
-  }
+  ${sanitise_index}
 
-  fn upwind_dilation(df : f32, db : f32) -> f32 {
-    return max(max(df, -db), 0.) * select(1., -1., df <= -db);
-  }
+  ${upwind_dilation}
 
-  fn upwind_erosion(df : f32, db : f32) -> f32 {
-    return max(max(-df, db), 0.) * select(1., -1., -df >= db);
-  }
+  ${upwind_erosion}
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -798,6 +563,8 @@ async function runInpainting() {
   canvas.width = gridWidth;
   canvas.height = gridHeight;
 
+  const workGroupGrid = [Math.ceil(gridWidth / WORKGROUP), Math.ceil(gridHeight / WORKGROUP)]
+
   // Define uniforms.
   const delta = Math.sqrt(2) - 1;
   const dt_diffusion = 1 / (4 - 2 * delta);
@@ -819,65 +586,38 @@ async function runInpainting() {
   device.queue.writeBuffer(uniformBuffer, 0, uniforms);
 
   // (Intermediate) textures.
-  function createStateTexture() {
-    return device.createTexture({
-      size: [gridWidth, gridHeight],
-      format: texFormat,
-      usage:
-        GPUTextureUsage.STORAGE_BINDING |
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_DST,
-    });
-  }
-  function createStateTextureVec3() {
-    return device.createTexture({
-      size: [gridWidth, gridHeight],
-      format: texVec3Format,
-      usage:
-        GPUTextureUsage.STORAGE_BINDING |
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_DST,
-    });
-  }
-  const u = createStateTexture();
+  const textureMaker = new TextureMaker(device, texFormat, gridWidth, gridHeight);
+  const textureMakerVec3 = new TextureMaker(device, texVec3Format, gridWidth, gridHeight);
+
+  const u = textureMaker.createStateTexture();
   device.queue.writeTexture(
     { texture: u },
     u0,
     { bytesPerRow: gridWidth * 4 },
     [gridWidth, gridHeight],
   );
-  const texMask = createStateTexture();
+  const texMask = textureMaker.createStateTexture();
   device.queue.writeTexture(
     { texture: texMask },
     mask,
     { bytesPerRow: gridWidth * 4 },
     [gridWidth, gridHeight],
   );
-  const convolutionStorage = createStateTexture();
-  const u_nu = createStateTexture();
-  const switch_DS = createStateTexture();
-  const u_sigma = createStateTexture();
-  const J = createStateTextureVec3();
-  const J_rho = createStateTextureVec3();
-  const convolutionStorageVec3 = createStateTextureVec3();
-  const d_dd = createStateTextureVec3();
-  const switch_morph = createStateTexture();
-  const diffusion = createStateTexture();
-  const shock = createStateTexture();
+  const convolutionStorage = textureMaker.createStateTexture();
+  const u_nu = textureMaker.createStateTexture();
+  const switch_DS = textureMaker.createStateTexture();
+  const u_sigma = textureMaker.createStateTexture();
+  const J = textureMakerVec3.createStateTexture();
+  const J_rho = textureMakerVec3.createStateTexture();
+  const convolutionStorageVec3 = textureMakerVec3.createStateTexture();
+  const d_dd = textureMakerVec3.createStateTexture();
+  const switch_morph = textureMaker.createStateTexture();
+  const diffusion = textureMaker.createStateTexture();
+  const shock = textureMaker.createStateTexture();
 
-  // Compute pipeline and bind groups.
-  function passMaker(encoder, pipeline, bindGroup) {
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(
-      Math.ceil(gridWidth / WORKGROUP),
-      Math.ceil(gridHeight / WORKGROUP),
-    );
-    pass.end();
-  }
   const [horizontalConvolutionPipeline, verticalConvolutionPipeline] =
-    makeConvolutionPipelines();
+    computePipelineMaker.makeConvolutionPipelines(false);
+  // makeConvolutionPipelines();
   function horizontalConvolutionBind(k, src, dst) {
     return device.createBindGroup({
       label: "horizontal convolution",
@@ -916,35 +656,36 @@ async function runInpainting() {
       encoder,
       horizontalConvolutionPipeline,
       horizontalConvolutionNuBind,
+      workGroupGrid
     );
-    passMaker(encoder, verticalConvolutionPipeline, verticalConvolutionNuBind);
+    passMaker(encoder, verticalConvolutionPipeline, verticalConvolutionNuBind, workGroupGrid);
   }
 
   const horizontalConvolutionSigmaBind = horizontalConvolutionBind(
     k_sigma,
     u,
-    convolutionStorage,
+    convolutionStorage, workGroupGrid
   );
   const verticalConvolutionSigmaBind = verticalConvolutionBind(
     k_sigma,
     convolutionStorage,
-    u_sigma,
+    u_sigma, workGroupGrid
   );
   function convolutionSigmaPass(encoder) {
     passMaker(
       encoder,
       horizontalConvolutionPipeline,
-      horizontalConvolutionSigmaBind,
+      horizontalConvolutionSigmaBind, workGroupGrid
     );
     passMaker(
       encoder,
       verticalConvolutionPipeline,
-      verticalConvolutionSigmaBind,
+      verticalConvolutionSigmaBind, workGroupGrid
     );
   }
 
   const [horizontalConvolutionVec3Pipeline, verticalConvolutionVec3Pipeline] =
-    makeConvolutionVec3Pipelines();
+    computePipelineMaker.makeConvolutionPipelines(true);
   function horizontalConvolutionVec3Bind(k, src, dst) {
     return device.createBindGroup({
       label: "horizontal 3d convolution",
@@ -981,12 +722,12 @@ async function runInpainting() {
     passMaker(
       encoder,
       horizontalConvolutionVec3Pipeline,
-      horizontalConvolutionJBind,
+      horizontalConvolutionJBind, workGroupGrid
     );
     passMaker(
       encoder,
       verticalConvolutionVec3Pipeline,
-      verticalConvolutionJBind,
+      verticalConvolutionJBind, workGroupGrid
     );
   }
 
@@ -1001,7 +742,7 @@ async function runInpainting() {
     ],
   });
   function DSSwitchPass(encoder) {
-    passMaker(encoder, DSSwitchPipeline, DSSwitchBind);
+    passMaker(encoder, DSSwitchPipeline, DSSwitchBind, workGroupGrid);
   }
 
   const structureTensorPipeline = makeStructureTensorPipeline();
@@ -1014,7 +755,7 @@ async function runInpainting() {
     ],
   });
   function structureTensorPass(encoder) {
-    passMaker(encoder, structureTensorPipeline, structureTensorBind);
+    passMaker(encoder, structureTensorPipeline, structureTensorBind, workGroupGrid);
   }
 
   const secondOrderPipeline = makeSecondOrderPipeline();
@@ -1027,7 +768,7 @@ async function runInpainting() {
     ],
   });
   function secondOrderPass(encoder) {
-    passMaker(encoder, secondOrderPipeline, secondOrderBind);
+    passMaker(encoder, secondOrderPipeline, secondOrderBind, workGroupGrid);
   }
 
   const morphologicalSwitchPipeline = makeMorphologicalSwitchPipeline();
@@ -1042,7 +783,7 @@ async function runInpainting() {
     ],
   });
   function morphologicalSwitchPass(encoder) {
-    passMaker(encoder, morphologicalSwitchPipeline, morphologicalSwitchBind);
+    passMaker(encoder, morphologicalSwitchPipeline, morphologicalSwitchBind, workGroupGrid);
   }
 
   const diffusionPipeline = makeDiffusionPipeline();
@@ -1057,7 +798,7 @@ async function runInpainting() {
     ],
   });
   function diffusionPass(encoder) {
-    passMaker(encoder, diffusionPipeline, diffusionBind);
+    passMaker(encoder, diffusionPipeline, diffusionBind, workGroupGrid);
   }
 
   const shockPipeline = makeShockPipeline();
@@ -1073,7 +814,7 @@ async function runInpainting() {
     ],
   });
   function shockPass(encoder) {
-    passMaker(encoder, shockPipeline, shockBind);
+    passMaker(encoder, shockPipeline, shockBind, workGroupGrid);
   }
 
   const stepPipeline = makeStepPipeline();
@@ -1089,7 +830,7 @@ async function runInpainting() {
     ],
   });
   function stepPass(encoder) {
-    passMaker(encoder, stepPipeline, stepBind);
+    passMaker(encoder, stepPipeline, stepBind, workGroupGrid);
   }
 
   // Render pipeline and bind groups.

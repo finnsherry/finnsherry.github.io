@@ -1,21 +1,9 @@
 import { getInputNumber, setInput } from "/utils/input.js";
+import { TextureMaker, setup } from "/utils/webgpu.js";
 
-const adapter = await navigator.gpu?.requestAdapter();
-const device = await adapter?.requestDevice();
-if (!device) throw new Error("WebGPU not supported");
-
-const canvas = document.getElementById("canvas");
-
-const context = canvas.getContext("webgpu");
-const format = navigator.gpu.getPreferredCanvasFormat();
-context.configure({
-  device,
-  format,
-  alphaMode: "opaque",
-});
+const { device: device, canvas: canvas, context: context, format: format } = await setup();
 
 const WORKGROUP = 8;
-
 const texFormat = "rgba8unorm";
 
 const computeWGSL = `
@@ -128,18 +116,6 @@ function computeBind(src, dst) {
   });
 }
 
-function createLifeTexture(width, height) {
-  return device.createTexture({
-    size: [width, height],
-    format: texFormat,
-    usage:
-      GPUTextureUsage.STORAGE_BINDING |
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST,
-  });
-}
-
-
 setInput("gridheight", 128);
 setInput("gridwidth", 128);
 setInput("fraction", 0.4);
@@ -178,8 +154,10 @@ function runSimulation() {
 
   let step = 0;
 
-  let texA = createLifeTexture(gridWidth, gridHeight);
-  let texB = createLifeTexture(gridWidth, gridHeight);
+  const textureMaker = new TextureMaker(device, texFormat, gridWidth, gridHeight);
+
+  let texA = textureMaker.createStateTexture();
+  let texB = textureMaker.createStateTexture();
 
   const init = new Uint8Array(size * 4);
   for (let i = 0; i < init.length; i += 4) {

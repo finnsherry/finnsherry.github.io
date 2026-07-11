@@ -1,53 +1,10 @@
 import { getInputNumber, setInput } from "/utils/input.js";
+import { svgFileToArray } from "/utils/imageio.js";
+import { TextureMaker, setup, upwind_erosion } from "/utils/webgpu.js";
 
-const adapter = await navigator.gpu?.requestAdapter();
-const device = await adapter?.requestDevice();
-if (!device) throw new Error("WebGPU not supported");
-
-const canvas = document.getElementById("canvas");
-
-const context = canvas.getContext("webgpu");
-const format = navigator.gpu.getPreferredCanvasFormat();
-context.configure({
-  device,
-  format,
-  alphaMode: "opaque",
-});
+const { device: device, canvas: canvas, context: context, format: format } = await setup();
 
 const WORKGROUP = 8;
-
-async function svgFileToArray(filePath, width) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      const aspect = img.naturalHeight / img.naturalWidth;
-      const height = Math.round(width * aspect);
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-
-      ctx.drawImage(img, 0, 0, width, height);
-      const { data } = ctx.getImageData(0, 0, width, height);
-
-      const maze = new Float32Array(width * height);
-      for (let i = 0; i < width * height; i++) {
-        if (data[i * 4 + 3] > 0) {
-          maze[i] = 0;
-        } else {
-          maze[i] = 1;
-        }
-      }
-      resolve({ maze, height });
-    };
-
-    img.onerror = reject;
-    img.src = filePath;
-  });
-}
-
 const texFormat = "r32float";
 
 function makeComputePipeline() {
@@ -65,9 +22,7 @@ function makeComputePipeline() {
   @group(0) @binding(2) var dst : texture_storage_2d<${texFormat}, write>;
   @group(0) @binding(3) var maze: texture_storage_2d<${texFormat}, read>;
 
-  fn selectUpwind(forward: f32, backward: f32) -> f32 {
-    return max(max(-forward, backward), 0.) * (2. * step(-forward, backward) - 1.);
-  }
+  ${upwind_erosion}
 
   @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
   fn main(@builtin(global_invocation_id) id : vec3<u32>) {
@@ -90,8 +45,8 @@ function makeComputePipeline() {
     let dyForward = yForward - centre;
     let dyBackward = centre - yBackward;
 
-    let dx = selectUpwind(dxForward, dxBackward);
-    let dy = selectUpwind(dyForward, dyBackward);
+    let dx = upwind_erosion(dxForward, dxBackward);
+    let dy = upwind_erosion(dyForward, dyBackward);
 
     let cost = 1. / (1. + uniforms.mazeMax * textureLoad(maze, vec2<i32>(x, y)).r);
 
