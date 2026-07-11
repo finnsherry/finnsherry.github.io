@@ -163,6 +163,60 @@ export class ComputePipelineMaker {
             },
         });
     }
+
+    makeDilationPipeline(dt) {
+        const computeWGSL = `
+            @group(0) @binding(0) var u : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(1) var u_dil : texture_storage_2d<${this.texFormat}, write>;
+
+            ${upwind_dilation}
+
+            @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+            fn dilate(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u);
+                if (id.x >= dims.x || id.y >= dims.y) {
+                return;
+                }
+                
+                let x = i32(id.x);
+                let y = i32(id.y);
+
+                let centre = textureLoad(u, vec2<i32>(x, y)).r;
+                let xForward = textureLoad(u, vec2<i32>(clamp(x+1, 0, i32(dims.x) - 1), y)).r;
+                let xBackward = textureLoad(u, vec2<i32>(clamp(x-1, 0, i32(dims.x) - 1), y)).r;
+                let yForward = textureLoad(u, vec2<i32>(x, clamp(y+1, 0, i32(dims.y) - 1))).r;
+                let yBackward = textureLoad(u, vec2<i32>(x, clamp(y-1, 0, i32(dims.y) - 1))).r;
+
+                let dxForward = xForward - centre;
+                let dxBackward = centre - xBackward;
+                let dyForward = yForward - centre;
+                let dyBackward = centre - yBackward;
+
+                let dx = upwind_dilation(dxForward, dxBackward);
+                let dy = upwind_dilation(dyForward, dyBackward);
+
+                let dudt = sqrt(dx * dx + dy * dy);
+                let out = centre + ${dt} * dudt;
+
+                textureStore(
+                    u_dil,
+                    vec2<i32>(x, y),
+                    out * vec4f(1)
+                );
+            }
+        `;
+
+        return this.device.createComputePipeline({
+            label: "dilation",
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "dilate",
+            },
+        });
+    }
 }
 
 export const sanitise_index = `
