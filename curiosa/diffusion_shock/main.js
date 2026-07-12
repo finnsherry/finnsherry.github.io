@@ -619,39 +619,8 @@ async function runInpainting() {
 
   const [horizontalConvolutionPipeline, verticalConvolutionPipeline] =
     computePipelineMaker.makeConvolutionPipelines();
-  function horizontalConvolutionBind(k, src, dst) {
-    return device.createBindGroup({
-      label: "horizontal convolution",
-      layout: horizontalConvolutionPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: k } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dst.createView() },
-      ],
-    });
-  }
-  function verticalConvolutionBind(k, src, dst) {
-    return device.createBindGroup({
-      label: "vertical convolution",
-      layout: verticalConvolutionPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: k } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dst.createView() },
-      ],
-    });
-  }
-
-  const horizontalConvolutionNuBind = horizontalConvolutionBind(
-    k_nu,
-    u,
-    convolutionStorage,
-  );
-  const verticalConvolutionNuBind = verticalConvolutionBind(
-    k_nu,
-    convolutionStorage,
-    u_nu,
-  );
+  const horizontalConvolutionNuBind = computePipelineMaker.makeConvolutionBindGroup(horizontalConvolutionPipeline, k_nu, u, convolutionStorage);
+  const verticalConvolutionNuBind = computePipelineMaker.makeConvolutionBindGroup(verticalConvolutionPipeline, k_nu, convolutionStorage, u_nu);
   function convolutionNuPass(encoder) {
     passMaker(
       encoder,
@@ -662,16 +631,8 @@ async function runInpainting() {
     passMaker(encoder, verticalConvolutionPipeline, verticalConvolutionNuBind, workGroupGrid);
   }
 
-  const horizontalConvolutionSigmaBind = horizontalConvolutionBind(
-    k_sigma,
-    u,
-    convolutionStorage, workGroupGrid
-  );
-  const verticalConvolutionSigmaBind = verticalConvolutionBind(
-    k_sigma,
-    convolutionStorage,
-    u_sigma, workGroupGrid
-  );
+  const horizontalConvolutionSigmaBind = computePipelineMaker.makeConvolutionBindGroup(horizontalConvolutionPipeline, k_sigma, u, convolutionStorage);
+  const verticalConvolutionSigmaBind = computePipelineMaker.makeConvolutionBindGroup(verticalConvolutionPipeline, k_sigma, convolutionStorage, u_sigma);
   function convolutionSigmaPass(encoder) {
     passMaker(
       encoder,
@@ -687,38 +648,8 @@ async function runInpainting() {
 
   const [horizontalConvolutionVec3Pipeline, verticalConvolutionVec3Pipeline] =
     computePipelineMakerVec3.makeConvolutionPipelines();
-  function horizontalConvolutionVec3Bind(k, src, dst) {
-    return device.createBindGroup({
-      label: "horizontal 3d convolution",
-      layout: horizontalConvolutionVec3Pipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: k } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dst.createView() },
-      ],
-    });
-  }
-  function verticalConvolutionVec3Bind(k, src, dst) {
-    return device.createBindGroup({
-      label: "vertical 3d convolution",
-      layout: verticalConvolutionVec3Pipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: k } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dst.createView() },
-      ],
-    });
-  }
-  const horizontalConvolutionJBind = horizontalConvolutionVec3Bind(
-    k_rho,
-    J,
-    convolutionStorageVec3,
-  );
-  const verticalConvolutionJBind = verticalConvolutionVec3Bind(
-    k_rho,
-    convolutionStorageVec3,
-    J_rho,
-  );
+  const horizontalConvolutionJBind = computePipelineMaker.makeConvolutionBindGroup(horizontalConvolutionVec3Pipeline, k_rho, J, convolutionStorageVec3);
+  const verticalConvolutionJBind = computePipelineMaker.makeConvolutionBindGroup(verticalConvolutionVec3Pipeline, k_rho, convolutionStorageVec3, J_rho);
   function regulariseStructureTensorPass(encoder) {
     passMaker(
       encoder,

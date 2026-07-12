@@ -44,16 +44,13 @@ async function binarise() {
     return;
   }
   const binarisePipeline = computePipelineMaker.makeBinarisationPipeline(threshold);
-  const binariseBind = device.createBindGroup({
-    label: "binarise",
-    layout: binarisePipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: u0.createView() },
-      { binding: 1, resource: ubin.createView() },
-    ]
-  })
+  const binariseBind = computePipelineMaker.makeBinarisationBindGroup(binarisePipeline, u0, ubin);
+
+  const overwritePipeline = computePipelineMaker.makeOverwritePipeline();
+  const overwriteBind = computePipelineMaker.makeOverwriteBindGroup(overwritePipeline, ubin, u0);
   const encoder = device.createCommandEncoder();
   passMaker(encoder, binarisePipeline, binariseBind, workGroupGrid);
+  passMaker(encoder, overwritePipeline, overwriteBind, workGroupGrid);
   device.queue.submit([encoder.finish()]);
 
   await renderImage(ubin, device, context, format);
@@ -74,32 +71,18 @@ async function dilate() {
   const n = Math.ceil(delta / dtOpt);
   const dt = delta / n;
   const dilatePipeline = computePipelineMaker.makeDilationPipeline(dt);
-  let dilateBindA = device.createBindGroup({
-    label: "binarise",
-    layout: dilatePipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: ubin.createView() },
-      { binding: 1, resource: udil.createView() },
-    ]
-  })
-  let dilateBindB = device.createBindGroup({
-    label: "binarise",
-    layout: dilatePipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: udil.createView() },
-      { binding: 1, resource: ubin.createView() },
-    ]
-  })
+  let dilateBindA = computePipelineMaker.makeDilationBindGroup(dilatePipeline, u0, udil);
+  let dilateBindB = computePipelineMaker.makeDilationBindGroup(dilatePipeline, udil, u0);
 
   const encoder = device.createCommandEncoder();
   for (let i = 0; i < n; i++) {
     passMaker(encoder, dilatePipeline, dilateBindA, workGroupGrid);
-    [ubin, udil] = [udil, ubin];
+    [u0, udil] = [udil, u0];
     [dilateBindA, dilateBindB] = [dilateBindB, dilateBindA];
   }
   device.queue.submit([encoder.finish()]);
 
-  await renderImage(ubin, device, context, format);
+  await renderImage(udil, device, context, format);
   dilated = true;
 }
 
@@ -116,22 +99,24 @@ async function connect() {
   const dtOpt = 1 / Math.sqrt(2);
   const n = Math.ceil(delta / dtOpt);
   const dt = delta / n;
-  const multiplicationPipeline = computePipelineMaker.makeBinaryOperatorPipeline("*");
-  const multiplicationBind = device.createBindGroup({
+  const binarisePipeline = computePipelineMaker.makeBinarisationPipeline(threshold);
+  const binariseBind = device.createBindGroup({
     label: "binarise",
-    layout: multiplicationPipeline.getBindGroupLayout(0),
+    layout: binarisePipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: u0.createView() },
-      { binding: 1, resource: udil.createView() },
-      { binding: 2, resource: ubin.createView() },
+      { binding: 0, resource: udil.createView() },
+      { binding: 1, resource: u0.createView() },
     ]
   })
+  const multiplyPipeline = computePipelineMaker.makeBinaryOperatorPipeline("*");
+  const multiplyBind = computePipelineMaker.makeBinaryOperatorBindGroup(multiplyPipeline, u0, ubin, udil);
 
   const encoder = device.createCommandEncoder();
-  passMaker(encoder, multiplicationPipeline, multiplicationBind, workGroupGrid);
+  passMaker(encoder, binarisePipeline, binariseBind, workGroupGrid);
+  // passMaker(encoder, multiplyPipeline, multiplyBind, workGroupGrid);
   device.queue.submit([encoder.finish()]);
 
-  await renderImage(ubin, device, context, format);
+  await renderImage(u0, device, context, format);
   connected = true;
 }
 

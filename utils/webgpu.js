@@ -26,6 +26,241 @@ export class ComputePipelineMaker {
         this.vec3 = vec3;
     }
 
+    // Generally useful
+    makeOverwritePipeline() {
+        let swizzle
+        let out
+        if (this.vec3) {
+            swizzle = "rgb";
+            out = `
+                textureStore(
+                    u_2,
+                    id.xy,
+                    vec4f(u_1_cur, 1)
+                );
+            `;
+        } else {
+            swizzle = "r";
+            out = `
+                textureStore(
+                    u_2,
+                    id.xy,
+                    u_1_cur * vec4f(1)
+                );
+            `;
+        }
+        const computeWGSL = `
+            @group(0) @binding(0) var u_1 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(1) var u_2 : texture_storage_2d<${this.texFormat}, write>;
+
+            @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+            fn overwrite(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u_1);
+                if (id.x >= dims.x || id.y >= dims.y) {
+                return;
+                }
+                
+                let u_1_cur = textureLoad(u_1, id.xy).${swizzle};
+
+                ${out}
+            }
+        `;
+
+        const pipeline = this.device.createComputePipeline({
+            label: "overwriting",
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "overwrite",
+            },
+        });
+
+        return pipeline
+    }
+
+    makeOverwriteBindGroup(pipeline, u_1, u_2) {
+        return this.device.createBindGroup({
+            label: "overwrite",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u_1.createView() },
+                { binding: 1, resource: u_2.createView() },
+            ]
+        });
+
+    }
+
+    makeAbsPipeline() {
+        let swizzle
+        let out
+        if (this.vec3) {
+            swizzle = "rgb";
+            out = `
+                textureStore(
+                    u_2,
+                    id.xy,
+                    vec4f(out, 1)
+                );
+            `;
+        } else {
+            swizzle = "r";
+            out = `
+                textureStore(
+                    u_2,
+                    id.xy,
+                    out * vec4f(1)
+                );
+            `;
+        }
+
+        const computeWGSL = `
+            @group(0) @binding(0) var u_1 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(1) var u_2 : texture_storage_2d<${this.texFormat}, write>;
+
+            @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+            fn abs(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u_1);
+                if (id.x >= dims.x || id.y >= dims.y) {
+                return;
+                }
+                let u_1_cur = textureLoad(u_1, id.xy).${swizzle};
+
+                let out = abs(u_1_cur);
+
+                ${out}
+            }
+        `;
+
+        return this.device.createComputePipeline({
+            label: `absolute value`,
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "abs",
+            },
+        });
+    }
+
+    makeAbsBindGroup(pipeline, u_1, u_2) {
+        return this.device.createBindGroup({
+            label: "absolute value",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u_1.createView() },
+                { binding: 1, resource: u_2.createView() },
+            ]
+        })
+    }
+
+    makeBinaryOperatorPipeline(operator) {
+        let swizzle
+        let out
+        if (this.vec3) {
+            swizzle = "rgb";
+            out = `
+                textureStore(
+                    u_3,
+                    id.xy,
+                    vec4f(out, 1)
+                );
+            `;
+        } else {
+            swizzle = "r";
+            out = `
+                textureStore(
+                    u_3,
+                    id.xy,
+                    out * vec4f(1)
+                );
+            `;
+        }
+
+        const computeWGSL = `
+            @group(0) @binding(0) var u_1 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(1) var u_2 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(2) var u_3 : texture_storage_2d<${this.texFormat}, write>;
+
+            ${upwind_dilation}
+
+            @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+            fn main(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u_1);
+                if (id.x >= dims.x || id.y >= dims.y) {
+                return;
+                }
+                let u_1_cur = textureLoad(u_1, id.xy).${swizzle};
+                let u_2_cur = textureLoad(u_2, id.xy).${swizzle};
+
+                let out = u_1_cur ${operator} u_2_cur;
+
+                ${out}
+            }
+        `;
+
+        return this.device.createComputePipeline({
+            label: `binary operator ${operator}`,
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "main",
+            },
+        });
+    }
+
+    makeBinaryOperatorBindGroup(pipeline, u_1, u_2, u_3) {
+        return this.device.createBindGroup({
+            label: "binary operator",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u_1.createView() },
+                { binding: 1, resource: u_2.createView() },
+                { binding: 2, resource: u_3.createView() },
+            ]
+        })
+    }
+
+    makeMaxPipeline() {
+        let defaultValue;
+        if (this.texFormat.includes("32float")) {
+            defaultValue = "0";
+        }
+        const computeWGSL = `
+            @group(0) @binding(0) var u_1 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(1) var u_2 : texture_storage_2d<${this.texFormat}, write>;
+
+            @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+            fn max(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u_1);
+                if (id.x >= dims.x || id.y >= dims.y) {
+                return;
+                }
+                let u_1_cur = textureLoad(u_1, id.xy).f;
+
+                let out = abs(u_1_cur);
+
+                
+            }
+        `;
+
+        return this.device.createComputePipeline({
+            label: `max`,
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "max",
+            },
+        });
+    }
+
+    // Diffusion-shock
     makeConvolutionPipelines() {
         let swizzle
         let out
@@ -99,30 +334,43 @@ export class ComputePipelineMaker {
             }
             `;
 
-        return [
-            this.device.createComputePipeline({
-                label: "horizontal convolution",
-                layout: "auto",
-                compute: {
-                    module: this.device.createShaderModule({
-                        code: computeWGSL,
-                    }),
-                    entryPoint: "convolve_horizontal",
-                },
-            }),
-            this.device.createComputePipeline({
-                label: "vertical convolution",
-                layout: "auto",
-                compute: {
-                    module: this.device.createShaderModule({
-                        code: computeWGSL,
-                    }),
-                    entryPoint: "convolve_vertical",
-                },
-            }),
-        ];
+        const horizontalPipeline = this.device.createComputePipeline({
+            label: "horizontal convolution",
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "convolve_horizontal",
+            },
+        });
+        const verticalPipeline = this.device.createComputePipeline({
+            label: "vertical convolution",
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "convolve_vertical",
+            },
+        });
+
+        return [horizontalPipeline, verticalPipeline]
     }
 
+    makeConvolutionBindGroup(pipeline, k, u_in, u_out) {
+        return this.device.createBindGroup({
+            label: "convolution",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: { buffer: k } },
+                { binding: 1, resource: u_in.createView() },
+                { binding: 2, resource: u_out.createView() },
+            ],
+        })
+    }
+
+    // Connected components
     makeBinarisationPipeline(threshold) {
         const computeWGSL = `
             @group(0) @binding(0) var u : texture_storage_2d<${this.texFormat}, read>;
@@ -158,6 +406,17 @@ export class ComputePipelineMaker {
                 }),
                 entryPoint: "binarise",
             },
+        });
+    }
+
+    makeBinarisationBindGroup(pipeline, u, u_bin) {
+        return this.device.createBindGroup({
+            label: "binarise",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u.createView() },
+                { binding: 1, resource: u_bin.createView() },
+            ]
         });
     }
 
@@ -215,61 +474,81 @@ export class ComputePipelineMaker {
         });
     }
 
-    makeBinaryOperatorPipeline(operator) {
-        let swizzle
-        let out
-        if (this.vec3) {
-            swizzle = "rgb";
-            out = `
-                textureStore(
-                    u_3,
-                    id.xy,
-                    vec4f(out, 1)
-                );
-            `;
-        } else {
-            swizzle = "r";
-            out = `
-                textureStore(
-                    u_3,
-                    id.xy,
-                    out * vec4f(1)
-                );
-            `;
-        }
+    makeDilationBindGroup(pipeline, u, u_dil) {
+        return this.device.createBindGroup({
+            label: "dilate",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u.createView() },
+                { binding: 1, resource: u_dil.createView() },
+            ]
+        })
+    }
 
+    makeLabelInitialisationPipeline() {
         const computeWGSL = `
-            @group(0) @binding(0) var u_1 : texture_storage_2d<${this.texFormat}, read>;
-            @group(0) @binding(1) var u_2 : texture_storage_2d<${this.texFormat}, read>;
-            @group(0) @binding(2) var u_3 : texture_storage_2d<${this.texFormat}, write>;
-
-            ${upwind_dilation}
+            @group(0) @binding(0) var u : texture_storage_2d<${this.texFormat}, write>;
 
             @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
-            fn dilate(@builtin(global_invocation_id) id : vec3<u32>) {
-                let dims = textureDimensions(u_1);
+            fn label(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u);
                 if (id.x >= dims.x || id.y >= dims.y) {
                 return;
                 }
-                let u_1_cur = textureLoad(u_1, id.xy).${swizzle};
-                let u_2_cur = textureLoad(u_2, id.xy).${swizzle};
 
-                let out = u_1_cur ${operator} u_2_cur;
+                let label = id.y * dims.x + id.x;
 
-                ${out}
+                textureStore(
+                    u,
+                    id.xy,
+                    label * vec4f(1)
+                );
             }
         `;
 
         return this.device.createComputePipeline({
-            label: `binary operator ${operator}`,
+            label: "initialise labels",
             layout: "auto",
             compute: {
                 module: this.device.createShaderModule({
                     code: computeWGSL,
                 }),
-                entryPoint: "dilate",
+                entryPoint: "label",
             },
         });
+    }
+
+    makeLabelInitialisationBindGroup(pipeline, u) {
+        return this.device.createBindGroup({
+            label: "initialise labels",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u.createView() },
+            ]
+        })
+    }
+
+    makeConnectedComponentsPipeline(connectivity) {
+        // Using the Union-Find algorithm
+        switch (connectivity) {
+            case 4:
+                break;
+            case 8:
+                break;
+            case _:
+                throw new Error("makeConnectedComponentsPipeline: connectivity must be either 4 or 8!");
+        }
+    }
+
+    makeConnectedComponentsBindGroup(pipeline, u_1, u_2) {
+        return this.device.createBindGroup({
+            label: "connected components",
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u_1.createView() },
+                { binding: 1, resource: u_2.createView() },
+            ]
+        })
     }
 }
 
