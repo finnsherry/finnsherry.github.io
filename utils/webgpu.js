@@ -19,19 +19,17 @@ export class TextureMaker {
 }
 
 export class ComputePipelineMaker {
-    constructor(device, texFormat, texFormatVec3, workgroupSize) {
+    constructor(device, texFormat, workgroupSize, vec3 = false) {
         this.device = device;
         this.texFormat = texFormat;
-        this.texFormatVec3 = texFormatVec3;
         this.workgroupSize = workgroupSize;
+        this.vec3 = vec3;
     }
 
-    makeConvolutionPipelines(vec3) {
-        let format
+    makeConvolutionPipelines() {
         let swizzle
         let out
-        if (vec3) {
-            format = this.texFormatVec3;
+        if (this.vec3) {
             swizzle = "rgb";
             out = `
                 textureStore(
@@ -41,7 +39,6 @@ export class ComputePipelineMaker {
                 );
             `;
         } else {
-            format = this.texFormat;
             swizzle = "r";
             out = `
                 textureStore(
@@ -70,8 +67,8 @@ export class ComputePipelineMaker {
         const computeWGSL = `
 
             @group(0) @binding(0) var<storage, read> k : array<f32>;
-            @group(0) @binding(1) var u : texture_storage_2d<${format}, read>;
-            @group(0) @binding(2) var u_reg : texture_storage_2d<${format}, write>;
+            @group(0) @binding(1) var u : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(2) var u_reg : texture_storage_2d<${this.texFormat}, write>;
 
             ${sanitise_index}
 
@@ -141,7 +138,7 @@ export class ComputePipelineMaker {
                 let u_cur = textureLoad(u, id.xy).r;
                 var u_out = 0.;
                 if (u_cur > ${threshold}) {
-                    u_out = 255.;
+                    u_out = 1.;
                 }
 
                 textureStore(
@@ -217,6 +214,63 @@ export class ComputePipelineMaker {
             },
         });
     }
+
+    makeBinaryOperatorPipeline(operator) {
+        let swizzle
+        let out
+        if (this.vec3) {
+            swizzle = "rgb";
+            out = `
+                textureStore(
+                    u_3,
+                    id.xy,
+                    vec4f(out, 1)
+                );
+            `;
+        } else {
+            swizzle = "r";
+            out = `
+                textureStore(
+                    u_3,
+                    id.xy,
+                    out * vec4f(1)
+                );
+            `;
+        }
+
+        const computeWGSL = `
+            @group(0) @binding(0) var u_1 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(1) var u_2 : texture_storage_2d<${this.texFormat}, read>;
+            @group(0) @binding(2) var u_3 : texture_storage_2d<${this.texFormat}, write>;
+
+            ${upwind_dilation}
+
+            @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+            fn dilate(@builtin(global_invocation_id) id : vec3<u32>) {
+                let dims = textureDimensions(u_1);
+                if (id.x >= dims.x || id.y >= dims.y) {
+                return;
+                }
+                let u_1_cur = textureLoad(u_1, id.xy).${swizzle};
+                let u_2_cur = textureLoad(u_2, id.xy).${swizzle};
+
+                let out = u_1_cur ${operator} u_2_cur;
+
+                ${out}
+            }
+        `;
+
+        return this.device.createComputePipeline({
+            label: `binary operator ${operator}`,
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "dilate",
+            },
+        });
+    }
 }
 
 export const sanitise_index = `
@@ -260,7 +314,7 @@ export async function renderImage(tex, device, context, format) {
         @fragment
         fn fs(@builtin(position) p : vec4<f32>) -> @location(0) vec4<f32> {
             let coord = vec2<i32>(p.xy);
-            let c = textureLoad(tex, coord, 0).r / 255.;
+            let c = textureLoad(tex, coord, 0).r;
             return vec4f(c, c, c, 1);
         }
     `;
@@ -305,7 +359,7 @@ export async function renderImage(tex, device, context, format) {
     device.queue.submit([encoder.finish()]);
 }
 
-export async function setup() {
+export async function setupWebGPU() {
     const adapter = await navigator.gpu?.requestAdapter();
     const device = await adapter?.requestDevice();
     if (!device) throw new Error("WebGPU not supported");
