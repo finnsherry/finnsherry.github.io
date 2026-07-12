@@ -1,8 +1,8 @@
 import { getInputNumber, setInput } from "/utils/input.js";
-import { svgFileToArray } from "/utils/imageio.js";
-import { TextureMaker, setup, upwind_erosion } from "/utils/webgpu.js";
+import { imageFileToArray } from "/utils/imageio.js";
+import { TextureMaker, setupWebGPU, upwind_erosion } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setup();
+const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
@@ -156,24 +156,20 @@ function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
 
-
-setInput("gridwidth", 256);
 setInput("showEvery", 1);
 
 let rafId = null;
 async function runSimulation() {
   // User parameters.
-  const gridWidth = getInputNumber("gridwidth", 256, true);
   const showEvery = getInputNumber("showEvery", 1, true);
   let colourScheme = document.getElementById("colourScheme").value;
   console.log(colourScheme);
 
   // Load maze and make canvas.
-  const { maze, height } = await svgFileToArray("maze.svg", gridWidth);
-  const gridHeight = height;
+  const { array: maze, width: width, height: height } = await imageFileToArray("maze.svg");
   function createStateTexture() {
     return device.createTexture({
-      size: [gridWidth, gridHeight],
+      size: [width, height],
       format: texFormat,
       usage:
         GPUTextureUsage.STORAGE_BINDING |
@@ -185,22 +181,22 @@ async function runSimulation() {
   device.queue.writeTexture(
     { texture: texMaze },
     maze,
-    { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
+    { bytesPerRow: width * 4 },
+    [width, height]
   );
-  canvas.width = gridWidth;
-  canvas.height = gridHeight;
+  canvas.width = width;
+  canvas.height = height;
 
   // Define uniforms.
   const mazeMax = 2000;
   const maxValue =
-    (Math.sqrt(gridHeight * gridHeight + gridWidth * gridWidth) * 2) / mazeMax;
+    (Math.sqrt(height * height + width * width) * 2) / mazeMax;
   const dt = 1 / Math.sqrt(2);
   const origin = 0;
 
   const uniforms = new Float32Array([
-    gridWidth,
-    gridHeight,
+    width,
+    height,
     maxValue,
     dt,
     origin,
@@ -214,7 +210,7 @@ async function runSimulation() {
   device.queue.writeBuffer(uniformBuffer, 0, uniforms);
 
   // Create textures for ping-pong.
-  const init = new Float32Array(gridHeight * gridWidth);
+  const init = new Float32Array(height * width);
   for (let i = 0; i < init.length; i += 1) {
     init[i] = i == origin ? 0 : maxValue;
   }
@@ -222,15 +218,15 @@ async function runSimulation() {
   device.queue.writeTexture(
     { texture: texA },
     init,
-    { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
+    { bytesPerRow: width * 4 },
+    [width, height]
   );
   let texB = createStateTexture();
   device.queue.writeTexture(
     { texture: texB },
     init,
-    { bytesPerRow: gridWidth * 4 },
-    [gridWidth, gridHeight]
+    { bytesPerRow: width * 4 },
+    [width, height]
   );
 
   // Compute pipeline and bind groups.
@@ -281,8 +277,8 @@ async function runSimulation() {
       pass.setPipeline(computePipeline);
       pass.setBindGroup(0, computeBindA);
       pass.dispatchWorkgroups(
-        Math.ceil(gridWidth / WORKGROUP),
-        Math.ceil(gridHeight / WORKGROUP)
+        Math.ceil(width / WORKGROUP),
+        Math.ceil(height / WORKGROUP)
       );
       pass.end();
       [texA, texB] = [texB, texA];

@@ -1,14 +1,16 @@
 import { getInputNumber, setInput } from "/utils/input.js";
-import { pngFileToArray } from "/utils/imageio.js";
-import { TextureMaker, setup, ComputePipelineMaker, sanitise_index, upwind_dilation, upwind_erosion, passMaker } from "/utils/webgpu.js";
+import { imageFileToArray } from "/utils/imageio.js";
+import { TextureMaker, setupWebGPU, ComputePipelineMaker, sanitise_index, upwind_dilation, upwind_erosion, passMaker } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setup();
+const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
 const texVec3Format = "rgba32float";
 
-const computePipelineMaker = new ComputePipelineMaker(device, texFormat, texVec3Format, WORKGROUP);
+const computePipelineMaker = new ComputePipelineMaker(device, texFormat, WORKGROUP);
+
+const computePipelineMakerVec3 = new ComputePipelineMaker(device, texVec3Format, WORKGROUP, true);
 
 
 function makeDSSwitchPipeline() {
@@ -452,7 +454,7 @@ function makeStepPipeline() {
     textureStore(
       u,
       id.xy,
-      u_cur + uniforms.dt * (mask_cur / 255) * (diffusion_cur + shock_cur) * vec4f(1)
+      u_cur + uniforms.dt * mask_cur * (diffusion_cur + shock_cur) * vec4f(1)
     );
   }
 `;
@@ -492,7 +494,7 @@ function makeRenderPipeline() {
   @fragment
   fn fs(@builtin(position) p : vec4<f32>) -> @location(0) vec4<f32> {
     let coord = vec2<i32>(p.xy);
-    let c = textureLoad(tex, coord, 0).r / 255.;
+    let c = textureLoad(tex, coord, 0).r;
     return vec4f(c, c, c, 1);
   }
 `;
@@ -548,18 +550,18 @@ let rafId = null;
 async function runInpainting() {
   // User parameters.
   const showEvery = getInputNumber("showEvery", 1, true);
-  const lambda = getInputNumber("lambda", 2);
+  const lambda = getInputNumber("lambda", 2) / 255.;
   const nu = getInputNumber("nu", 2);
   const sigma = getInputNumber("sigma", 2);
   const rho = getInputNumber("rho", 5);
 
   // Load data and make canvas.
-  const { array: u0 } = await pngFileToArray("cross.png");
+  const { array: u0 } = await imageFileToArray("cross.png");
   const {
     array: mask,
     width: gridWidth,
     height: gridHeight,
-  } = await pngFileToArray("mask.png");
+  } = await imageFileToArray("mask.png");
   canvas.width = gridWidth;
   canvas.height = gridHeight;
 
@@ -616,8 +618,7 @@ async function runInpainting() {
   const shock = textureMaker.createStateTexture();
 
   const [horizontalConvolutionPipeline, verticalConvolutionPipeline] =
-    computePipelineMaker.makeConvolutionPipelines(false);
-  // makeConvolutionPipelines();
+    computePipelineMaker.makeConvolutionPipelines();
   function horizontalConvolutionBind(k, src, dst) {
     return device.createBindGroup({
       label: "horizontal convolution",
@@ -685,7 +686,7 @@ async function runInpainting() {
   }
 
   const [horizontalConvolutionVec3Pipeline, verticalConvolutionVec3Pipeline] =
-    computePipelineMaker.makeConvolutionPipelines(true);
+    computePipelineMakerVec3.makeConvolutionPipelines();
   function horizontalConvolutionVec3Bind(k, src, dst) {
     return device.createBindGroup({
       label: "horizontal 3d convolution",

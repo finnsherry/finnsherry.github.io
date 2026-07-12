@@ -1,26 +1,24 @@
 import { getInputNumber, setInput } from "/utils/input.js";
-import { pngFileToArray } from "/utils/imageio.js";
-import { TextureMaker, ComputePipelineMaker, setup, renderImage, passMaker } from "/utils/webgpu.js";
+import { imageFileToArray } from "/utils/imageio.js";
+import { TextureMaker, ComputePipelineMaker, setupWebGPU, renderImage, passMaker } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setup();
+const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
 
-const computePipelineMaker = new ComputePipelineMaker(device, texFormat, null, WORKGROUP);
+const computePipelineMaker = new ComputePipelineMaker(device, texFormat, WORKGROUP);
 
 function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
 
 setInput("delta", 10);
-setInput("showEvery", 1);
-setInput("threshold", 128);
+setInput("threshold", 0.5);
 const delta = getInputNumber("delta", 10);
-const showEvery = getInputNumber("showEvery", 1, true);
-const threshold = getInputNumber("threshold", 128);
+const threshold = getInputNumber("threshold", 0.5);
 
-const { array: intialImage, width: gridWidth, height: gridHeight } = await pngFileToArray("cross.png");
+const { array: intialImage, width: gridWidth, height: gridHeight } = await imageFileToArray("cross.png");
 canvas.width = gridWidth;
 canvas.height = gridHeight;
 console.log(Math.max(...intialImage));
@@ -37,6 +35,7 @@ device.queue.writeTexture(
   [gridWidth, gridHeight],
 );
 let ubin = textureMaker.createStateTexture();
+let udil = textureMaker.createStateTexture();
 
 async function binarise() {
   console.log("binarise!");
@@ -80,14 +79,14 @@ async function dilate() {
     layout: dilatePipeline.getBindGroupLayout(0),
     entries: [
       { binding: 0, resource: ubin.createView() },
-      { binding: 1, resource: u0.createView() },
+      { binding: 1, resource: udil.createView() },
     ]
   })
   let dilateBindB = device.createBindGroup({
     label: "binarise",
     layout: dilatePipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: u0.createView() },
+      { binding: 0, resource: udil.createView() },
       { binding: 1, resource: ubin.createView() },
     ]
   })
@@ -95,7 +94,7 @@ async function dilate() {
   const encoder = device.createCommandEncoder();
   for (let i = 0; i < n; i++) {
     passMaker(encoder, dilatePipeline, dilateBindA, workGroupGrid);
-    [ubin, u0] = [u0, ubin];
+    [ubin, udil] = [udil, ubin];
     [dilateBindA, dilateBindB] = [dilateBindB, dilateBindA];
   }
   device.queue.submit([encoder.finish()]);
@@ -114,6 +113,26 @@ async function connect() {
     console.log("Already connected!");
     return;
   }
+  const dtOpt = 1 / Math.sqrt(2);
+  const n = Math.ceil(delta / dtOpt);
+  const dt = delta / n;
+  const multiplicationPipeline = computePipelineMaker.makeBinaryOperatorPipeline("*");
+  const multiplicationBind = device.createBindGroup({
+    label: "binarise",
+    layout: multiplicationPipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: u0.createView() },
+      { binding: 1, resource: udil.createView() },
+      { binding: 2, resource: ubin.createView() },
+    ]
+  })
+
+  const encoder = device.createCommandEncoder();
+  passMaker(encoder, multiplicationPipeline, multiplicationBind, workGroupGrid);
+  device.queue.submit([encoder.finish()]);
+
+  await renderImage(ubin, device, context, format);
+  connected = true;
 }
 
 await renderImage(u0, device, context, format);

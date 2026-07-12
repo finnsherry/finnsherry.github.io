@@ -1,7 +1,7 @@
 import { getInputNumber, setInput } from "/utils/input.js";
-import { TextureMaker, setup } from "/utils/webgpu.js";
+import { TextureMaker, setupWebGPU } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setup();
+const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "rgba8unorm";
