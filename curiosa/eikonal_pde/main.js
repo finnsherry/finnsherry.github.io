@@ -1,8 +1,30 @@
-import { getInputNumber, setInput } from "/utils/input.js";
+import { InputTable, InputButtons } from "/utils/input.js";
 import { imageFileToArray } from "/utils/imageio.js";
 import { TextureMaker, setupWebGPU, upwind_erosion } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
+const container = document.getElementsByClassName("content-container")[0];
+const inputTable = new InputTable(container);
+const parameters = [
+  { label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 },
+]
+parameters.forEach(parameter => inputTable.addNumber(parameter));
+const selector = {
+  label: "colourScheme", shownLabel: "Colour scheme", options: [
+    ["whiteBlack", "White-Black"],
+    ["blueRed", "Blue-Red"],
+    ["blueGreen", "Blue-Green"],
+  ]
+};
+inputTable.addSelector(selector);
+const inputButtons = new InputButtons(container);
+inputButtons.addButton({ label: "submit", shownLabel: "Start" });
+
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
+canvas.setAttribute("style", "width: 100%;");
+container.appendChild(canvas);
+
+const { device: device, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
@@ -156,14 +178,13 @@ function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
 
-setInput("showEvery", 1);
-
 let rafId = null;
 async function runSimulation() {
   // User parameters.
-  const showEvery = getInputNumber("showEvery", 1, true);
-  let colourScheme = document.getElementById("colourScheme").value;
+  const showEvery = inputTable.getNumber("showEvery", true);
+  const colourScheme = inputTable.getSelector("colourScheme");
   console.log(colourScheme);
+
 
   // Load maze and make canvas.
   const { array: maze, width: width, height: height } = await imageFileToArray("maze.svg");

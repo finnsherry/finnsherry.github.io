@@ -112,21 +112,143 @@ export class InputState {
 }
 
 
-export function getInputNumber(label, def, isInt = false) {
-    let value = document.getElementById(label).value;
-    if (value === '' || value === null || value === undefined) {
-        value = def;
-    } else {
-        if (isInt) {
-            value = parseInt(value);
-        } else {
-            value = parseFloat(value);
-        }
+export class InputTable {
+    constructor(container) {
+        this.container = container;
+        const table = document.createElement("table");
+        table.classList.add('form');
+        this.container.appendChild(table);
+        this.table = table;
+
+        this.numbers = new Map();
+        this.selectors = new Map();
     }
-    return value;
+
+    addNumber({ label, shownLabel, defaultValue, width = null }) {
+        const tr = document.createElement("tr");
+        const tdShownLabel = document.createElement("td");
+        const htmlShownLabel = document.createElement("label");
+        htmlShownLabel.textContent = shownLabel + ":";
+        tdShownLabel.append(htmlShownLabel);
+        tr.appendChild(tdShownLabel);
+        switch (typeof (label)) {
+            case "string":
+                // single column
+                this.addNumberColumn(tr, label, defaultValue, width);
+                break;
+            case "object":
+                // multiple columns as a "vector"
+                label.forEach((l, i) => this.addNumberColumn(tr, l, defaultValue[i], width));
+                break;
+        }
+        this.table.appendChild(tr);
+    }
+
+    addNumberColumn(tr, label, defaultValue, width = null) {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.type = "text";
+        input.id = label;
+        input.name = label;
+        input.value = defaultValue;
+        input.required = true;
+        if (width) {
+            input.size = width;
+        }
+        td.append(input);
+        tr.appendChild(td);
+        this.numbers.set(label, { value: defaultValue, defaultValue: defaultValue });
+    }
+
+    getNumber(label, isInt = false) {
+        const entry = document.getElementById(label);
+        const param = this.numbers.get(label);
+        let value = entry["value"];
+        if (value === '' || value === null || value === undefined) {
+            value = param.get("defaultValue");
+        } else {
+            if (isInt) {
+                value = parseInt(value);
+            } else {
+                value = parseFloat(value);
+            }
+            param.value = value;
+        }
+        return value;
+    }
+
+    setNumber(label, value) {
+        const param = this.numbers.get(label);
+        param.value = value;
+        const entry = document.getElementById(label);
+        entry.value = value;
+    }
+
+    addSelector({ label, shownLabel, options, width = null }) {
+        const tr = document.createElement("tr");
+        const tdShownLabel = document.createElement("td");
+        const htmlShownLabel = document.createElement("label");
+        htmlShownLabel.textContent = shownLabel + ":";
+        tdShownLabel.append(htmlShownLabel);
+        tr.appendChild(tdShownLabel);
+
+        const tdSelector = document.createElement("td");
+        const selector = document.createElement("select");
+        selector.id = label;
+        if (width) {
+            selector.width = width;
+        }
+
+        for (const [value, shownValue] of options) {
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = shownValue;
+            selector.appendChild(option);
+        }
+        tdSelector.appendChild(selector);
+        tr.append(tdSelector);
+        this.table.appendChild(tr);
+        this.selectors.set(label, options[0][0]);
+    }
+
+    getSelector(label) {
+        const entry = document.getElementById(label);
+        const value = entry.value;
+        this.selectors.set(label, value);
+        return value;
+    }
+
+    setSelector(label, value) {
+        this.selectors.set(label, value);
+        const entry = document.getElementById(label);
+        entry.value = value;
+    }
 }
 
 
-export function setInput(label, value) {
-    document.getElementById(label).value = value;
+export class InputButtons {
+    constructor(container) {
+        this.container = container;
+        const table = document.createElement("table");
+        table.classList.add('form');
+        this.container.appendChild(table);
+        this.table = table;
+
+        const tr = document.createElement("tr");
+        this.table.appendChild(tr);
+        this.tr = tr;
+    }
+
+    addButton({ label, shownLabel, width = null }) {
+        const td = document.createElement("td");
+        const button = document.createElement("button");
+        button.id = label;
+        button.name = label;
+        button.textContent = shownLabel;
+        if (width) {
+            button.size = width;
+        }
+        td.append(button);
+        this.tr.appendChild(td);
+    }
 }

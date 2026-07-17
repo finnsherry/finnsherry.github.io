@@ -653,7 +653,7 @@ export async function setupWebGPU() {
         alphaMode: "opaque",
     });
 
-    return { device: device, canvas: canvas, context: context, format: format };
+    return { device: device, context: context, format: format };
 }
 
 export function passMaker(encoder, pipeline, bindGroup, workGroupGrid) {

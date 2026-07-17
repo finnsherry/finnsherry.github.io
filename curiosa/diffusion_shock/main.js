@@ -1,8 +1,26 @@
-import { getInputNumber, setInput } from "/utils/input.js";
+import { InputTable, InputButtons } from "/utils/input.js";
 import { imageFileToArray } from "/utils/imageio.js";
 import { TextureMaker, setupWebGPU, ComputePipelineMaker, sanitise_index, upwind_dilation, upwind_erosion, passMaker } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
+const container = document.getElementsByClassName("content-container")[0];
+const inputTable = new InputTable(container);
+const parameters = [
+  { label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 },
+  { label: "lambda", shownLabel: "\\(\\lambda\\)", defaultValue: 2 },
+  { label: "nu", shownLabel: "\\(\\nu\\)", defaultValue: 1 },
+  { label: "sigma", shownLabel: "\\(\\sigma\\)", defaultValue: 2 },
+  { label: "rho", shownLabel: "\\(\\rho\\)", defaultValue: 5 },
+]
+parameters.forEach(parameter => inputTable.addNumber(parameter));
+const inputButtons = new InputButtons(container);
+inputButtons.addButton({ label: "submit", shownLabel: "Start" });
+
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
+canvas.setAttribute("style", "width: 100%;");
+container.appendChild(canvas);
+
+const { device: device, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
@@ -540,20 +558,14 @@ function createGaussianKernel(sigma, radiusMultiplier) {
   return kBuffer;
 }
 
-setInput("showEvery", 1);
-setInput("lambda", 2);
-setInput("nu", 2);
-setInput("sigma", 2);
-setInput("rho", 5);
-
 let rafId = null;
 async function runInpainting() {
   // User parameters.
-  const showEvery = getInputNumber("showEvery", 1, true);
-  const lambda = getInputNumber("lambda", 2) / 255.;
-  const nu = getInputNumber("nu", 2);
-  const sigma = getInputNumber("sigma", 2);
-  const rho = getInputNumber("rho", 5);
+  const showEvery = inputTable.getNumber("showEvery", true);
+  const lambda = inputTable.getNumber("lambda") / 255.;
+  const nu = inputTable.getNumber("nu");
+  const sigma = inputTable.getNumber("sigma");
+  const rho = inputTable.getNumber("rho");
 
   // Load data and make canvas.
   const { array: u0 } = await imageFileToArray("cross.png");

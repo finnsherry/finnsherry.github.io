@@ -1,7 +1,24 @@
-import { getInputNumber, setInput } from "/utils/input.js";
+import { InputTable, InputButtons } from "/utils/input.js";
 import { TextureMaker, setupWebGPU } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
+const container = document.getElementsByClassName("content-container")[0];
+const inputTable = new InputTable(container);
+const parameters = [
+  { label: "gridHeight", shownLabel: "Grid height", defaultValue: 128 },
+  { label: "gridWidth", shownLabel: "Grid width", defaultValue: 128 },
+  { label: "fraction", shownLabel: "Starting fraction alive", defaultValue: 0.4 },
+  { label: "fps", shownLabel: "Frames per second", defaultValue: 10 },
+]
+parameters.forEach(parameter => inputTable.addNumber(parameter));
+const inputButtons = new InputButtons(container);
+inputButtons.addButton({ label: "submit", shownLabel: "Start" });
+
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
+canvas.setAttribute("style", "width: 100%;");
+container.appendChild(canvas);
+
+const { device: device, context: context, format: format } = await setupWebGPU();
 
 const WORKGROUP = 8;
 const texFormat = "rgba8unorm";
@@ -116,16 +133,11 @@ function computeBind(src, dst) {
   });
 }
 
-setInput("gridheight", 128);
-setInput("gridwidth", 128);
-setInput("fraction", 0.4);
-setInput("fps", 10);
-
 function runSimulation() {
-  const gridHeight = getInputNumber("gridheight", 128, true);
-  const gridWidth = getInputNumber("gridwidth", 128, true);
-  const aliveFraction = getInputNumber("fraction", 0.4);
-  const fps = getInputNumber("fps", 10, true)
+  const gridHeight = inputTable.getNumber("gridHeight", true);
+  const gridWidth = inputTable.getNumber("gridWidth", true);
+  const aliveFraction = inputTable.getNumber("fraction");
+  const fps = inputTable.getNumber("fps", true)
   let updateInterval = 1000 / fps;
 
   const size = gridWidth * gridHeight;

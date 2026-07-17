@@ -221,7 +221,7 @@ header {
     color: var(--navbar-font-colour);
 }
 
-@media (width <= 900px) {
+@media (width <=900px) {
     header {
         justify-content: space-around;
     }
@@ -278,11 +278,6 @@ header {
     color: white;
 }
 
-.form {
-    display: grid;
-    direction: column;
-}
-
 .form tr,
 .form td {
     padding: 0 0.2em 0.2em 0;
@@ -291,5 +286,5 @@ header {
 mjx-container[display="true"] {
     overflow-x: auto;
     overflow-y: hidden;
-    min-width: 100% !important; 
+    min-width: 100% !important;
 }
