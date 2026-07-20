@@ -121,7 +121,6 @@ export class InputTable {
         this.table = table;
 
         this.numbers = new Map();
-        this.selectors = new Map();
     }
 
     addNumber({ label, shownLabel, defaultValue, width = null }) {
@@ -157,29 +156,25 @@ export class InputTable {
         }
         td.append(input);
         tr.appendChild(td);
-        this.numbers.set(label, { value: defaultValue, defaultValue: defaultValue });
+        this.numbers.set(label, defaultValue);
     }
 
     getNumber(label, isInt = false) {
         const entry = document.getElementById(label);
-        const param = this.numbers.get(label);
         let value = entry["value"];
         if (value === '' || value === null || value === undefined) {
-            value = param.get("defaultValue");
+            value = this.numbers.get(label);
         } else {
             if (isInt) {
                 value = parseInt(value);
             } else {
                 value = parseFloat(value);
             }
-            param.value = value;
         }
         return value;
     }
 
     setNumber(label, value) {
-        const param = this.numbers.get(label);
-        param.value = value;
         const entry = document.getElementById(label);
         entry.value = value;
     }
@@ -208,20 +203,22 @@ export class InputTable {
         tdSelector.appendChild(selector);
         tr.append(tdSelector);
         this.table.appendChild(tr);
-        this.selectors.set(label, options[0][0]);
     }
 
     getSelector(label) {
         const entry = document.getElementById(label);
         const value = entry.value;
-        this.selectors.set(label, value);
         return value;
     }
 
     setSelector(label, value) {
-        this.selectors.set(label, value);
         const entry = document.getElementById(label);
         entry.value = value;
+    }
+
+    remove(label) {
+        const entry = document.getElementById(label);
+        entry.remove();
     }
 }
 
@@ -250,5 +247,15 @@ export class InputButtons {
         }
         td.append(button);
         this.tr.appendChild(td);
+        return button
+    }
+
+    getButton(label) {
+        return document.getElementById(label)
+    }
+
+    removeButton(label) {
+        const button = document.getElementById(label);
+        button.remove();
     }
 }

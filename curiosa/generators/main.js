@@ -1,9 +1,27 @@
 import { NDArray, vec2, vec3, vec4, mat3, mat4 } from "/utils/linalg.js";
 import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
 import { Camera } from "/utils/camera.js";
-import { InputState, getInputNumber, setInput } from "/utils/input.js";
+import { InputState, InputTable, InputButtons } from "/utils/input.js";
 
-const canvas = document.getElementById("canvas");
+const container = document.getElementsByClassName("content-container")[0];
+const inputTable = new InputTable(container);
+
+const parameters = [
+  { label: ["x1x", "x1y", "x1z"], shownLabel: "\\(x_1\\)", defaultValue: [-1, 0, 0], width: 3 },
+  { label: ["n1x", "n1y", "n1z"], shownLabel: "\\(n_1\\)", defaultValue: [0, 1, 0], width: 3 },
+  { label: ["x2x", "x2y", "x2z"], shownLabel: "\\(x_2\\)", defaultValue: [1, 0, 0], width: 3 },
+  { label: ["n2x", "n2y", "n2z"], shownLabel: "\\(n_2\\)", defaultValue: [0, 0, 1], width: 3 },
+  { label: "phi", shownLabel: "\\(\\phi / \\pi\\)", defaultValue: 0.5, width: 3 },
+]
+parameters.forEach(parameter => inputTable.addNumber(parameter));
+const inputButtons = new InputButtons(container);
+const submit = inputButtons.addButton({ label: "submit", shownLabel: "Submit" });
+const randomise = inputButtons.addButton({ label: "randomise", shownLabel: "Randomise" });
+
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
+canvas.setAttribute("style", "width: 100%;");
+container.appendChild(canvas);
 resizeCanvasToDisplaySize(canvas);
 const width = canvas.width;
 const height = canvas.height;
@@ -253,43 +271,26 @@ class PositionOrientation {
     );
   }
 }
-setInput("x1x", -1);
-setInput("x1y", 0);
-setInput("x1z", 0);
-
-setInput("n1x", 0);
-setInput("n1y", 1);
-setInput("n1z", 0);
-
-setInput("x2x", 1);
-setInput("x2y", 0);
-setInput("x2z", 0);
-
-setInput("n2x", 0);
-setInput("n2y", 0);
-setInput("n2z", 1);
-
-setInput("phi", 0.5);
 
 let rafId = null;
 function runSimulation() {
-  const x1x = getInputNumber("x1x", -1);
-  const x1y = getInputNumber("x1y", 0);
-  const x1z = getInputNumber("x1z", 0);
+  const x1x = inputTable.getNumber("x1x");
+  const x1y = inputTable.getNumber("x1y");
+  const x1z = inputTable.getNumber("x1z");
 
-  const n1x = getInputNumber("n1x", 0);
-  const n1y = getInputNumber("n1y", 1);
-  const n1z = getInputNumber("n1z", 0);
+  const n1x = inputTable.getNumber("n1x");
+  const n1y = inputTable.getNumber("n1y");
+  const n1z = inputTable.getNumber("n1z");
 
-  const x2x = getInputNumber("x2x", 1);
-  const x2y = getInputNumber("x2y", 0);
-  const x2z = getInputNumber("x2z", 0);
+  const x2x = inputTable.getNumber("x2x");
+  const x2y = inputTable.getNumber("x2y");
+  const x2z = inputTable.getNumber("x2z");
 
-  const n2x = getInputNumber("n2x", 0);
-  const n2y = getInputNumber("n2y", 0);
-  const n2z = getInputNumber("n2z", 1);
+  const n2x = inputTable.getNumber("n2x");
+  const n2y = inputTable.getNumber("n2y");
+  const n2z = inputTable.getNumber("n2z");
 
-  const phioverpi = getInputNumber("phi", 0.5);
+  const phioverpi = inputTable.getNumber("phi");
   const phi = phioverpi * Math.PI;
 
   const p1 = new PositionOrientation(vec3(x1x, x1y, x1z), NDArray.normalize(vec3(n1x, n1y, n1z)));
@@ -367,23 +368,10 @@ document.addEventListener('keydown', (event) => {
 });
 
 function startRandomSimulation() {
-  setInput("x1x", (2. * (Math.random() - 0.5)).toFixed(2));
-  setInput("x1y", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("x1z", (2. * (Math.random() - 0.5).toFixed(2)));
-
-  setInput("n1x", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("n1y", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("n1z", (2. * (Math.random() - 0.5).toFixed(2)));
-
-  setInput("x2x", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("x2y", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("x2z", (2. * (Math.random() - 0.5).toFixed(2)));
-
-  setInput("n2x", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("n2y", (2. * (Math.random() - 0.5).toFixed(2)));
-  setInput("n2z", (2. * (Math.random() - 0.5).toFixed(2)));
-
-  setInput("phi", (2. * (Math.random() - 0.5).toFixed(2)));
+  const labels = ["x1x", "x1y", "x1z", "n1x", "n1y", "n1z", "x2x", "x2y", "x2z", "n2x", "n2y", "n2z", "phi"]
+  for (let l of labels) {
+    inputTable.setNumber(l, (2. * (Math.random() - 0.5)).toFixed(2));
+  }
 
   if (rafId !== null) {
     cancelAnimationFrame(rafId);

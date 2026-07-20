@@ -17,7 +17,7 @@ const selector = {
 };
 inputTable.addSelector(selector);
 const inputButtons = new InputButtons(container);
-inputButtons.addButton({ label: "submit", shownLabel: "Start" });
+const submit = inputButtons.addButton({ label: "submit", shownLabel: "Start" });
 
 const canvas = document.createElement("canvas");
 canvas.id = "canvas";
@@ -340,5 +340,4 @@ async function startSimulation() {
 }
 
 await runSimulation();
-const submit = document.getElementById("submit");
 submit.addEventListener("click", startSimulation);
