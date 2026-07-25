@@ -1,13 +1,10 @@
 import { InputTable, InputButtons } from "/utils/input.js";
 import { imageFileToArray } from "/utils/imageio.js";
-import { TextureMaker, setupWebGPU, upwind_erosion } from "/utils/webgpu.js";
+import { TextureMaker, setupWebGPU, ComputePipelineMaker, upwind_erosion } from "/utils/webgpu.js";
 
 const container = document.getElementsByClassName("content-container")[0];
 const inputTable = new InputTable(container);
-const parameters = [
-  { label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 },
-]
-parameters.forEach(parameter => inputTable.addNumber(parameter));
+const parameters = inputTable.addNumber({ label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 });
 const selector = {
   label: "colourScheme", shownLabel: "Colour scheme", options: [
     ["whiteBlack", "White-Black"],
@@ -24,77 +21,12 @@ canvas.id = "canvas";
 canvas.setAttribute("style", "width: 100%;");
 container.appendChild(canvas);
 
-const { device: device, context: context, format: format } = await setupWebGPU();
+const { device: device, context: context, format: format } = await setupWebGPU(canvas);
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
 
-function makeComputePipeline() {
-  const computeWGSL = `
-  struct Uniforms {
-    grid: vec2f,
-    maxValue: f32,
-    dt: f32,
-    origin: f32,
-    mazeMax: f32,
-  };
-
-  @group(0) @binding(0) var<uniform> uniforms: Uniforms;
-  @group(0) @binding(1) var src : texture_storage_2d<${texFormat}, read>;
-  @group(0) @binding(2) var dst : texture_storage_2d<${texFormat}, write>;
-  @group(0) @binding(3) var maze: texture_storage_2d<${texFormat}, read>;
-
-  ${upwind_erosion}
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(src);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let x = i32(id.x);
-    let y = i32(id.y);
-
-    let centre = textureLoad(src, vec2<i32>(x, y)).r;
-    let xForward = textureLoad(src, vec2<i32>(clamp(x+1, 0, i32(dims.x) - 1), y)).r;
-    let xBackward = textureLoad(src, vec2<i32>(clamp(x-1, 0, i32(dims.x) - 1), y)).r;
-    let yForward = textureLoad(src, vec2<i32>(x, clamp(y+1, 0, i32(dims.y) - 1))).r;
-    let yBackward = textureLoad(src, vec2<i32>(x, clamp(y-1, 0, i32(dims.y) - 1))).r;
-
-    let dxForward = xForward - centre;
-    let dxBackward = centre - xBackward;
-    let dyForward = yForward - centre;
-    let dyBackward = centre - yBackward;
-
-    let dx = upwind_erosion(dxForward, dxBackward);
-    let dy = upwind_erosion(dyForward, dyBackward);
-
-    let cost = 1. / (1. + uniforms.mazeMax * textureLoad(maze, vec2<i32>(x, y)).r);
-
-    let dWdt = cost - sqrt(dx * dx + dy * dy);
-    var out = 0.;
-    if abs(f32(f32(y) * uniforms.grid.x + f32(x)) - uniforms.origin) > 0.5 {
-      out = centre + uniforms.dt * dWdt;
-    }
-    textureStore(
-      dst,
-      vec2<i32>(x, y),
-      out * vec4f(1)
-    );
-  }
-`;
-
-  return device.createComputePipeline({
-    layout: "auto",
-    compute: {
-      module: device.createShaderModule({
-        code: computeWGSL,
-      }),
-      entryPoint: "main",
-    },
-  });
-}
+const computePipelineMaker = new ComputePipelineMaker(device, texFormat, WORKGROUP);
 
 function makeRenderPipeline(colourScheme) {
   let fragmentColouring = ``;
@@ -251,21 +183,9 @@ async function runSimulation() {
   );
 
   // Compute pipeline and bind groups.
-  const computePipeline = makeComputePipeline();
-
-  function computeBind(src, dst, maze) {
-    return device.createBindGroup({
-      layout: computePipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: src.createView() },
-        { binding: 2, resource: dst.createView() },
-        { binding: 3, resource: maze.createView() },
-      ],
-    });
-  }
-  let computeBindA = computeBind(texA, texB, texMaze);
-  let computeBindB = computeBind(texB, texA, texMaze);
+  const computePipeline = computePipelineMaker.makeEikonalPipeline();
+  let computeBindA = computePipelineMaker.makeEikonalBindGroup(computePipeline, uniformBuffer, texA, texB, texMaze);
+  let computeBindB = computePipelineMaker.makeEikonalBindGroup(computePipeline, uniformBuffer, texB, texA, texMaze);
 
   // Render pipeline and bind groups.
   const renderPipeline = makeRenderPipeline(colourScheme);

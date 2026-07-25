@@ -217,7 +217,7 @@ export class InputTable {
     }
 
     remove(label) {
-        const entry = document.getElementById(label);
+        const entry = document.getElementById(label).parentElement;
         entry.remove();
     }
 }
@@ -254,8 +254,8 @@ export class InputButtons {
         return document.getElementById(label)
     }
 
-    removeButton(label) {
-        const button = document.getElementById(label);
+    remove(label) {
+        const button = document.getElementById(label).parentElement;
         button.remove();
     }
 }

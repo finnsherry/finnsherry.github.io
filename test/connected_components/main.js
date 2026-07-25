@@ -1,8 +1,26 @@
-import { getInputNumber, setInput } from "/utils/input.js";
+import { InputTable, InputButtons } from "/utils/input.js";
 import { imageFileToArray } from "/utils/imageio.js";
 import { TextureMaker, ComputePipelineMaker, setupWebGPU, renderImage, passMaker } from "/utils/webgpu.js";
 
-const { device: device, canvas: canvas, context: context, format: format } = await setupWebGPU();
+const container = document.getElementsByClassName("content-container")[0];
+const inputTable = new InputTable(container);
+const parameters = [
+  { label: "delta", shownLabel: "\\(\\delta\\)", defaultValue: 10 },
+  { label: "threshold", shownLabel: "Threshold", defaultValue: 0.5 },
+]
+
+parameters.forEach(parameter => inputTable.addNumber(parameter));
+const inputButtons = new InputButtons(container);
+let binariseButton;
+let dilateButton;
+let connectButton;
+
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
+canvas.setAttribute("style", "width: 100%;");
+container.appendChild(canvas);
+
+const { device: device, context: context, format: format } = await setupWebGPU(canvas);
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
@@ -13,10 +31,8 @@ function roundUpToMultiple(number, multiplier) {
   return Math.ceil(number / multiplier) * multiplier;
 }
 
-setInput("delta", 10);
-setInput("threshold", 0.5);
-const delta = getInputNumber("delta", 10);
-const threshold = getInputNumber("threshold", 0.5);
+const delta = inputTable.getNumber("delta");
+const threshold = inputTable.getNumber("threshold");
 
 const { array: intialImage, width: gridWidth, height: gridHeight } = await imageFileToArray("cross.png");
 canvas.width = gridWidth;
@@ -37,12 +53,9 @@ device.queue.writeTexture(
 let ubin = textureMaker.createStateTexture();
 let udil = textureMaker.createStateTexture();
 
+binariseButton = inputButtons.addButton({ label: "binarise", shownLabel: "Binarise" });
 async function binarise() {
   console.log("binarise!");
-  if (binarised) {
-    console.log("Already binarised!");
-    return;
-  }
   const binarisePipeline = computePipelineMaker.makeBinarisationPipeline(threshold);
   const binariseBind = computePipelineMaker.makeBinarisationBindGroup(binarisePipeline, u0, ubin);
 
@@ -55,18 +68,13 @@ async function binarise() {
 
   await renderImage(ubin, device, context, format);
   binarised = true;
+  inputButtons.remove("binarise");
+  dilateButton = inputButtons.addButton({ label: "dilate", shownLabel: "Dilate" });
+  dilateButton.addEventListener("click", dilate);
 }
 
 async function dilate() {
   console.log("dilate!");
-  if (!binarised) {
-    console.log("Can't dilate without first binarising!");
-    return;
-  }
-  if (dilated) {
-    console.log("Already dilated!");
-    return;
-  }
   const dtOpt = 1 / Math.sqrt(2);
   const n = Math.ceil(delta / dtOpt);
   const dt = delta / n;
@@ -84,18 +92,17 @@ async function dilate() {
 
   await renderImage(udil, device, context, format);
   dilated = true;
+  inputButtons.remove("dilate");
+  connectButton = inputButtons.addButton({ label: "connect", shownLabel: "Connect" });
+  connectButton.addEventListener("click", connect);
 }
 
 async function connect() {
-  console.log("connect!");
-  if (!dilated) {
-    console.log("Can't connect without first dilating!");
-    return;
-  }
   if (connected) {
     console.log("Already connected!");
     return;
   }
+  console.log("connect!");
   const dtOpt = 1 / Math.sqrt(2);
   const n = Math.ceil(delta / dtOpt);
   const dt = delta / n;
@@ -126,11 +133,4 @@ let binarised = false;
 let dilated = false;
 let connected = false;
 
-const binariseButton = document.getElementById("binarise");
 binariseButton.addEventListener("click", binarise);
-
-const dilateButton = document.getElementById("dilate");
-dilateButton.addEventListener("click", dilate);
-
-const connectButton = document.getElementById("connect");
-connectButton.addEventListener("click", connect);

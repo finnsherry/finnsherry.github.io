@@ -1,5 +1,5 @@
 import { InputTable, InputButtons } from "/utils/input.js";
-import { TextureMaker, setupWebGPU } from "/utils/webgpu.js";
+import { TextureMaker, setupWebGPU, ComputePipelineMaker } from "/utils/webgpu.js";
 
 const container = document.getElementsByClassName("content-container")[0];
 const inputTable = new InputTable(container);
@@ -18,64 +18,12 @@ canvas.id = "canvas";
 canvas.setAttribute("style", "width: 100%;");
 container.appendChild(canvas);
 
-const { device: device, context: context, format: format } = await setupWebGPU();
+const { device: device, context: context, format: format } = await setupWebGPU(canvas);
 
 const WORKGROUP = 8;
 const texFormat = "rgba8unorm";
 
-const computeWGSL = `
-  @group(0) @binding(0) var src : texture_storage_2d<rgba8unorm, read>;
-  @group(0) @binding(1) var dst : texture_storage_2d<rgba8unorm, write>;
-
-  @compute @workgroup_size(${WORKGROUP}, ${WORKGROUP})
-  fn main(@builtin(global_invocation_id) id : vec3<u32>) {
-    let dims = textureDimensions(src);
-    if (id.x >= dims.x || id.y >= dims.y) {
-      return;
-    }
-
-    let x = i32(id.x);
-    let y = i32(id.y);
-    var n = 0;
-
-    for (var dy = -1; dy <= 1; dy++) {
-      for (var dx = -1; dx <= 1; dx++) {
-        if (dx == 0 && dy == 0) { continue; }
-        let nx = (x + dx + i32(dims.x)) % i32(dims.x);
-        let ny = (y + dy + i32(dims.y)) % i32(dims.y);
-        if (textureLoad(src, vec2<i32>(nx, ny)).r > 0.5) {
-          n++;
-        }
-      }
-    }
-
-    let alive = textureLoad(src, vec2<i32>(x, y)).r > 0.5;
-
-    let outAlive =
-      (alive && (n == 2 || n == 3)) ||
-      (!alive && n == 3);
-
-    textureStore(
-      dst,
-      vec2<i32>(x, y),
-      select(
-        vec4<f32>(0.0, 0.0, 0.0, 1.0),
-        vec4<f32>(1.0, 1.0, 1.0, 1.0),
-        outAlive
-      )
-    );
-  }
-`;
-
-const computePipeline = device.createComputePipeline({
-  layout: "auto",
-  compute: {
-    module: device.createShaderModule({
-      code: computeWGSL,
-    }),
-    entryPoint: "main",
-  },
-});
+const computePipelineMaker = new ComputePipelineMaker(device, texFormat, WORKGROUP);
 
 const renderWGSL = `
   struct Uniforms {
@@ -122,16 +70,6 @@ const renderPipeline = device.createRenderPipeline({
   },
   primitive: { topology: "triangle-list" },
 });
-
-function computeBind(src, dst) {
-  return device.createBindGroup({
-    layout: computePipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: src.createView() },
-      { binding: 1, resource: dst.createView() },
-    ],
-  });
-}
 
 function runSimulation() {
   const gridHeight = inputTable.getNumber("gridHeight", true);
@@ -187,8 +125,9 @@ function runSimulation() {
     [gridWidth, gridHeight]
   );
 
-  let computeBindA = computeBind(texA, texB);
-  let computeBindB = computeBind(texB, texA);
+  const computePipeline = computePipelineMaker.makeConwayPipeline();
+  let computeBindA = computePipelineMaker.makeConwayBindGroup(computePipeline, texA, texB);
+  let computeBindB = computePipelineMaker.makeConwayBindGroup(computePipeline, texB, texA);
 
   let renderBindA = renderBind(texA);
   let renderBindB = renderBind(texB);

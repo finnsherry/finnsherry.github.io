@@ -260,6 +260,153 @@ export class ComputePipelineMaker {
         });
     }
 
+    // Conway's Game of Life
+    makeConwayPipeline() {
+        const computeWGSL = `
+        @group(0) @binding(0) var src : texture_storage_2d<${this.texFormat}, read>;
+        @group(0) @binding(1) var dst : texture_storage_2d<${this.texFormat}, write>;
+
+        @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+        fn main(@builtin(global_invocation_id) id : vec3<u32>) {
+            let dims = textureDimensions(src);
+            if (id.x >= dims.x || id.y >= dims.y) {
+            return;
+            }
+
+            let x = i32(id.x);
+            let y = i32(id.y);
+            var n = 0;
+
+            for (var dy = -1; dy <= 1; dy++) {
+            for (var dx = -1; dx <= 1; dx++) {
+                if (dx == 0 && dy == 0) { continue; }
+                let nx = (x + dx + i32(dims.x)) % i32(dims.x);
+                let ny = (y + dy + i32(dims.y)) % i32(dims.y);
+                if (textureLoad(src, vec2<i32>(nx, ny)).r > 0.5) {
+                n++;
+                }
+            }
+            }
+
+            let alive = textureLoad(src, vec2<i32>(x, y)).r > 0.5;
+
+            let outAlive =
+            (alive && (n == 2 || n == 3)) ||
+            (!alive && n == 3);
+
+            textureStore(
+            dst,
+            vec2<i32>(x, y),
+            select(
+                vec4<f32>(0.0, 0.0, 0.0, 1.0),
+                vec4<f32>(1.0, 1.0, 1.0, 1.0),
+                outAlive
+            )
+            );
+        }
+        `;
+
+        return this.device.createComputePipeline({
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "main",
+            },
+        });
+    }
+
+    makeConwayBindGroup(pipeline, u_in, u_out) {
+        return this.device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: u_in.createView() },
+                { binding: 1, resource: u_out.createView() },
+            ],
+        });
+    }
+
+    // Eikonal PDE
+    makeEikonalPipeline() {
+        const computeWGSL = `
+        struct Uniforms {
+            grid: vec2f,
+            maxValue: f32,
+            dt: f32,
+            origin: f32,
+            mazeMax: f32,
+        };
+
+        @group(0) @binding(0) var<uniform> uniforms: Uniforms;
+        @group(0) @binding(1) var src : texture_storage_2d<${this.texFormat}, read>;
+        @group(0) @binding(2) var dst : texture_storage_2d<${this.texFormat}, write>;
+        @group(0) @binding(3) var maze: texture_storage_2d<${this.texFormat}, read>;
+
+        ${upwind_erosion}
+
+        @compute @workgroup_size(${this.workgroupSize}, ${this.workgroupSize})
+        fn main(@builtin(global_invocation_id) id : vec3<u32>) {
+            let dims = textureDimensions(src);
+            if (id.x >= dims.x || id.y >= dims.y) {
+            return;
+            }
+
+            let x = i32(id.x);
+            let y = i32(id.y);
+
+            let centre = textureLoad(src, vec2<i32>(x, y)).r;
+            let xForward = textureLoad(src, vec2<i32>(clamp(x+1, 0, i32(dims.x) - 1), y)).r;
+            let xBackward = textureLoad(src, vec2<i32>(clamp(x-1, 0, i32(dims.x) - 1), y)).r;
+            let yForward = textureLoad(src, vec2<i32>(x, clamp(y+1, 0, i32(dims.y) - 1))).r;
+            let yBackward = textureLoad(src, vec2<i32>(x, clamp(y-1, 0, i32(dims.y) - 1))).r;
+
+            let dxForward = xForward - centre;
+            let dxBackward = centre - xBackward;
+            let dyForward = yForward - centre;
+            let dyBackward = centre - yBackward;
+
+            let dx = upwind_erosion(dxForward, dxBackward);
+            let dy = upwind_erosion(dyForward, dyBackward);
+
+            let cost = 1. / (1. + uniforms.mazeMax * textureLoad(maze, vec2<i32>(x, y)).r);
+
+            let dWdt = cost - sqrt(dx * dx + dy * dy);
+            var out = 0.;
+            if abs(f32(f32(y) * uniforms.grid.x + f32(x)) - uniforms.origin) > 0.5 {
+            out = centre + uniforms.dt * dWdt;
+            }
+            textureStore(
+            dst,
+            vec2<i32>(x, y),
+            out * vec4f(1)
+            );
+        }
+        `;
+
+        return this.device.createComputePipeline({
+            layout: "auto",
+            compute: {
+                module: this.device.createShaderModule({
+                    code: computeWGSL,
+                }),
+                entryPoint: "main",
+            },
+        });
+    }
+
+    makeEikonalBindGroup(pipeline, uniforms, u_in, u_out, maze) {
+        return this.device.createBindGroup({
+            layout: pipeline.getBindGroupLayout(0),
+            entries: [
+                { binding: 0, resource: { buffer: uniforms } },
+                { binding: 1, resource: u_in.createView() },
+                { binding: 2, resource: u_out.createView() },
+                { binding: 3, resource: maze.createView() },
+            ],
+        });
+    }
+
     // Diffusion-shock
     makeConvolutionPipelines() {
         let swizzle
@@ -638,12 +785,10 @@ export async function renderImage(tex, device, context, format) {
     device.queue.submit([encoder.finish()]);
 }
 
-export async function setupWebGPU() {
+export async function setupWebGPU(canvas) {
     const adapter = await navigator.gpu?.requestAdapter();
     const device = await adapter?.requestDevice();
     if (!device) throw new Error("WebGPU not supported");
-
-    const canvas = document.getElementById("canvas");
 
     const context = canvas.getContext("webgpu");
     const format = navigator.gpu.getPreferredCanvasFormat();

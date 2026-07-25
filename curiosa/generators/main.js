@@ -5,7 +5,6 @@ import { InputState, InputTable, InputButtons } from "/utils/input.js";
 
 const container = document.getElementsByClassName("content-container")[0];
 const inputTable = new InputTable(container);
-
 const parameters = [
   { label: ["x1x", "x1y", "x1z"], shownLabel: "\\(x_1\\)", defaultValue: [-1, 0, 0], width: 3 },
   { label: ["n1x", "n1y", "n1z"], shownLabel: "\\(n_1\\)", defaultValue: [0, 1, 0], width: 3 },

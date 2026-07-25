@@ -20,7 +20,7 @@ canvas.id = "canvas";
 canvas.setAttribute("style", "width: 100%;");
 container.appendChild(canvas);
 
-const { device: device, context: context, format: format } = await setupWebGPU();
+const { device: device, context: context, format: format } = await setupWebGPU(canvas);
 
 const WORKGROUP = 8;
 const texFormat = "r32float";
