@@ -66,38 +66,31 @@
         <div class="content-container">
             <h1>Eikonal PDE</h1>
             <p>
-                <img src="riemannian_ball.png" alt="Isosurfaces of a Riemannian distance on position-orientation space."
-                    class="inline-image" style="width: 18em;">
-                In "Crossing-Preserving Geodesic Tracking on Spherical Images" (<a
-                    href="https://arxiv.org/abs/2504.03388" target="_blank">🔓arXiv</a>, <a
-                    href="https://github.com/finnsherry/IterativeEikonal" target="_blank">🧑‍💻code</a>), we model blood
-                vessels as geodesics of Riemannian distances on position-orientation spaces. It turns out that these
-                distances are the (viscosity) solutions of corresponding eikonal PDEs. Here I go over how we can solve
-                the eikonal PDE practically to recover the distance map. I also wrote some <a
-                    href="https://www.shadertoy.com/view/wXdXW7">shaders
-                    (Shadertoy)</a> so we can see it in practice. A preliminary WebGPU implementation is available at
-                the bottom of the page.
+                <img src="riemannian_ball.png" alt="Isosurfaces of a Riemannian distance on position-orientation space." class="inline-image" style="width: 18em;">
+                In "Crossing-Preserving Geodesic Tracking on Spherical Images" (<a href="https://arxiv.org/abs/2504.03388" target="_blank">🔓arXiv</a>,
+                <a href="https://github.com/finnsherry/IterativeEikonal" target="_blank">🧑‍💻code</a>),
+                we model blood vessels as geodesics of Riemannian distances on position-orientation spaces.
+                It turns out that these distances are the (viscosity) solutions of corresponding eikonal PDEs.
+                Here I go over how we can solve the eikonal PDE practically to recover the distance map.
+                I also wrote some <a href="https://www.shadertoy.com/view/wXdXW7">shaders (Shadertoy)</a> so we can see it in practice.
+                A preliminary WebGPU implementation is available at the bottom of the page.
             </p>
             <p>
-                By definition, a Riemannian manifold \((\mathcal{M}, \mathcal{G})\) has a Riemannian metric tensor field
-                \(\mathcal{G}\)
-                (or Riemannian metric for short), which in essence is an inner product defined on the tangent space at
-                each point. The Riemannian metric locally defines lengths and angles. It can also be used to define
-                distances on the manifold via
+                By definition, a Riemannian manifold \((\mathcal{M}, \mathcal{G})\) has a Riemannian metric tensor field \(\mathcal{G}\) (or Riemannian metric for short),
+                which in essence is an inner product defined on the tangent space at each point.
+                The Riemannian metric locally defines lengths and angles. It can also be used to define distances on the manifold via
                 \[
                 d(p, q) := \inf_{\gamma \in \Gamma_p^q} L(\gamma) := \inf_{\gamma \in \Gamma_p^q} \int_0^1
                 \sqrt{\mathcal{G}_{\gamma(t)}(\dot{\gamma}(t),
                 \dot{\gamma}(t))} d t,
                 \]
-                where \(\Gamma_p^q := \{\gamma: \mathbb{R} \to \mathcal{M} \,|\, \gamma(0) = p, \gamma(1) = q, \gamma
-                \textrm{ sufficiently regular}\}\), and \(L\) is the length functional. The geodesics are then the
-                curves that minimise \(L\). The figure shows the isosurfaces of a distance map on position-orientation
-                space. We designed the Riemannian metric such that the distance between points is small when they are
-                both spatially close and aligned.
+                where \(\Gamma_p^q := \{\gamma: \mathbb{R} \to \mathcal{M} \,|\, \gamma(0) = p, \gamma(1) = q, \gamma \textrm{ sufficiently regular}\}\), and \(L\) is the length functional.
+                The geodesics are then the curves that minimise \(L\). The figure shows the isosurfaces of a distance map on position-orientation space.
+                We designed the Riemannian metric such that the distance between points is small when they are both spatially close and aligned.
             </p>
             <p>
-                Riemannian metrics also allow us to properly define the notion of gradient on manifolds: the gradient is
-                the Riesz representative of the differential. This means that
+                Riemannian metrics also allow us to properly define the notion of gradient on manifolds: the gradient is the Riesz representative of the differential.
+                This means that
                 \[
                 \mathcal{G}(\nabla f, X) := X f
                 \]
@@ -108,12 +101,10 @@
                 W(p_0) = 0,
                 \end{cases}
                 \]
-                and the distance map \(W := d(p_0, \cdot)\) is the solution to the eikonal PDE. Hence, solving the
-                eikonal PDE gives us the distance map.
+                and the distance map \(W := d(p_0, \cdot)\) is the solution to the eikonal PDE. Hence, solving the eikonal PDE gives us the distance map.
             </p>
             <p>
-                However, the eikonal PDE is hard to solve directly, since it is a boundary value problem. We therefore
-                instead solve an iterative relaxation:
+                However, the eikonal PDE is hard to solve directly, since it is a boundary value problem. We therefore instead solve an iterative relaxation:
                 \[
                 \begin{cases}
                 \frac{\partial}{\partial r} W_{n + 1}^\epsilon(p, r) = 1 - \vert \nabla_p W \vert, \textrm{ on }
@@ -122,17 +113,15 @@
                 W_{n + 1}^\epsilon(p_0, r) = 0.
                 \end{cases}
                 \]
-                The parameter \(\epsilon\) controls the accuracy, while \(n\) is the iteration variable, and we have the
-                following convergence result:
+                The parameter \(\epsilon\) controls the accuracy, while \(n\) is the iteration variable, and we have the following convergence result:
                 \[
                 W(p) = \lim_{\epsilon \downarrow 0} \lim_{n \to \infty} W_{n + 1}(p, 0).
                 \]
                 Notably, it takes more iterations to converge as \(\epsilon\) is decreased.
             </p>
             <p>
-                I have created a shader on <a href="https://www.shadertoy.com/view/wXdXW7">Shadertoy</a> that computes a
-                distance map on \(\mathbb{R}^2\) in this way. The Riemannian metric is simply the Euclidean metric,
-                scaled pointwise by a cost function, similar to how we defined the metrics in our paper.
+                I have created a shader on <a href="https://www.shadertoy.com/view/wXdXW7">Shadertoy</a> that computes a distance map on \(\mathbb{R}^2\) in this way.
+                The Riemannian metric is simply the Euclidean metric, scaled pointwise by a cost function, similar to how we defined the metrics in our paper.
             </p>
             <p>
                 Here is a WebGPU implementation of the distance map computation:
