@@ -71,7 +71,6 @@
 
             const root = document.documentElement;
             const storedScheme = localStorage.getItem('scheme');
-            console.log(storedScheme)
             const colourButton = document.getElementById("colourbutton");
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const scheme = storedScheme || (prefersDark ? 'dark' : 'light');

@@ -289,7 +289,7 @@ export class InputRanges {
         range.min = min;
         range.max = max;
         range.step = step;
-        range.value = defaultStep*step;
+        range.value = min + defaultStep*step;
         if (width) {
             range.size = width;
         }
@@ -302,7 +302,6 @@ export class InputRanges {
         tdShownValue.append(htmlShownValue);
 
         range.addEventListener('input', () => {
-            console.log("change!");
             htmlShownValue.textContent = Number(range.value).toFixed(3);
         })
 

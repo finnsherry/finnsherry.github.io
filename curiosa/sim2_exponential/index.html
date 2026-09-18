@@ -41,7 +41,6 @@
 
             const root = document.documentElement;
             const storedScheme = localStorage.getItem('scheme');
-            console.log(storedScheme)
             const colourButton = document.getElementById("colourbutton");
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
@@ -138,8 +137,8 @@
                 Hence, the spatial projection is the logarithmic spiral \(t \mapsto (e^{t c^A} \cos(t), e^{t c^A} \sin(t))\).
                 To see this, define the radius \(r(t) \coloneqq \Vert \gamma(t) y \Vert^2 = e^{t c^A}\);
                 it follows that \(r(t + \pi/2) / r(t) = e^{\frac{\pi}{2} c^A}\), which is constant for all \(t \in \mathbb{R}\).
-                If we now choose \(c^A\) such that \(e^{\frac{\pi}{2} c^A} = \varphi\), i.e. \(c^A = \frac{2}{\pi} \log(\phi)\),
-                with \(\phi \coloneqq \frac{1 + \sqrt{5}}{2}\) the golden ratio, then this curve is a so-called golden spiral.
+                Choosing \(c^A\) such that \(e^{\frac{\pi}{2} c^A} = \varphi\), i.e. \(c^A = \frac{2}{\pi} \log(\phi)\),
+                with \(\phi \coloneqq \frac{1 + \sqrt{5}}{2}\) the golden ratio, this curve becomes a so-called golden spiral.
             </p>
          </div>
     </main>

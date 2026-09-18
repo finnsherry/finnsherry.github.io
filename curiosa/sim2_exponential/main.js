@@ -2,12 +2,11 @@ import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
 import { InputRanges } from "/utils/input.js";
 
 const goldenRatio = (1 + Math.sqrt(5))/2;
-const cAGoldenRatio = (2 / Math.PI) * Math.log(goldenRatio)
-console.log(cAGoldenRatio);
+const cAGoldenRatio = (2 / Math.PI) * Math.log(goldenRatio);
 
 const container = document.getElementsByClassName("content-container")[0];
 const inputRange = new InputRanges(container);
-const cARange = inputRange.addRange({ label: "cA", shownLabel: "\\(c^A\\)", defaultValue: cAGoldenRatio, min: 0, max: 1 });
+const cARange = inputRange.addRange({ label: "cA", shownLabel: "\\(c^A\\)", defaultValue: cAGoldenRatio, min: -1, max: 1 });
 
 const canvas = document.createElement("canvas");
 canvas.id = "canvas";
@@ -39,24 +38,35 @@ function project(x, y) {
 
 function plotSpiral() {
   const cA = inputRange.getValue("cA");
+  const rSmall = 0.9;
+  const rBig = 1.1;
 
-  function spiralPoint(t) {
-    return [ Math.exp(t * cA) * Math.cos(t), Math.exp(t * cA) * Math.sin(t) ]
+  function spiralPoint(t, r) {
+    return [ r * Math.exp(t * cA) * Math.cos(t), r * Math.exp(t * cA) * Math.sin(t) ]
   }
   ctx.fillStyle = white;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.lineWidth = lineWidth;
-  ctx.lineCap = "round";
   ctx.strokeStyle = royalBlue;
+  ctx.fillStyle = royalBlue;
   ctx.beginPath();
-  let [ x, y ] = project(...spiralPoint(tStart, cA));
+  let [ x, y ] = project(...spiralPoint(tStart, rSmall));
   ctx.moveTo(x, y);
   for (let k = 1; k < nSamples; k++) {
     let t = tStart + k * dt;
-    let [ x, y ] = project(...spiralPoint(t, cA));
+    [ x, y ] = project(...spiralPoint(t, rSmall));
     ctx.lineTo(x, y);
   }
+  [ x, y ] = project(...spiralPoint(tEnd, rBig));
+  ctx.lineTo(x, y);
+  for (let k = 1; k < nSamples; k++) {
+    let t = tEnd - k * dt;
+    [ x, y ] = project(...spiralPoint(t, rBig));
+    ctx.lineTo(x, y);
+  }
+  ctx.closePath();
   ctx.stroke();
+  ctx.fill();
 }
 
 plotSpiral();
