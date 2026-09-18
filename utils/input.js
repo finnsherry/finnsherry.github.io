@@ -227,7 +227,6 @@ export class InputButtons {
     constructor(container) {
         this.container = container;
         const table = document.createElement("table");
-        table.classList.add('form');
         this.container.appendChild(table);
         this.table = table;
 
@@ -257,5 +256,73 @@ export class InputButtons {
     remove(label) {
         const button = document.getElementById(label).parentElement;
         button.remove();
+    }
+}
+
+
+export class InputRanges {
+    constructor(container) {
+        this.container = container;
+        const table = document.createElement("table");
+        this.container.appendChild(table);
+        this.table = table;
+    }
+
+    addRange({ label, shownLabel, defaultValue, min, max, stepCount = null, width = null }) {
+        const tr = document.createElement("tr");
+        const tdShownLabel = document.createElement("td");
+        const htmlShownLabel = document.createElement("label");
+        htmlShownLabel.textContent = shownLabel + ":";
+        tdShownLabel.append(htmlShownLabel);
+        tr.appendChild(tdShownLabel);
+
+        const tdSlider = document.createElement("td");
+        const range = document.createElement("input");
+        if (!stepCount) {
+            stepCount = 100;
+        }
+        const step = (max - min) / stepCount;
+        const defaultStep = Math.round((defaultValue - min) / (max - min) * stepCount);
+        range.type = "range";
+        range.id = label;
+        range.name = shownLabel;
+        range.min = min;
+        range.max = max;
+        range.step = step;
+        range.value = defaultStep*step;
+        if (width) {
+            range.size = width;
+        }
+        tdSlider.append(range);
+        tr.appendChild(tdSlider);
+
+        const tdShownValue = document.createElement("td");
+        let htmlShownValue = document.createElement("label");
+        htmlShownValue.textContent = defaultValue.toFixed(3);
+        tdShownValue.append(htmlShownValue);
+
+        range.addEventListener('input', () => {
+            console.log("change!");
+            htmlShownValue.textContent = Number(range.value).toFixed(3);
+        })
+
+        tr.appendChild(tdShownValue);
+        this.table.appendChild(tr);
+        return range
+    }
+
+    getValue(label) {
+        const entry = document.getElementById(label);
+        let value = entry["value"];
+        return parseFloat(value);
+    }
+
+    getRange(label) {
+        return document.getElementById(label)
+    }
+
+    remove(label) {
+        const range = document.getElementById(label).parentElement;
+        range.remove();
     }
 }

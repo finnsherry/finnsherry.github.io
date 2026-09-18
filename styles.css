@@ -288,3 +288,7 @@ mjx-container[display="true"] {
     overflow-y: hidden;
     min-width: 100% !important;
 }
+
+input[type="range"] {
+    accent-color: var(--link-colour);
+}

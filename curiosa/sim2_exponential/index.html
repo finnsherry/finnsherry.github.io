@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curiosa: Exponential Curves on the Similarity Group</title>
+    <link rel="icon" href="/content/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+    <script type="module" src='main.js' defer></script>
+    <link rel="stylesheet" href="/utils/katex/katex.min.css">
+    <script defer src="/utils/katex/katex.min.js"></script>
+    <script defer src="/utils/katex/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+</head>
+
+<body>
+    <header>
+        <div id="nav">
+            <a class="navlink" href="/">Home</a>
+            <a class="navlink" href="/publications">Publications</a>
+            <!-- <a class="navlink" href="/teaching">Teaching</a> -->
+            <a class="navlink" href="/curiosa">Curiosa</a>
+        </div>
+        <a id="home" href="/">Finn Sherry</a>
+        <button id="colourbutton">
+            🌙
+        </button>
+        <button id="navbutton" onclick="toggleNav()">
+            •••
+        </button>
+        <script>
+            function toggleNav() {
+                document.getElementById("nav").classList.toggle('expand')
+            }
+
+            const root = document.documentElement;
+            const storedScheme = localStorage.getItem('scheme');
+            console.log(storedScheme)
+            const colourButton = document.getElementById("colourbutton");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const scheme = storedScheme || (prefersDark ? 'dark' : 'light');
+
+            applyScheme(scheme);
+
+            colourButton.addEventListener("click", () => {
+                const current = root.dataset.scheme === 'dark' ? 'dark' : 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                applyScheme(next);
+                localStorage.setItem('scheme', next);
+            });
+
+            function applyScheme(scheme) {
+                root.dataset.scheme = scheme
+                colourButton.textContent = scheme === "dark" ? "☀️" : "🌙";
+            }
+        </script>
+    </header>
+
+    <main>
+        <div class="content-container">
+            <h1>Exponential Curves on the Similarity Group</h1>
+            <p>
+                \(\operatorname{SIM}(2)\) is the similarity group on \(\mathbb{R}^2\) consists of transformations which preserve similarity and orientation:
+                if you apply a transformation in \(\operatorname{SIM}(2)\) to a triangle, you get a similar triangle (equal angles) in the same orientation.
+                We can see that \(\operatorname{SIM}(2) \cong \mathbb{R}^2 \rtimes (\operatorname{SO}(2) \times \mathbb{R}_{> 0})\):
+                orientation-preserving similarity transformations are precisely translations, rotations, and isotropic scalings.
+                Because of this, we may denote elements in SIM(2) by a tuple of a translation, rotation, and scaling 
+                \[
+                (x, R, a) \in \mathbb{R}^2 \times \operatorname{SO}(2) \times \mathbb{R}_{> 0}.
+                \]
+                The \(\operatorname{SIM}(2)\) group product is however not a direct product of the group products on \(\mathbb{R}^2, \operatorname{SO}(2), \mathbb{R}_{> 0}\) (this is the meaning \(\rtimes\)), instead:
+                \[
+                (x_1, R_1, a_1) (x_2, R_2, a_2) \coloneqq (x_1 + a_1 R_1 x_2, R_1 R_2, a_1 a_2).
+                \]
+                Equivalently, we can work with the following matrix representation of \(\operatorname{SIM}(2)\):
+                \[
+                (x, R, a) \leftrightarrow \begin{pmatrix} a R & x \\ 0 & 1 \end{pmatrix}.
+                \]
+                One can confirm that the matrix product behaves like the \(\operatorname{SIM}(2)\) group product for these matrices.
+                It is natural to let \(\operatorname{SIM}(2)\) act on \(\mathbb{R}^2\):
+                the obvious action is
+                \[
+                (x, R, a) y \coloneqq x + a R y,
+                \]
+                equivalently written with homogeneous coordinates as 
+                \[
+                \begin{pmatrix} a R & x \\ 0 & 1 \end{pmatrix} \begin{pmatrix} y \\ 1 \end{pmatrix} \coloneqq \begin{pmatrix} x + a R y \end{pmatrix}.
+                \]
+                Finally, since \(\operatorname{SO}(2) \cong S^1\) (as smooth manifolds), we can replace a rotation \(R\) by its angle \(\theta\).
+            </p>
+            <p>
+                Exponential curves can be thought of as the natural generalisations of straight lines to Lie groups.
+                We have already see them before, e.g. in "<a href="/curiosa/generators/">Generators for Pairs of Position-Orientations</a>".
+                Spatial projections of \(\operatorname{SIM}(2)\), exponential curves, i.e. \(t \mapsto \gamma(t) y\) for some exponential curve \(\gamma\), are nice.
+                We can compute the spatial projection using the fact that the matrix representation maps the Lie group exponential to the matrix exponential.
+            </p>
+            <p> 
+                In particular, we consider the exponential curve generated by some infinitesimal scaling and rotation. 
+                These generators are given by 
+                \[
+                \begin{aligned}
+                A & \coloneqq \left. \partial_t \begin{pmatrix}
+                    (a + t) \cos(\theta) & -(a + t) \sin(\theta) & x \\
+                    (a + t) \sin(\theta) & (a + t) \cos(\theta) & y \\
+                    0 & 0 & 1
+                \end{pmatrix} \right|_{(x, \theta, a) = (0, 0, 1)} = \begin{pmatrix}
+                    1 & 0 & 0 \\
+                    0 & 1 & 0 \\
+                    0 & 0 & 0
+                \end{pmatrix}, \textrm{ and} \\
+                \Theta & \coloneqq \left. \partial_t \begin{pmatrix}
+                    a \cos(\theta + t) & -a \sin(\theta + t) & x \\
+                    a \sin(\theta + t) & a \cos(\theta + t) & y \\
+                    0 & 0 & 1
+                \end{pmatrix} \right|_{(x, \theta, a) = (0, 0, 1)} = \begin{pmatrix}
+                    0 & -1 & 0 \\
+                    1 & 0 & 0 \\
+                    0 & 0 & 0
+                \end{pmatrix}.
+                \end{aligned}
+                \]
+                It turns out that \(\lambda (c^A A + c^\Theta \Theta)\) generates the same exponential curve as \(c^A A + c^\Theta \Theta\) (up to reparametrisation).
+                We therefore consider the generator \(\omega \coloneqq c^A A + \Theta\) and corresponding exponential curve \(\gamma(t) \coloneqq \exp(t \omega)\). 
+                We project spatially using the reference vector \(y = (1, 0) \in \mathbb{R}^2\):
+                \[
+                \gamma(t) y = \exp(t \omega) y = \begin{pmatrix}
+                e^{t c^A} \cos(t) & -e^{t c^A} \sin(t) & 0 \\
+                e^{t c^A} \sin(t) & e^{t c^A} \cos(t) & 0 \\
+                0 & 0 & 1
+                \end{pmatrix} \begin{pmatrix} 1 \\ 0 \\ 1 \end{pmatrix} = \begin{pmatrix} e^{t c^A} \cos(t) \\ e^{t c^A} \sin(t) \\ 1 \end{pmatrix}.
+                \]
+                Hence, the spatial projection is the logarithmic spiral \(t \mapsto (e^{t c^A} \cos(t), e^{t c^A} \sin(t))\).
+                To see this, define the radius \(r(t) \coloneqq \Vert \gamma(t) y \Vert^2 = e^{t c^A}\);
+                it follows that \(r(t + \pi/2) / r(t) = e^{\frac{\pi}{2} c^A}\), which is constant for all \(t \in \mathbb{R}\).
+                If we now choose \(c^A\) such that \(e^{\frac{\pi}{2} c^A} = \varphi\), i.e. \(c^A = \frac{2}{\pi} \log(\phi)\),
+                with \(\phi \coloneqq \frac{1 + \sqrt{5}}{2}\) the golden ratio, then this curve is a so-called golden spiral.
+            </p>
+         </div>
+    </main>
+</body>
+
+</html>
