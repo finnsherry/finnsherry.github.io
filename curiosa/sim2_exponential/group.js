@@ -47,7 +47,7 @@ function clearCanvas() {
 function project([x, y]) {
   return [
     width / 2 + x * minRadius,
-    height / 2 + y * minRadius
+    height / 2 - y * minRadius
   ]
 }
 
@@ -81,7 +81,7 @@ function addPoint(e) {
   }
   const rect = canvas.getBoundingClientRect();
   const clickX = (2 * (e.clientX - rect.left) - width / 2) / minRadius;
-  const clickY = (2 * (e.clientY - rect.top) - height / 2) / minRadius;
+  const clickY = -(2 * (e.clientY - rect.top) - height / 2) / minRadius;
   drawPoint(project([clickX, clickY]), inputColours.vertexColour);
   points.push([clickX, clickY]);
   pointCount += 1;
