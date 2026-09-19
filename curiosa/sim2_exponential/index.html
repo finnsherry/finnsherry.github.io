@@ -13,7 +13,8 @@
             image-rendering: crisp-edges;
         }
     </style>
-    <script type="module" src='main.js' defer></script>
+    <script type="module" src='group.js' defer></script>
+    <script type="module" src='exponential_curve.js' defer></script>
     <link rel="stylesheet" href="/utils/katex/katex.min.css">
     <script defer src="/utils/katex/katex.min.js"></script>
     <script defer src="/utils/katex/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
@@ -93,6 +94,11 @@
                 \]
                 Finally, since \(\operatorname{SO}(2) \cong S^1\) (as smooth manifolds), we can replace a rotation \(R\) by its angle \(\theta\).
             </p>
+            <p>
+                Click on the canvas to place points; three points will form a triangle.
+                The sliders determine the similarity transform that will be applied to the triangle.
+                Simply add a new point to start creating the next triangle.
+            </p>
         </div>
         <div class="content-container" id="exponential-curve">
             <p>
@@ -141,6 +147,10 @@
                 it follows that \(r(t + \pi/2) / r(t) = e^{\frac{\pi}{2} c^A}\), which is constant for all \(t \in \mathbb{R}\).
                 Choosing \(c^A\) such that \(e^{\frac{\pi}{2} c^A} = \varphi\), i.e. \(c^A = \frac{2}{\pi} \log(\phi)\),
                 with \(\phi \coloneqq \frac{1 + \sqrt{5}}{2}\) the golden ratio, this curve becomes a so-called golden spiral.
+            </p>
+            <p>
+                The spatial projection of the exponential curve is plotted below, where \(c^A\) can be controlled using the slider.
+                To get the width of the curve to vary, we apply the exponential curve to a pair of vectors, where one is slightly longer than the other.
             </p>
          </div>
     </main>

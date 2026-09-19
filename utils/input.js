@@ -268,7 +268,7 @@ export class InputRanges {
         this.table = table;
     }
 
-    addRange({ label, shownLabel, defaultValue, min, max, stepCount = null, width = null }) {
+    addRange({ label, shownLabel, defaultValue, min, max, width = null }) {
         const tr = document.createElement("tr");
         const tdShownLabel = document.createElement("td");
         const htmlShownLabel = document.createElement("label");
@@ -278,18 +278,13 @@ export class InputRanges {
 
         const tdSlider = document.createElement("td");
         const range = document.createElement("input");
-        if (!stepCount) {
-            stepCount = 100;
-        }
-        const step = (max - min) / stepCount;
-        const defaultStep = Math.round((defaultValue - min) / (max - min) * stepCount);
         range.type = "range";
         range.id = label;
         range.name = shownLabel;
         range.min = min;
         range.max = max;
-        range.step = step;
-        range.value = min + defaultStep*step;
+        range.step = "any";
+        range.value = defaultValue;
         if (width) {
             range.size = width;
         }
