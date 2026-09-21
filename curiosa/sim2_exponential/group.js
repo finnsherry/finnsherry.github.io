@@ -44,10 +44,17 @@ function clearCanvas() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function project([x, y]) {
+function worldFromCanvas([x, y]) {
   return [
-    width / 2 + x * minRadius,
-    height / 2 - y * minRadius
+    (x - width / 2) / minRadius,
+    (y - height / 2) / minRadius,
+  ]
+}
+
+function canvasFromWorld([x, y]) {
+  return [
+    x * minRadius + width / 2,
+    y * minRadius + height / 2,
   ]
 }
 
@@ -59,16 +66,16 @@ function drawPoint([x, y], colour = black) {
 }
 
 function drawTriangle(points, colours) {
-  points.forEach(p => { drawPoint(project(p), colours.vertexColour) });
+  points.forEach(p => { drawPoint(canvasFromWorld(p), colours.vertexColour) });
   ctx.fillStyle = colours.fillColour;
   ctx.strokeStyle = colours.lineColour;
   ctx.lineWidth = lineWidth;
-  const projectedPoints = points.map(project);
+  const canvasPoints = points.map(canvasFromWorld);
 
   ctx.beginPath();
-  ctx.moveTo(projectedPoints[0][0], projectedPoints[0][1]);
-  ctx.lineTo(projectedPoints[1][0], projectedPoints[1][1]);
-  ctx.lineTo(projectedPoints[2][0], projectedPoints[2][1]);
+  ctx.moveTo(canvasPoints[0][0], canvasPoints[0][1]);
+  ctx.lineTo(canvasPoints[1][0], canvasPoints[1][1]);
+  ctx.lineTo(canvasPoints[2][0], canvasPoints[2][1]);
   ctx.closePath();
   ctx.stroke();
   ctx.fill();
@@ -79,10 +86,9 @@ function addPoint(e) {
     clearCanvas();
     points = [];
   }
-  const [ clickX, clickY ] = canvasFromClient(canvas, e.clientX, e.clientY);
-  const x = (clickX - width / 2) / minRadius;
-  const y = -(clickY - height / 2) / minRadius;
-  drawPoint(project([x, y]), inputColours.vertexColour);
+  const [ canvasX, canvasY ] = canvasFromClient(canvas, e.clientX, e.clientY);
+  const [ x, y ] = worldFromCanvas([ canvasX, canvasY ]);
+  drawPoint([canvasX, canvasY], inputColours.vertexColour);
   points.push([x, y]);
   pointCount += 1;
 
