@@ -1,4 +1,4 @@
-import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
+import { resizeCanvasToDisplaySize, canvasFromClient } from "/utils/canvas.js";
 import { InputRanges } from "/utils/input.js";
 
 const container = document.getElementById("group");
@@ -79,11 +79,11 @@ function addPoint(e) {
     clearCanvas();
     points = [];
   }
-  const rect = canvas.getBoundingClientRect();
-  const clickX = (2 * (e.clientX - rect.left) - width / 2) / minRadius;
-  const clickY = -(2 * (e.clientY - rect.top) - height / 2) / minRadius;
-  drawPoint(project([clickX, clickY]), inputColours.vertexColour);
-  points.push([clickX, clickY]);
+  const [ clickX, clickY ] = canvasFromClient(canvas, e.clientX, e.clientY);
+  const x = (clickX - width / 2) / minRadius;
+  const y = -(clickY - height / 2) / minRadius;
+  drawPoint(project([x, y]), inputColours.vertexColour);
+  points.push([x, y]);
   pointCount += 1;
 
   if (pointCount % 3 == 0) {
