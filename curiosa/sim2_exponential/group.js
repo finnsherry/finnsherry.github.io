@@ -47,14 +47,14 @@ function clearCanvas() {
 function worldFromCanvas([x, y]) {
   return [
     (x - width / 2) / minRadius,
-    (y - height / 2) / minRadius,
+    (height / 2 - y) / minRadius,
   ]
 }
 
 function canvasFromWorld([x, y]) {
   return [
     x * minRadius + width / 2,
-    y * minRadius + height / 2,
+    height / 2 - y * minRadius ,
   ]
 }
 
