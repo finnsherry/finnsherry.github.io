@@ -292,3 +292,8 @@ mjx-container[display="true"] {
 input[type="range"] {
     accent-color: var(--link-colour);
 }
+
+canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
