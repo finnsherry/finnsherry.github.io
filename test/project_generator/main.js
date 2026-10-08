@@ -5,7 +5,18 @@ const container = document.getElementsByClassName("machine")[0];
 const inputButtons = new InputButtons(container);
 const spinButton = inputButtons.addButton({ label: "spin", shownLabel: "SPIN" });
 spinButton.classList.add("spin-button")
-console.log(spinButton);
+container.insertBefore(inputButtons.table, container.querySelector(".coin-tray"));
+
+const message = document.getElementById("message");
+const lever = container.querySelector(".lever");
+
+document.querySelectorAll(".bulbs").forEach(row => {
+    for (let i = 0; i < 16; i++) {
+        const bulb = document.createElement("span");
+        bulb.style.setProperty("--i", i);
+        row.appendChild(bulb);
+    }
+});
 
 const groups = [
     "SE(2)", "SE(3)", "SO(3)", "SIM(2)",
@@ -90,6 +101,7 @@ function jackpotSound() {
 }
 
 let running = false;
+let winTimer;
 
 function randomWord(options) {
     return options[Math.floor(Math.random() * options.length)];
@@ -101,6 +113,14 @@ function spin() {
     running = true;
     spinButton.disabled = true;
 
+    clearTimeout(winTimer);
+    container.classList.remove("win");
+    container.classList.add("spinning");
+    message.textContent = "SPINNING...";
+    lever.classList.remove("pulled");
+    void lever.offsetWidth; // restart the pull animation
+    lever.classList.add("pulled");
+
     let stopped = 0;
     const WEEDEATER = Math.random() < 0.01;
     if (WEEDEATER) {
@@ -109,6 +129,7 @@ function spin() {
 
     wheels.forEach((wheel, index) => {
         const span = wheel.querySelector("span");
+        wheel.classList.remove("landed");
         wheel.classList.add("spinning");
         const wordList = wordLists[index]
 
@@ -122,6 +143,7 @@ function spin() {
         setTimeout(() => {
             clearInterval(interval);
             wheel.classList.remove("spinning");
+            wheel.classList.add("landed");
             stopSound();
             span.textContent = randomWord(wordList);
 
@@ -131,9 +153,18 @@ function spin() {
                 running = false;
                 spinButton.disabled = false;
                 jackpotSound();
+
+                container.classList.remove("spinning");
+                container.classList.add("win");
+                message.textContent = "JACKPOT!";
+                winTimer = setTimeout(() => {
+                    container.classList.remove("win");
+                    message.textContent = "READY TO SPIN";
+                }, 3000);
             }
         }, stopDelay);
     });
 }
 
 spinButton.addEventListener("click", spin)
+lever.addEventListener("click", spin)
