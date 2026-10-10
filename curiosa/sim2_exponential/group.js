@@ -1,8 +1,8 @@
 import { resizeCanvasToDisplaySize, canvasFromClient } from "/utils/canvas.js";
-import { InputRanges } from "/utils/input.js";
+import { InputForm } from "/utils/input.js";
 
 const container = document.getElementById("group");
-const inputRange = new InputRanges(container);
+const inputForm = new InputForm(container);
 
 const canvas = document.createElement("canvas");
 canvas.id = "canvas-group";
@@ -15,10 +15,10 @@ const minRadius = Math.min(width, height) / 2;
 const aspect = width / height;
 const ctx = canvas.getContext("2d");
 
-const xRange = inputRange.addRange({ label: "x", shownLabel: "\\(x\\)", defaultValue: 0, min: -(width / (2 * minRadius)), max: (width / (2 * minRadius)) });
-const yRange = inputRange.addRange({ label: "y", shownLabel: "\\(y\\)", defaultValue: 0, min: -(height / (2 * minRadius)), max: (height / (2 * minRadius)) });
-const thetaRange = inputRange.addRange({ label: "theta", shownLabel: "\\(\\theta\\)", defaultValue: 0, min: -Math.PI, max: Math.PI });
-const aRange = inputRange.addRange({ label: "a", shownLabel: "\\(a\\)", defaultValue: 1, min: 0.2, max: 5 });
+const xRange = inputForm.addRange({ label: "x", shownLabel: "\\(x\\)", defaultValue: 0, min: -(width / (2 * minRadius)), max: (width / (2 * minRadius)) });
+const yRange = inputForm.addRange({ label: "y", shownLabel: "\\(y\\)", defaultValue: 0, min: -(height / (2 * minRadius)), max: (height / (2 * minRadius)) });
+const thetaRange = inputForm.addRange({ label: "theta", shownLabel: "\\(\\theta\\)", defaultValue: 0, min: -Math.PI, max: Math.PI });
+const aRange = inputForm.addRange({ label: "a", shownLabel: "\\(a\\)", defaultValue: 1, min: 0.2, max: 5 });
 
 const black = `rgb(0 0 0)`;
 const white = `rgb(255 255 255)`;
@@ -54,7 +54,7 @@ function worldFromCanvas([x, y]) {
 function canvasFromWorld([x, y]) {
   return [
     x * minRadius + width / 2,
-    height / 2 - y * minRadius ,
+    height / 2 - y * minRadius,
   ]
 }
 
@@ -86,8 +86,8 @@ function addPoint(e) {
     clearCanvas();
     points = [];
   }
-  const [ canvasX, canvasY ] = canvasFromClient(canvas, e.clientX, e.clientY);
-  const [ x, y ] = worldFromCanvas([ canvasX, canvasY ]);
+  const [canvasX, canvasY] = canvasFromClient(canvas, e.clientX, e.clientY);
+  const [x, y] = worldFromCanvas([canvasX, canvasY]);
   drawPoint([canvasX, canvasY], inputColours.vertexColour);
   points.push([x, y]);
   pointCount += 1;
@@ -113,10 +113,10 @@ function drawScene() {
   clearCanvas();
   drawTriangle(points, inputColours);
 
-  const x = inputRange.getValue("x");
-  const y = inputRange.getValue("y");
-  const theta = inputRange.getValue("theta");
-  const a = inputRange.getValue("a");
+  const x = inputForm.readRange("x");
+  const y = inputForm.readRange("y");
+  const theta = inputForm.readRange("theta");
+  const a = inputForm.readRange("a");
   const transformedPoints = points.map(p => transformPoint(p, [x, y, theta, a]));
   drawTriangle(transformedPoints, transformedColours);
 }

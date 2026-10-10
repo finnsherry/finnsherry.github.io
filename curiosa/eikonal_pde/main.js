@@ -1,18 +1,17 @@
-import { InputTable, InputButtons } from "/utils/input.js";
+import { InputButtons, InputForm } from "/utils/input.js";
 import { imageFileToArray } from "/utils/imageio.js";
 import { TextureMaker, setupWebGPU, ComputePipelineMaker, upwind_erosion } from "/utils/webgpu.js";
 
 const container = document.getElementsByClassName("content-container")[0];
-const inputTable = new InputTable(container);
-const parameters = inputTable.addNumber({ label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 });
-const selector = {
+const inputForm = new InputForm(container);
+inputForm.addNumber({ label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 });
+inputForm.addSelector({
   label: "colourScheme", shownLabel: "Colour scheme", options: [
     ["whiteBlack", "White-Black"],
     ["blueRed", "Blue-Red"],
     ["blueGreen", "Blue-Green"],
   ]
-};
-inputTable.addSelector(selector);
+});
 const inputButtons = new InputButtons(container);
 const submit = inputButtons.addButton({ label: "submit", shownLabel: "Start" });
 
@@ -113,8 +112,8 @@ function roundUpToMultiple(number, multiplier) {
 let rafId = null;
 async function runSimulation() {
   // User parameters.
-  const showEvery = inputTable.getNumber("showEvery", true);
-  const colourScheme = inputTable.getSelector("colourScheme");
+  const showEvery = inputForm.readNumber("showEvery", true);
+  const colourScheme = inputForm.readSelector("colourScheme");
   console.log(colourScheme);
 
 

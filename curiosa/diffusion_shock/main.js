@@ -1,9 +1,9 @@
-import { InputTable, InputButtons } from "/utils/input.js";
+import { InputButtons, InputForm } from "/utils/input.js";
 import { imageFileToArray } from "/utils/imageio.js";
 import { TextureMaker, setupWebGPU, ComputePipelineMaker, sanitise_index, upwind_dilation, upwind_erosion, passMaker } from "/utils/webgpu.js";
 
 const container = document.getElementsByClassName("content-container")[0];
-const inputTable = new InputTable(container);
+const inputForm = new InputForm(container);
 const parameters = [
   { label: "showEvery", shownLabel: "Show every #th frame", defaultValue: 1 },
   { label: "lambda", shownLabel: "\\(\\lambda\\)", defaultValue: 2 },
@@ -11,7 +11,7 @@ const parameters = [
   { label: "sigma", shownLabel: "\\(\\sigma\\)", defaultValue: 2 },
   { label: "rho", shownLabel: "\\(\\rho\\)", defaultValue: 5 },
 ]
-parameters.forEach(parameter => inputTable.addNumber(parameter));
+parameters.forEach(parameter => inputForm.addNumber(parameter));
 const inputButtons = new InputButtons(container);
 const submit = inputButtons.addButton({ label: "submit", shownLabel: "Start" });
 
@@ -561,11 +561,11 @@ function createGaussianKernel(sigma, radiusMultiplier) {
 let rafId = null;
 async function runInpainting() {
   // User parameters.
-  const showEvery = inputTable.getNumber("showEvery", true);
-  const lambda = inputTable.getNumber("lambda") / 255.;
-  const nu = inputTable.getNumber("nu");
-  const sigma = inputTable.getNumber("sigma");
-  const rho = inputTable.getNumber("rho");
+  const showEvery = inputForm.readNumber("showEvery", true);
+  const lambda = inputForm.readNumber("lambda") / 255.;
+  const nu = inputForm.readNumber("nu");
+  const sigma = inputForm.readNumber("sigma");
+  const rho = inputForm.readNumber("rho");
 
   // Load data and make canvas.
   const { array: u0 } = await imageFileToArray("cross.png");

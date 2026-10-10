@@ -1,16 +1,15 @@
-import { InputTable, InputButtons, InputRanges } from "/utils/input.js";
+import { InputButtons, InputForm } from "/utils/input.js";
 import { TextureMaker, setupWebGPU, ComputePipelineMaker } from "/utils/webgpu.js";
 
 const container = document.getElementsByClassName("content-container")[0];
-const inputTable = new InputTable(container);
+const inputForm = new InputForm(container);
 const parameters = [
   { label: "gridHeight", shownLabel: "Grid height", defaultValue: 128 },
   { label: "gridWidth", shownLabel: "Grid width", defaultValue: 128 },
   { label: "fps", shownLabel: "Frames per second", defaultValue: 10 },
 ]
-parameters.forEach(parameter => inputTable.addNumber(parameter));
-const inputRange = new InputRanges(container);
-inputRange.addRange({ label: "fraction", shownLabel: "Starting fraction alive", defaultValue: 0.4, min: 0, max: 1 });
+parameters.forEach(parameter => inputForm.addNumber(parameter));
+inputForm.addRange({ label: "fraction", shownLabel: "Starting fraction alive", defaultValue: 0.4, min: 0, max: 1 });
 const inputButtons = new InputButtons(container);
 const submit = inputButtons.addButton({ label: "submit", shownLabel: "Start" });
 
@@ -73,10 +72,10 @@ const renderPipeline = device.createRenderPipeline({
 });
 
 function runSimulation() {
-  const gridHeight = inputTable.getNumber("gridHeight", true);
-  const gridWidth = inputTable.getNumber("gridWidth", true);
-  const fps = inputTable.getNumber("fps", true)
-  const aliveFraction = inputRange.getValue("fraction");
+  const gridHeight = inputForm.readNumber("gridHeight", true);
+  const gridWidth = inputForm.readNumber("gridWidth", true);
+  const fps = inputForm.readNumber("fps", true)
+  const aliveFraction = inputForm.readRange("fraction");
   let updateInterval = 1000 / fps;
 
   const size = gridWidth * gridHeight;

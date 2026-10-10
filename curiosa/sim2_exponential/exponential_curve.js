@@ -1,12 +1,12 @@
 import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
-import { InputRanges } from "/utils/input.js";
+import { InputForm } from "/utils/input.js";
 
 const goldenRatio = (1 + Math.sqrt(5)) / 2;
 const cAGoldenRatio = (2 / Math.PI) * Math.log(goldenRatio);
 
 const container = document.getElementById("exponential-curve");
-const inputRange = new InputRanges(container);
-const cARange = inputRange.addRange({ label: "cA", shownLabel: "\\(c^A\\)", defaultValue: cAGoldenRatio, min: -1, max: 1 });
+const inputForm = new InputForm(container);
+const cARange = inputForm.addRange({ label: "cA", shownLabel: "\\(c^A\\)", defaultValue: cAGoldenRatio, min: -1, max: 1 });
 
 const canvas = document.createElement("canvas");
 canvas.id = "canvas-exponential-curve";
@@ -32,7 +32,7 @@ function project(x, y) {
 }
 
 function plotSpiral() {
-  const cA = inputRange.getValue("cA");
+  const cA = inputForm.readRange("cA");
   const rSmall = 0.9;
   const rBig = 1.1;
 
