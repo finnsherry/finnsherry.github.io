@@ -28,7 +28,7 @@ const applications = [
     "Tracking", "Denoising", "Segmentation", "Inpainting",
     "Classification", "Generative Modelling",
 ];
-let wordLists = [groups, symmetries, applications];
+const wordLists = [groups, symmetries, applications];
 
 const wheels = document.querySelectorAll(".wheel");
 const results = wheels.length;
@@ -123,15 +123,16 @@ function spin() {
 
     let stopped = 0;
     const WEEDEATER = Math.random() < 0.01;
+    let usedWordLists = wordLists;
     if (WEEDEATER) {
-        wordLists = [["WEED"], ["EATER"], ["🌿"]];
+        usedWordLists = [["WEED"], ["EATER"], ["🌿"]];
     }
 
     wheels.forEach((wheel, index) => {
         const span = wheel.querySelector("span");
         wheel.classList.remove("landed");
         wheel.classList.add("spinning");
-        const wordList = wordLists[index]
+        const wordList = usedWordLists[index]
 
         const interval = setInterval(() => {
             span.textContent = randomWord(wordList);

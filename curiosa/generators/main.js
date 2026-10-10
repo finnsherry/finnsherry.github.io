@@ -1,7 +1,7 @@
 import { NDArray, vec2, vec3, vec4, mat3, mat4 } from "/utils/linalg.js";
 import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
 import { Camera } from "/utils/camera.js";
-import { InputState, InputTable, InputButtons } from "/utils/input.js";
+import { InputState, InputTable, InputButtons, InputRanges } from "/utils/input.js";
 
 const container = document.getElementsByClassName("content-container")[0];
 const inputTable = new InputTable(container);
@@ -10,9 +10,10 @@ const parameters = [
   { label: ["n1x", "n1y", "n1z"], shownLabel: "\\(n_1\\)", defaultValue: [0, 1, 0], width: 3 },
   { label: ["x2x", "x2y", "x2z"], shownLabel: "\\(x_2\\)", defaultValue: [1, 0, 0], width: 3 },
   { label: ["n2x", "n2y", "n2z"], shownLabel: "\\(n_2\\)", defaultValue: [0, 0, 1], width: 3 },
-  { label: "phi", shownLabel: "\\(\\phi / \\pi\\)", defaultValue: 0.5, width: 3 },
 ]
 parameters.forEach(parameter => inputTable.addNumber(parameter));
+const inputRange = new InputRanges(container);
+const phiRange = inputRange.addRange({ label: "phi", shownLabel: "\\(\\phi / \\pi\\)", defaultValue: 0.5, min: -1, max: 1 });
 const inputButtons = new InputButtons(container);
 const submit = inputButtons.addButton({ label: "submit", shownLabel: "Submit" });
 const randomise = inputButtons.addButton({ label: "randomise", shownLabel: "Randomise" });
@@ -289,7 +290,7 @@ function runSimulation() {
   const n2y = inputTable.getNumber("n2y");
   const n2z = inputTable.getNumber("n2z");
 
-  const phioverpi = inputTable.getNumber("phi");
+  const phioverpi = inputRange.getValue("phi");
   const phi = phioverpi * Math.PI;
 
   const p1 = new PositionOrientation(vec3(x1x, x1y, x1z), NDArray.normalize(vec3(n1x, n1y, n1z)));
@@ -365,6 +366,7 @@ document.addEventListener('keydown', (event) => {
     startSimulation();
   }
 });
+phiRange.addEventListener("input", startSimulation);
 
 function startRandomSimulation() {
   const labels = ["x1x", "x1y", "x1z", "n1x", "n1y", "n1z", "x2x", "x2y", "x2z", "n2x", "n2y", "n2z", "phi"]
