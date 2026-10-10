@@ -1,3 +1,5 @@
+import { resizeCanvasToDisplaySize } from "/utils/canvas.js";
+
 export class TextureMaker {
     constructor(device, texFormat, gridWidth, gridHeight) {
         this.device = device;
@@ -786,9 +788,20 @@ export async function renderImage(tex, device, context, format) {
 }
 
 export async function setupWebGPU(canvas) {
+    resizeCanvasToDisplaySize(canvas);
     const adapter = await navigator.gpu?.requestAdapter();
     const device = await adapter?.requestDevice();
-    if (!device) throw new Error("WebGPU not supported");
+    if (!device) {
+        const ctx = canvas.getContext("2d");
+        const width = canvas.width
+        const height = canvas.height;
+        ctx.fillStyle = "rgb(255 255 255)";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = "rgb(0 0 0)";
+        ctx.font = `${Math.round(width / 20.5)}px sans-serif`
+        ctx.fillText("WebGPU is not supported on this device 😢️", 0, height / 2);
+        throw new Error("WebGPU not supported");
+    }
 
     const context = canvas.getContext("webgpu");
     const format = navigator.gpu.getPreferredCanvasFormat();
