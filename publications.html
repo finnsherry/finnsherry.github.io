@@ -589,6 +589,92 @@
           </div>
         </div>
       </div>
+
+      <div class="content-container" id="supervised">
+        <h1>Supervised</h1>
+        <div class="publication">
+          <input
+            id="Sparse geometric representation of images using Gaussian splatting"
+            class="toggle"
+            type="checkbox"
+          />
+          <label
+            for="Sparse geometric representation of images using Gaussian splatting"
+            class="publication-label"
+          >
+            <h3 class="publication-title">
+              Sparse geometric representation of images using Gaussian splatting
+            </h3>
+            <p>
+              <b><a href="https://github.com/SuperVK">Victor Klomp</a></b>
+            </p>
+            <p>
+              Supervised by <a href="https://bmnsmets.com/">Bart Smets</a> &
+              Finn Sherry
+            </p>
+            <div class="publication-footer">
+              <div class="horizontal-links">
+                <a
+                  href="https://pure.tue.nl/ws/files/425292417/Thesis_BTW_Victor_Klomp.pdf"
+                  target="_blank"
+                  >research.tue.nl</a
+                >
+              </div>
+              <span class="publication-year">2025</span>
+            </div>
+          </label>
+
+          <div class="publication-summary">
+            <p>
+              <em>
+                This thesis belongs to Victor's graduation project for the Bachelor Applied Mathematics.
+              </em>
+            </p>
+            <p>
+              In the last few years, AI and machine learning have become increasingly important.
+              We have seen ML applied across several domains, mainly text, image, video, and audio.
+              For image recognition, convolutional neural networks (CNN) have been quite successful.
+              CNNs use convolutional kernels to group pixels together, such that for a 100x100 pixel image, we do not need 10,000 weights to connect each pixel.
+              These networks are designed to extract information from images, such as classification.
+              This has become the de facto standard for image recognition in the past 10 years.
+            </p>
+            <p>
+              Recently, another model has become prevalent: the transformer.
+              A transformer takes tokens as inputs; in most cases, these tokens are words.
+              The transformer can predict new tokens, leading to generative models.
+              It was discovered that you can serialize an image into patches of 16x16 pixels and use those as tokens to train transformers successfully.
+              Initially outperforming "classical" CNNs, later the optimizations in the transformers have been backported to CNN
+              In this thesis, however, we will focus on transformers instead of CNNs, specifically the generation of tokens for transformers.
+            </p>
+            <p>
+              Ideally, we can find a set of tokens that describes an image, similar to how a set of words describes a sentence or text.
+              While text tokens can encode grammatical or contextual information, image tokens should capture geometric information.
+              Currently, the 16x16 patches do not contain any geometrical information.
+              This is reintroduced in the embedding, but the way this is done is unstable and unpredictable for any transformation done on the tokens by the transformer.
+              It also does not match the Euclidean geometry that we expect from images: the attention of a token is mostly on tokens that are on the same row/column axis.
+              This is more likely because of the embedding, instead of the actual relevance of those tokens.
+            </p>
+            <p>
+              One way to generate such tokens is Gaussian splatting.
+              This has been popularized in 2023 and is being used for 3D scene reconstruction.
+              By taking multiple pictures and spawning Gaussian blobs in 3D to match each view, it results in a 3D scene represented by Gaussians.
+              This is done using gradient descent to train the scenes to iteratively better match each image, using L1 and SSIM loss.
+              Recently, Gaussian splatting has also been used in 2D for image representation.
+              This works essentially by taking only one image and training for that single image.
+              This process works a lot simpler, as quite a few complications for 3D do not have to be made anymore.
+              Besides encoding tokens for transformers, 2D Gaussian splatting can also be used in scenarios where compression is done once and decompression is done multiple times, such as textures for video games.
+              Finally, 2D Gaussian splatting also has applications in super-resolution, i.e., upscaling images.
+            </p>
+            <p>
+              Tokenization of Gaussian parameters has already been studied.
+              In this thesis, we aim to provide more geometric value to these tokens by using Lie theory.
+              Furthermore, we hope to use more complex wavelets to encode more information in a single token.
+              As each token has attention to all other tokens, transformer networks scale quadratically, limiting the number of tokens is thus key to smaller networks, limiting the needed memory and compute.
+              We hope to use first and second order derivatives of the Gaussian function to define edges and lines more efficiently than a normal Gaussian can.
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
   </body>
 </html>
