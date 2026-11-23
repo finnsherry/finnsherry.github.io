@@ -525,7 +525,7 @@
               <a href="https://research.tue.nl/p/en/persons/luis-a-zavala-mondragon">Luis Zavala Mondragon </a>,
               Finn Sherry,
               <a href="https://research.tue.nl/p/en/persons/fons-van-der-sommen">Fons van der Sommen</a>,
-              <a href="http://www.win.tue.nl/~mpisaren/">Maxim Pisarenco</a>
+              <a href="http://www.win.tue.nl/~mpisaren/">Maxim Pisarenco</a>,
               <a href="https://rduits.win.tue.nl/">Remco Duits</a>
             </p>
             <div class="publication-footer">
@@ -684,6 +684,108 @@
               Finally, we measure the stress relaxation of a comb vitrimer network using Molecular Dynamics simulations to find the timescale on which the network is rigid.
               Unfortunately, we believe we have encountered an issue in the implementation of the dynamic bonds in simulations, causing us to observe a nonphysical stress relaxation;
               we therefore have been unable to test the second part of our hypothesis.
+            </p>
+          </div>
+        </div>
+
+        <div class="publication">
+          <input
+            id="Investigating Poiseuille and Fourier Problems"
+            class="toggle"
+            type="checkbox"
+          />
+          <label
+            for="Investigating Poiseuille and Fourier Problems"
+            class="publication-label"
+          >
+            <h3 class="publication-title">
+              Investigating Poiseuille and Fourier Problems: Comparing Macroscopic and Microscopic Approaches
+            </h3>
+            <p>
+              <b>Finn Sherry</b>
+            </p>
+            <p>
+              Supervised by <a href="https://www.tue.nl/en/research/researchers/herman-clercx/">Herman Clercx</a> &
+              <a href="https://research.tue.nl/p/en/persons/gianluca-di-staso">Gianluca di Staso</a>
+            </p>
+            <div class="publication-footer">
+              <div class="horizontal-links">
+                <a
+                  href="https://research.tue.nl/p/en/studenttheses/scze5rqmr9f2-daa10bb5-2ce7-4e19-b423-df16d5c36785"
+                  target="_blank"
+                  >research.tue.nl</a
+                >
+              </div>
+              <span class="publication-year">2021</span>
+            </div>
+          </label>
+
+          <div class="publication-summary">
+            <p>
+              <em>
+                This thesis belongs to the graduation project of my Bachelor Applied Physics.
+              </em>
+            </p>
+            <p>
+              In this report, we use a mesoscopic approach, Direct Simulation Monte Carlo (DSMC), to
+              investigate the validity of solutions for the plane Poiseuille flow and Fourier heat transfer, in the
+              slip flow and transitional flow regime obtained using a macroscopic approach, the Navier-Stokes
+              Equations. The relevant dimensionless number is the Knudsen number (Kn), which is a measure
+              for the rarefaction of the fluid.
+            </p>
+            <p>
+              We first examine the implementation and computational complexity of the DSMC method.
+              Subsequently, we analytically derive solutions to the plane Poiseuille flow problem in the
+              no-slip flow regime using the Navier-Stokes Equations. We extend these to the slip flow
+              regime, using velocity slip boundary conditions. We then compare these analytical predictions
+              to results obtained using DSMC. There is qualitative and quantitative agreement between the
+              analytically derived and the Direct Simulation Monte Carlo (DSMC) flow velocity profile in
+              the slip flow regime. However, the DSMC temperature profile exhibits a dip at the centre of
+              the channel, which does not occur in the analytical solution. This qualitative difference cannot
+              be corrected by using higher order velocity slip boundary conditions, since the shape of the
+              analytically derived profiles is determined by the Navier-Stokes Equations, and not by the
+              boundary conditions.
+            </p>
+            <p>
+              We use first order velocity slip boundary conditions to find analytical solutions in the
+              transitional flow regime. We see that there is still qualitative agreement between the analytical
+              solutions and those obtained using DSMC, though there is an increasing gap between the two
+              as Kn increases. In the transitional flow regime, the DSMC temperature profile still has a dip
+              at the centre of the channel, which again does not occur in the analytical solution.
+              Thereafter, we solve the Fourier heat transfer problem in the temperature jump regime
+              using the Navier-Stokes Equations, applying first order temperature jump boundary conditions.
+              There is quantitative agreement between the analytically found and the temperature profiles
+              from DSMC. However, we observe an inflection point at the centre of the channel in the profiles
+              from DSMC, which is not present in the analytical solutions. This can also not be recovered
+              using higher order boundary conditions.
+            </p>
+            <p>
+              Beside increased rarefaction, increased temperature difference between the walls decreases
+              the quantitative agreement between the analytical and DSMC solutions. It follows from the
+              theory that in the no-slip flow regime, the pressure is constant. Using the ideal gas law, we
+              measure the pressure in the channel in the slip flow regime. Outside of the Knudsen layer, which
+              has a width on the order of one mean free path length, we indeed observe that the pressure is
+              constant.
+            <p>
+              Finally, we consider the Fourier heat transfer problem in the transitional flow regime. As
+              the flow becomes more rarefied, we still observe an inflection point in the centre of the domain.
+              There are, moreover, quantitatively large differences between the temperature profiles obtained
+              using DSMC and the analytically predicted temperature profiles, of around 5 % at the centre of
+              the channel. We moreover observe that the pressure is no longer constant. Instead, the pressure
+              appears to be proportional to the temperature.
+            </p>
+            <p>
+              We have found that the Navier-Stokes Equations do not accurately predict the shape of
+              the flow velocity and temperature profiles in the slip flow and transitional flow regimes for the
+              plane Poiseuille flow and Fourier heat transfer problems. Though these are geometrically simple
+              problems, they are relevant to the study and fabrication of microsensors, e.g. Micro-ElectroMechanical-Systems (MEMS).
+              In future research, other simple flow problems, such as the Couette flow, could be investigated
+              for this reason. The use of a locally defined Knudsen number should also be explored in the
+              future, since it may address the issue that in our investigation, the analytically derived profiles
+              are consistently larger or smaller than the DSMC profiles at the centre of the channel, depending
+              on the problem. Similarly, velocity slip and temperature jump boundary conditions that are
+              higher order in Knudsen number (Kn) might improve the quantitative agreement between the
+              macroscopically and mesoscopically derived solutions.
             </p>
           </div>
         </div>
